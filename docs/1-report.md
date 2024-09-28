@@ -121,7 +121,7 @@
 - Актор: Региональный менеджер
 - Описание: Региональный менеджер просматривает сводную информацию по всем пасекам в регионе, принимает решения по распределению ресурсов и координации работ.
 
-# 6. Предложить архитектуру будущей системы
+# 6. Предложить архитектуру будущей системы и стек технологий
 
 ```mermaid
 graph TB
@@ -185,3 +185,5 @@ graph TB
     class AP1 apiary;
     class H11,H12,H13 hive;
 ```
+
+Стек технологий: k8s, docker, hashicorp consul, hashicorp vault, prometheus, grafana, api gateway, dapr, rabbitmq, tikv, postgresql, nextjs/svelte/nuxt, golang
