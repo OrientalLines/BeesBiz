@@ -1,5 +1,5 @@
 replicaCount:
-  postgresql: 3
+  postgresql: 1
   tikv: 3
   pd: 3
   rabbitmq: 1
@@ -37,7 +37,6 @@ rabbitmq:
 tikv:
   image: pingcap/tikv:v5.3.0
   port: 20160
-  replicas:
   persistence:
     enabled: true
     size: 2Gi

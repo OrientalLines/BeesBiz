@@ -21,9 +21,13 @@ lint:
 template:
 	helm template ./BeesBizData-0.1.0.tgz
 
+recreate:
+	helm package .
+	helm upgrade --install beesbiz ./BeesBizData-0.1.0.tgz --namespace beesbiz-data
+
 minikube:
-	minikube stop
-	minikube delete
-	minikube start --cpus 4 --memory 10244 --disk-size 20g
+	minikube start --cpus 6 --memory 10244 --disk-size 20g
 	minikube addons enable storage-provisioner
 	minikube addons enable default-storageclass
+	kubectl create namespace beesbiz-data
+	kubectl apply -f persistent-volumes.yaml -n beesbiz-data --wait

@@ -16,6 +16,18 @@ spec:
       labels:
         app: tikv
     spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - tikv
+              topologyKey: "kubernetes.io/hostname"
       containers:
         - name: tikv
           image: {{ .Values.tikv.image }}
@@ -26,6 +38,15 @@ spec:
             - --addr=0.0.0.0:20160
             - --advertise-addr=$(POD_NAME).tikv.$(NAMESPACE).svc.cluster.local:20160
             - --status-addr=0.0.0.0:20180
+            - --advertise-status-addr=$(POD_NAME).tikv-status.$(NAMESPACE).svc.cluster.local:20180
+            - --data-dir=/var/lib/tikv/data
+            - --capacity=2GB
+            - --config=/etc/tikv/tikv.toml
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/tikv
+            - name: config
+              mountPath: /etc/tikv
           env:
             - name: NAMESPACE
               valueFrom:
@@ -49,20 +70,22 @@ spec:
           readinessProbe:
             tcpSocket:
               port: {{ .Values.tikv.port }}
-            initialDelaySeconds: 20
+            initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             tcpSocket:
               port: {{ .Values.tikv.port }}
-            initialDelaySeconds: 40
+            initialDelaySeconds: 20
             periodSeconds: 30
+      volumes:
+        - name: config
+          configMap:
+            name: tikv-config
   volumeClaimTemplates:
     - metadata:
-        name: tikv-storage
+        name: data
       spec:
-        accessModes:
-          - ReadWriteOnce
+        accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
-            storage: {{ .Values.tikv.persistence.size }}
-        storageClassName: {{ .Values.tikv.persistence.storageClass }}
+            storage: 10Gi
