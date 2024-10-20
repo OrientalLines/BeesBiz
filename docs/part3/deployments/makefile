@@ -6,7 +6,7 @@ KUBECTL := kubectl
 HELM := helm
 MINIKUBE := minikube
 
-.PHONY: start uninstall template lint package upgrade list get_all port-forward stop-port-forward recreate
+.PHONY: start uninstall template lint package upgrade list get_all port-forward stop-port-forward recreate pause resume
 
 uninstall:
 	$(HELM) uninstall $(RELEASE_NAME) --namespace $(NAMESPACE)
@@ -56,3 +56,9 @@ start:
 	$(KUBECTL) create secret generic postgresql-superuser -n $(NAMESPACE) \
      --from-literal=username=postgres \
      --from-literal=password=postgres
+
+pause:
+	$(MINIKUBE) pause
+
+resume:
+	$(MINIKUBE) start
