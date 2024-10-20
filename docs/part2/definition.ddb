@@ -1085,7 +1085,7 @@
     },
     {
       "id": 15,
-      "name": "allowed_regions",
+      "name": "allowed_region",
       "x": -506.6406454808174,
       "y": 200.7095782571837,
       "fields": [

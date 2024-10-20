@@ -20,7 +20,7 @@
   - [production_report](#production_report)
   - [weather_data](#weather_data)
   - [user](#user)
-  - [allowed_regions](#allowed_regions)
+  - [allowed_region](#allowed_region)
   - [region_apiary](#region_apiary)
 - [Relationships](#relationships)
 - [Database Diagram](#database-Diagram)
@@ -183,7 +183,7 @@
 | **email**      | VARCHAR(100) | not null , unique |                 |      |
 | **last_login** | TIMESTAMP    | not null          |                 |      |
 
-### allowed_regions
+### allowed_region
 
 | Name          | Type    | Settings                                | References                  | Note |
 | ------------- | ------- | --------------------------------------- | --------------------------- | ---- |
@@ -213,8 +213,8 @@
 - **incident to hive**: many_to_one
 - **production_report to apiary**: many_to_one
 - **weather_data to region**: many_to_one
-- **user to allowed_regions**: one_to_one
-- **allowed_regions to region**: one_to_one
+- **user to allowed_region**: one_to_one
+- **allowed_region to region**: one_to_one
 - **region_apiary to apiary**: one_to_one
 - **region_apiary to region**: one_to_one
 
@@ -234,8 +234,8 @@ erDiagram
 	incident ||--o{ hive : references
 	production_report ||--o{ apiary : references
 	weather_data ||--o{ region : references
-	user ||--|| allowed_regions : references
-	allowed_regions ||--|| region : references
+	user ||--|| allowed_region : references
+	allowed_region ||--|| region : references
 	region_apiary ||--|| apiary : references
 	region_apiary ||--|| region : references
 
@@ -359,7 +359,7 @@ erDiagram
 		TIMESTAMP last_login
 	}
 
-	allowed_regions {
+	allowed_region {
 		INTEGER id
 		INTEGER user_id
 		INTEGER region_id

@@ -12,7 +12,7 @@ BEGIN
     FROM honey_harvest
     WHERE hive_id = p_hive_id
     AND harvest_date BETWEEN p_start_date AND p_end_date;
-    
+
     RETURN total_honey;
 END;
 $$ LANGUAGE plpgsql;
@@ -42,7 +42,7 @@ BEGIN
     WHERE vp.community_id = p_community_id
     ORDER BY vp.last_inspection_date DESC
     LIMIT 1;
-    
+
     RETURN COALESCE(health_status, 'Unknown');
 END;
 $$ LANGUAGE plpgsql;
@@ -72,7 +72,7 @@ BEGIN
     FROM weather_data
     WHERE region_id = p_region_id
     AND date >= CURRENT_DATE - p_days;
-    
+
     RETURN COALESCE(avg_temp, 0);
 END;
 $$ LANGUAGE plpgsql;
@@ -99,10 +99,10 @@ DECLARE
 BEGIN
     SELECT EXISTS (
         SELECT 1
-        FROM allowed_regions
+        FROM allowed_region
         WHERE user_id = p_user_id AND region_id = p_region_id
     ) INTO has_access;
-    
+
     RETURN has_access;
 END;
 $$ LANGUAGE plpgsql;

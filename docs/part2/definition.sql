@@ -158,7 +158,7 @@ CREATE TABLE "user" (
 );
 
 
-CREATE TABLE "allowed_regions" (
+CREATE TABLE "allowed_region" (
 	"id" INTEGER NOT NULL UNIQUE,
 	"user_id" INTEGER,
 	"region_id" INTEGER,
@@ -211,9 +211,9 @@ ALTER TABLE "weather_data"
 ADD FOREIGN KEY("region_id") REFERENCES "region"("region_id")
 ON UPDATE NO ACTION ON DELETE CASCADE;
 ALTER TABLE "user"
-ADD FOREIGN KEY("user_id") REFERENCES "allowed_regions"("user_id")
+ADD FOREIGN KEY("user_id") REFERENCES "allowed_region"("user_id")
 ON UPDATE NO ACTION ON DELETE NO ACTION;
-ALTER TABLE "allowed_regions"
+ALTER TABLE "allowed_region"
 ADD FOREIGN KEY("region_id") REFERENCES "region"("region_id")
 ON UPDATE NO ACTION ON DELETE NO ACTION;
 ALTER TABLE "region_apiary"
