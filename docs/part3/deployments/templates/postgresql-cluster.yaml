@@ -1,0 +1,29 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgresql
+spec:
+  instances: {{ .Values.postgresql.instances }}
+  imageName: {{ .Values.postgresql.imageName }}
+  imagePullPolicy: {{ .Values.postgresql.imagePullPolicy }}
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: {{ .Values.postgresql.storage.size }}
+    storageClass: {{ .Values.postgresql.storage.storageClass }}
+  superuserSecret:
+    name: {{ .Values.postgresql.superuserSecret.name }}
+  bootstrap:
+    initdb:
+      database: {{ .Values.postgresql.bootstrap.initdb.database }}
+      owner: {{ .Values.postgresql.bootstrap.initdb.owner }}
+  postgresql:
+    parameters:
+      max_connections: "100"
+      shared_buffers: 256MB
+  resources:
+    requests:
+      cpu: {{ .Values.resources.requests.cpu }}
+      memory: {{ .Values.resources.requests.memory }}
+    limits:
+      cpu: {{ .Values.resources.limits.cpu }}
+      memory: {{ .Values.resources.limits.memory }}

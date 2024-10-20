@@ -1,4 +1,4 @@
-.PHONY: minikube uninstall template lint package upgrade list get_all
+.PHONY: start uninstall template lint package upgrade list get_all
 
 uninstall:
 	helm uninstall beesbiz --namespace beesbiz-data
@@ -25,9 +25,15 @@ recreate:
 	helm package .
 	helm upgrade --install beesbiz ./BeesBizData-0.1.0.tgz --namespace beesbiz-data
 
-minikube:
+start:
 	minikube start --cpus 6 --memory 10244 --disk-size 20g
 	minikube addons enable storage-provisioner
 	minikube addons enable default-storageclass
 	kubectl create namespace beesbiz-data
 	kubectl apply -f persistent-volumes.yaml -n beesbiz-data --wait
+	helm repo add cnpg https://cloudnative-pg.github.io/charts
+	helm repo update
+	helm install cnpg cnpg/cloudnative-pg --namespace cnpg-system --create-namespace
+	kubectl create secret generic postgresql-superuser \
+     --from-literal=username=postgres \
+     --from-literal=password=postgres

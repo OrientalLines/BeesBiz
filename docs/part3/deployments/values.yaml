@@ -15,12 +15,18 @@ resources:
     ephemeralStorage: "2Gi"
 
 postgresql:
-  image: postgres:13
-  port: 5432
-  persistence:
-    enabled: true
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:14.7
+  imagePullPolicy: IfNotPresent
+  storage:
     size: 2Gi
-    storageClass: "standard" # Adjust based on your Minikube storage class
+    storageClass: "standard"
+  superuserSecret:
+    name: postgresql-superuser
+  bootstrap:
+    initdb:
+      database: postgres
+      owner: postgres
   password: postgres
 
 rabbitmq:
