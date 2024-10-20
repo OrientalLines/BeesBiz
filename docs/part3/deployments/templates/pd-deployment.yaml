@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pd
+  labels:
+    app: pd
+spec:
+  serviceName: "pd"
+  replicas: {{ .Values.replicaCount.pd }}
+  selector:
+    matchLabels:
+      app: pd
+  template:
+    metadata:
+      labels:
+        app: pd
+    spec:
+      containers:
+        - name: pd
+          image: {{ .Values.pd.image }}
+          ports:
+            - containerPort: 2379
+            - containerPort: 2380
+          args:
+            - --name=$(POD_NAME)
+            - --client-urls=http://0.0.0.0:2379
+            - --peer-urls=http://0.0.0.0:2380
+            - --advertise-client-urls=http://$(POD_NAME).pd.$(NAMESPACE).svc.cluster.local:2379
+            - --advertise-peer-urls=http://$(POD_NAME).pd.$(NAMESPACE).svc.cluster.local:2380
+            - --initial-cluster=pd-0=http://pd-0.pd.$(NAMESPACE).svc.cluster.local:2380,pd-1=http://pd-1.pd.$(NAMESPACE).svc.cluster.local:2380,pd-2=http://pd-2.pd.$(NAMESPACE).svc.cluster.local:2380
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+              ephemeral-storage:
+                {{ .Values.resources.limits.ephemeralStorage }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+              ephemeral-storage:
+                {{ .Values.resources.requests.ephemeralStorage }}
+          volumeMounts:
+            - name: pd-storage
+              mountPath: /var/lib/pd
+  volumeClaimTemplates:
+    - metadata:
+        name: pd-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: {{ .Values.pd.persistence.size }}
+        storageClassName: {{ .Values.pd.persistence.storageClass }}

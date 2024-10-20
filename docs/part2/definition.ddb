@@ -1,0 +1,1382 @@
+{
+  "author": "Unnamed",
+  "title": "part2_definition",
+  "date": "2024-09-29T11:15:25.914Z",
+  "tables": [
+    {
+      "name": "region",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "region_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "size": 100,
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "climate_zone",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "size": 50,
+          "check": "",
+          "id": 2
+        }
+      ],
+      "indices": [],
+      "id": 0,
+      "x": -521.7940306007814,
+      "y": -59.947920710156325
+    },
+    {
+      "name": "apiary",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "apiary_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "location",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "size": 255,
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "manager_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "establishment_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        }
+      ],
+      "indices": [],
+      "id": 1,
+      "x": -120.14200845312513,
+      "y": -265.7076945054687
+    },
+    {
+      "name": "hive",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "hive_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "apiary_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "hive_type",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "size": 50,
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "installation_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "current_status",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "size": 50,
+          "check": "",
+          "id": 4
+        }
+      ],
+      "indices": [],
+      "id": 2,
+      "x": 551,
+      "y": -267
+    },
+    {
+      "name": "bee_community",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "community_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "hive_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "queen_age",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "population_estimate",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "health_status",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "size": 50,
+          "check": "",
+          "id": 4
+        }
+      ],
+      "indices": [],
+      "id": 3,
+      "x": 907,
+      "y": -458
+    },
+    {
+      "name": "veterinary_passport",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "passport_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "community_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "issue_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "health_status",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "size": 50,
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "last_inspection_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 4
+        }
+      ],
+      "indices": [],
+      "id": 4,
+      "x": 1244,
+      "y": -458
+    },
+    {
+      "name": "veterinary_record",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "record_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "passport_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "record_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "treatment",
+          "type": "TEXT",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 4
+        }
+      ],
+      "indices": [],
+      "id": 5,
+      "x": 1558,
+      "y": -452.00000000000006
+    },
+    {
+      "name": "sensor",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "sensor_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "hive_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "sensor_type",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "size": 50,
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "last_reading",
+          "type": "BLOB",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "last_reading_time",
+          "type": "TIMESTAMP",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 4
+        }
+      ],
+      "indices": [],
+      "id": 6,
+      "x": 905,
+      "y": -203
+    },
+    {
+      "name": "sensor_reading",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "reading_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "sensor_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "value",
+          "type": "BLOB",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "timestamp",
+          "type": "TIMESTAMP",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        }
+      ],
+      "indices": [],
+      "id": 7,
+      "x": 1237,
+      "y": -204.00000000000006
+    },
+    {
+      "name": "honey_harvest",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "harvest_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "hive_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "harvest_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "quantity",
+          "type": "BLOB",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "quality_grade",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "size": 50,
+          "check": "",
+          "id": 4
+        }
+      ],
+      "indices": [],
+      "id": 8,
+      "x": 904,
+      "y": 516
+    },
+    {
+      "name": "observation_log",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "log_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "hive_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "observation_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "recommendations",
+          "type": "TEXT",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 4
+        }
+      ],
+      "indices": [],
+      "id": 9,
+      "x": 598,
+      "y": 354
+    },
+    {
+      "name": "maintenance_plan",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "plan_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "apiary_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "planned_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "work_type",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "size": 50,
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "assigned_to",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 4
+        }
+      ],
+      "indices": [],
+      "id": 10,
+      "x": 250,
+      "y": -502
+    },
+    {
+      "name": "incident",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "incident_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "hive_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "incident_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "severity",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "size": 50,
+          "check": "",
+          "id": 4
+        },
+        {
+          "name": "actions_taken",
+          "type": "TEXT",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 5
+        }
+      ],
+      "indices": [],
+      "id": 11,
+      "x": 906,
+      "y": 83
+    },
+    {
+      "name": "production_report",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "report_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "apiary_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "start_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "end_date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "total_honey_produced",
+          "type": "BLOB",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 4
+        },
+        {
+          "name": "total_expenses",
+          "type": "BLOB",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 5
+        }
+      ],
+      "indices": [],
+      "id": 12,
+      "x": 250.76806238359381,
+      "y": 62.81420084531237
+    },
+    {
+      "name": "weather_data",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "weather_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "region_id",
+          "type": "INTEGER",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "date",
+          "type": "DATE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 2
+        },
+        {
+          "name": "temperature",
+          "type": "BLOB",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "humidity",
+          "type": "BLOB",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 4
+        },
+        {
+          "name": "wind_speed",
+          "type": "BLOB",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 5
+        },
+        {
+          "name": "precipitation",
+          "type": "BLOB",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 6
+        }
+      ],
+      "indices": [],
+      "id": 13,
+      "x": -879.0674111585938,
+      "y": -98.29230549453126
+    },
+    {
+      "name": "user",
+      "comment": "",
+      "color": "#175e7a",
+      "fields": [
+        {
+          "name": "user_id",
+          "type": "SERIAL",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": true,
+          "default": "",
+          "check": "",
+          "id": 0
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": true,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "size": 50,
+          "check": "",
+          "id": 1
+        },
+        {
+          "name": "role",
+          "type": "ROLE",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "size": "",
+          "check": "",
+          "id": 2,
+          "values": []
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR",
+          "comment": "",
+          "unique": true,
+          "increment": false,
+          "notNull": true,
+          "primary": false,
+          "default": "",
+          "size": 100,
+          "check": "",
+          "id": 3
+        },
+        {
+          "name": "last_login",
+          "type": "TIMESTAMP",
+          "comment": "",
+          "unique": false,
+          "increment": false,
+          "notNull": false,
+          "primary": false,
+          "default": "",
+          "check": "",
+          "id": 4
+        }
+      ],
+      "indices": [],
+      "id": 14,
+      "x": -889.9845252757816,
+      "y": 237.30888267109356
+    },
+    {
+      "id": 15,
+      "name": "allowed_regions",
+      "x": -506.6406454808174,
+      "y": 200.7095782571837,
+      "fields": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "default": "",
+          "check": "",
+          "primary": true,
+          "unique": true,
+          "notNull": true,
+          "increment": true,
+          "comment": "",
+          "id": 0
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": false,
+          "increment": false,
+          "comment": "",
+          "id": 1,
+          "size": "",
+          "values": []
+        },
+        {
+          "name": "region_id",
+          "type": "INTEGER",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": false,
+          "increment": false,
+          "comment": "",
+          "id": 2,
+          "size": "",
+          "values": []
+        }
+      ],
+      "comment": "",
+      "indices": [],
+      "color": "#175e7a",
+      "key": 1727607422018
+    },
+    {
+      "id": 16,
+      "name": "region_apiary",
+      "x": -123.90933051831661,
+      "y": 16.379422889214936,
+      "fields": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "default": "",
+          "check": "",
+          "primary": true,
+          "unique": true,
+          "notNull": true,
+          "increment": true,
+          "comment": "",
+          "id": 0
+        },
+        {
+          "name": "apiary_id",
+          "type": "INTEGER",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": false,
+          "increment": false,
+          "comment": "",
+          "id": 1,
+          "size": "",
+          "values": []
+        },
+        {
+          "name": "region_id",
+          "type": "INTEGER",
+          "default": "",
+          "check": "",
+          "primary": false,
+          "unique": false,
+          "notNull": false,
+          "increment": false,
+          "comment": "",
+          "id": 2,
+          "size": "",
+          "values": []
+        }
+      ],
+      "comment": "",
+      "indices": [],
+      "color": "#175e7a",
+      "key": 1727608101844
+    }
+  ],
+  "relationships": [
+    {
+      "name": "Hive_apiary_id_fk",
+      "startTableId": 2,
+      "startFieldId": 1,
+      "endTableId": 1,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 0
+    },
+    {
+      "name": "BeeCommunity_hive_id_fk",
+      "startTableId": 3,
+      "startFieldId": 1,
+      "endTableId": 2,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 1
+    },
+    {
+      "name": "VeterinaryPassport_community_id_fk",
+      "startTableId": 4,
+      "startFieldId": 1,
+      "endTableId": 3,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 2
+    },
+    {
+      "name": "VeterinaryRecord_passport_id_fk",
+      "startTableId": 5,
+      "startFieldId": 1,
+      "endTableId": 4,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 3
+    },
+    {
+      "name": "Sensor_hive_id_fk",
+      "startTableId": 6,
+      "startFieldId": 1,
+      "endTableId": 2,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 4
+    },
+    {
+      "name": "SensorReading_sensor_id_fk",
+      "startTableId": 7,
+      "startFieldId": 1,
+      "endTableId": 6,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 5
+    },
+    {
+      "name": "HoneyHarvest_hive_id_fk",
+      "startTableId": 8,
+      "startFieldId": 1,
+      "endTableId": 2,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 6
+    },
+    {
+      "name": "ObservationLog_hive_id_fk",
+      "startTableId": 9,
+      "startFieldId": 1,
+      "endTableId": 2,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 7
+    },
+    {
+      "name": "MaintenancePlan_apiary_id_fk",
+      "startTableId": 10,
+      "startFieldId": 1,
+      "endTableId": 1,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 8
+    },
+    {
+      "name": "Incident_hive_id_fk",
+      "startTableId": 11,
+      "startFieldId": 1,
+      "endTableId": 2,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 9
+    },
+    {
+      "name": "ProductionReport_apiary_id_fk",
+      "startTableId": 12,
+      "startFieldId": 1,
+      "endTableId": 1,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 10
+    },
+    {
+      "name": "WeatherData_region_id_fk",
+      "startTableId": 13,
+      "startFieldId": 1,
+      "endTableId": 0,
+      "endFieldId": 0,
+      "updateConstraint": "No action",
+      "deleteConstraint": "Cascade",
+      "cardinality": "many_to_one",
+      "id": 11
+    },
+    {
+      "startTableId": 14,
+      "startFieldId": 0,
+      "endTableId": 15,
+      "endFieldId": 1,
+      "cardinality": "one_to_one",
+      "updateConstraint": "No action",
+      "deleteConstraint": "No action",
+      "name": "User_user_id_fk",
+      "id": 12
+    },
+    {
+      "startTableId": 15,
+      "startFieldId": 2,
+      "endTableId": 0,
+      "endFieldId": 0,
+      "cardinality": "one_to_one",
+      "updateConstraint": "No action",
+      "deleteConstraint": "No action",
+      "name": "AllowedRegions_region_id_fk",
+      "id": 13
+    },
+    {
+      "startTableId": 16,
+      "startFieldId": 1,
+      "endTableId": 1,
+      "endFieldId": 0,
+      "cardinality": "one_to_one",
+      "updateConstraint": "No action",
+      "deleteConstraint": "No action",
+      "name": "region_apiary_apiary_id_fk",
+      "id": 14
+    },
+    {
+      "startTableId": 16,
+      "startFieldId": 2,
+      "endTableId": 0,
+      "endFieldId": 0,
+      "cardinality": "one_to_one",
+      "updateConstraint": "No action",
+      "deleteConstraint": "No action",
+      "name": "region_apiary_region_id_fk",
+      "id": 15
+    }
+  ],
+  "notes": [],
+  "subjectAreas": [],
+  "database": "postgresql",
+  "types": [],
+  "enums": [
+    {
+      "name": "role",
+      "values": [
+        "ADMIN",
+        "WORKER"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+replicaCount:
+  postgresql: 3
+  tikv: 3
+  pd: 3
+  rabbitmq: 1
+
+resources:
+  limits:
+    cpu: "1"
+    memory: "1024Mi"
+    ephemeralStorage: "2Gi"
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+    ephemeralStorage: "2Gi"
+
+postgresql:
+  image: postgres:13
+  port: 5432
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: "standard" # Adjust based on your Minikube storage class
+  password: postgres
+
+rabbitmq:
+  adminUser: admin
+  adminPassword: adminpassword
+  image: rabbitmq:4-management
+  port: 5672
+  managementPort: 15672
+  persistence:
+    enabled: true
+    size: 512Mi
+    storageClass: "standard" # Adjust based on your Minikube storage class
+
+tikv:
+  image: pingcap/tikv:v5.3.0
+  port: 20160
+  replicas:
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: "standard"
+
+pd:
+  image: pingcap/pd:v5.3.0
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: "standard"

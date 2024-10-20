@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tikv
+  namespace: beesbiz-data
+  labels:
+    app: tikv
+spec:
+  serviceName: "tikv"
+  replicas: {{ .Values.replicaCount.tikv }}
+  selector:
+    matchLabels:
+      app: tikv
+  template:
+    metadata:
+      labels:
+        app: tikv
+    spec:
+      containers:
+        - name: tikv
+          image: {{ .Values.tikv.image }}
+          ports:
+            - containerPort: {{ .Values.tikv.port }}
+          args:
+            - --pd=http://pd.$(NAMESPACE).svc.cluster.local:2379
+            - --addr=0.0.0.0:20160
+            - --advertise-addr=$(POD_NAME).tikv.$(NAMESPACE).svc.cluster.local:20160
+            - --status-addr=0.0.0.0:20180
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+              ephemeral-storage:
+                {{ .Values.resources.limits.ephemeralStorage }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+              ephemeral-storage:
+                {{ .Values.resources.requests.ephemeralStorage }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.tikv.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.tikv.port }}
+            initialDelaySeconds: 40
+            periodSeconds: 30
+  volumeClaimTemplates:
+    - metadata:
+        name: tikv-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.tikv.persistence.size }}
+        storageClassName: {{ .Values.tikv.persistence.storageClass }}
