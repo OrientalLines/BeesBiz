@@ -34,6 +34,6 @@ start:
 	helm repo add cnpg https://cloudnative-pg.github.io/charts
 	helm repo update
 	helm install cnpg cnpg/cloudnative-pg --namespace cnpg-system --create-namespace
-	kubectl create secret generic postgresql-superuser \
+	kubectl create secret generic postgresql-superuser -n beesbiz-data \
      --from-literal=username=postgres \
      --from-literal=password=postgres
