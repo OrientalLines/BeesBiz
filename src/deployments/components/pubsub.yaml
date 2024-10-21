@@ -48,7 +48,7 @@ spec:
     - name: maxLenBytes # Optional maximum length in bytes of a queue.
       value: 10485760
     - name: exchangeKind
-      value: fanout
+      value: topic
     - name: saslExternal
       value: false
     - name: ttlInSeconds

@@ -8,12 +8,11 @@ import (
 	"syscall"
 	"time"
 
-	dapr "github.com/dapr/go-sdk/client"
-	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
 	"github.com/orientallines/beesbiz/internal/config"
 	"github.com/orientallines/beesbiz/internal/database"
+	"github.com/orientallines/beesbiz/internal/server"
 )
 
 func main() {
@@ -27,33 +26,32 @@ func main() {
 		zap.S().Fatal("Failed to load configuration: ", err)
 	}
 
-	// Set up database connection
-	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
+	// Create the database URL
+	dbURL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		config.GlobalConfig.PostgresUser,
 		config.GlobalConfig.PostgresPassword,
 		config.GlobalConfig.PostgresHost,
 		config.GlobalConfig.PostgresPort,
 		config.GlobalConfig.PostgresDB)
-	if err := database.InitDB(dbURL); err != nil {
-		zap.S().Fatal("Failed to initialize database: ", err)
+
+	// Connect to the database
+	err := database.New(dbURL)
+	if err != nil {
+		zap.S().Fatal("Failed to connect to database: ", err)
 	}
-	defer func() {
-		database.DB.Close()
-	}()
 
-	// Set up Fiber app
-	app := fiber.New()
+	// Initialize the database schema
+	if err := database.GetDB().InitSchema(); err != nil {
+		zap.S().Fatal("Failed to initialize database schema: ", err)
+	}
 
-	// TODO: Add routes
-	// routes.SetupRoutes(app)
-	app.Get("/tikv/:key", getState("tikv-store"))
-	app.Post("/tikv/:key", saveState("tikv-store"))
-	app.Post("/publish", publishEvent)
+	// Create the server
+	srv := server.NewServer(database.GetDB().DB)
 
-	// Start server
+	// Start servers
 	go func() {
-		if err := app.Listen(":4040"); err != nil {
-			zap.S().Fatal("Failed to start server: ", err)
+		if err := srv.SetupAndRun(":50051", ":4040"); err != nil {
+			zap.S().Fatal("Failed to start servers: ", err)
 		}
 	}()
 
@@ -63,65 +61,11 @@ func main() {
 	<-quit
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer func() {
-		cancel()
-	}()
+	defer cancel()
 
-	if err := app.ShutdownWithContext(ctx); err != nil {
+	if err := srv.Shutdown(ctx); err != nil {
 		zap.S().Fatal("Server forced to shutdown: ", err)
 	}
 
 	zap.L().Info("Server exiting")
-}
-
-func getState(storeName string) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		client, err := dapr.NewClient()
-		if err != nil {
-			return c.Status(500).SendString(fmt.Sprintf("Failed to create Dapr client: %v", err))
-		}
-		defer client.Close()
-
-		key := c.Params("key")
-		state, err := client.GetState(c.Context(), storeName, key, nil)
-		if err != nil {
-			return c.Status(500).SendString(err.Error())
-		}
-		if state.Value == nil {
-			return c.Status(404).SendString("Key not found")
-		}
-		return c.Send(state.Value)
-	}
-}
-
-func saveState(storeName string) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		client, err := dapr.NewClient()
-		if err != nil {
-			return c.Status(500).SendString(fmt.Sprintf("Failed to create Dapr client: %v", err))
-		}
-		defer client.Close()
-
-		key := c.Params("key")
-		value := c.Body()
-		err = client.SaveState(c.Context(), storeName, key, value, nil)
-		if err != nil {
-			return c.Status(500).SendString(err.Error())
-		}
-		return c.SendString("Data saved successfully")
-	}
-}
-
-func publishEvent(c *fiber.Ctx) error {
-	client, err := dapr.NewClient()
-	if err != nil {
-		return c.Status(500).SendString(fmt.Sprintf("Failed to create Dapr client: %v", err))
-	}
-	defer client.Close()
-
-	err = client.PublishEvent(c.Context(), "rabbitmq-pubsub", "topic-name", c.Body())
-	if err != nil {
-		return c.Status(500).SendString(err.Error())
-	}
-	return c.SendString("Message published")
 }
