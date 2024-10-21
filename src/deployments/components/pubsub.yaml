@@ -57,3 +57,5 @@ spec:
       value: { podName }
     - name: heartBeat
       value: 10s
+scopes:
+  - rabbitmq

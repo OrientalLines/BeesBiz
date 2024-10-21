@@ -13,10 +13,6 @@ spec:
       app: tikv
   template:
     metadata:
-      annotations:
-        dapr.io/enabled: "true"
-        dapr.io/app-id: "tikv"
-        dapr.io/app-port: "20160"
       labels:
         app: tikv
     spec:
