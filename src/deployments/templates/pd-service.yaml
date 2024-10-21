@@ -2,14 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: pd
-  labels:
-    app: pd
+  namespace: beesbiz-data
 spec:
   ports:
-    - port: 2379
-      name: client
-    - port: 2380
-      name: peer
-  clusterIP: None
+    - name: client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
   selector:
     app: pd
+  type: ClusterIP

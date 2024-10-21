@@ -40,7 +40,7 @@ spec:
             - --status-addr=0.0.0.0:20180
             - --advertise-status-addr=$(POD_NAME).tikv-status.$(NAMESPACE).svc.cluster.local:20180
             - --data-dir=/var/lib/tikv/data
-            - --capacity=2GB
+            - --capacity=10GB
             - --config=/etc/tikv/tikv.toml
           volumeMounts:
             - name: data
@@ -48,14 +48,14 @@ spec:
             - name: config
               mountPath: /etc/tikv
           env:
-            - name: NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
             - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
           resources:
             limits:
               cpu: {{ .Values.resources.limits.cpu }}
@@ -78,6 +78,14 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 30
       initContainers:
+        - name: wait-for-pd
+          image: busybox
+          command: ['sh', '-c', 'until nslookup pd.$(NAMESPACE).svc.cluster.local; do echo waiting for PD DNS resolution; sleep 2; done;']
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
         - name: init-tikv
           image: busybox
           command: ['sh', '-c', 'rm -rf /var/lib/tikv/data/* && rm -f /var/lib/tikv/db/CURRENT']

@@ -12,10 +12,6 @@ spec:
   storageClassName: standard
   hostPath:
     path: "/mnt/data/postgresql"
-  mountOptions:
-    - uid=999
-    - gid=999
-    - mode=0700
 
 ---
 apiVersion: v1

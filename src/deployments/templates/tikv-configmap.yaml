@@ -5,6 +5,10 @@ metadata:
   namespace: beesbiz-data
 data:
   tikv.toml: |
+    [pd]
+    retry-interval = "1s"
+    retry-max-count = 20
+
     [raftstore]
     # The number of replicas for each region
     max-replicas = 3

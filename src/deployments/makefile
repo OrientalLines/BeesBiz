@@ -50,7 +50,7 @@ start:
 	$(MINIKUBE) addons enable storage-provisioner
 	$(MINIKUBE) addons enable default-storageclass
 	$(KUBECTL) create namespace $(NAMESPACE)
-	$(KUBECTL) apply -f persistent-volumes.yaml -n $(NAMESPACE) --wait
+	# $(KUBECTL) apply -f persistent-volumes.yaml -n $(NAMESPACE) --wait
 	$(HELM) repo add cnpg https://cloudnative-pg.github.io/charts
 	$(HELM) repo update
 	$(HELM) install cnpg cnpg/cloudnative-pg --namespace cnpg-system --create-namespace
@@ -85,3 +85,4 @@ stop-port-forward:
 	@echo "Stopping all port-forwarding processes..."
 	@pkill -f "$(KUBECTL) port-forward"
 	@echo "Port forwarding stopped."
+

@@ -7,7 +7,7 @@ replicaCount:
 resources:
   limits:
     cpu: "1"
-    memory: "1024Mi"
+    memory: "2Gi"
     ephemeralStorage: "2Gi"
   requests:
     cpu: "500m"
