@@ -12,7 +12,7 @@ spec:
     - name: hostname
       value: localhost
     - name: connectionString
-      value: "amqp://$(USERNAME):$(PASSWORD)@rabbitmq.beesbiz-data.svc.cluster.local:5672"
+      value: "amqp://localhost:5672"
     - name: username
       secretKeyRef:
         name: rabbitmq-secret
