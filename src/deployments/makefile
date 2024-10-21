@@ -61,6 +61,12 @@ dapr-install:
 	$(HELM) repo update
 	$(HELM) install dapr dapr/dapr --namespace dapr-system --create-namespace
 
+pubsub:
+	kubectl apply -f ./components/pubsub.yaml -n beesbiz-data;
+	kubectl rollout restart deployment -n dapr-system
+	make uninstall
+	make recreate
+
 start:
 	$(MINIKUBE) start --cpus 6 --memory 10244 --disk-size 20g
 	$(MINIKUBE) addons enable storage-provisioner
