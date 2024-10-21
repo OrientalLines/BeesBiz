@@ -10,9 +10,10 @@ import (
 
 	dapr "github.com/dapr/go-sdk/client"
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
+
 	"github.com/orientallines/beesbiz/internal/config"
 	"github.com/orientallines/beesbiz/internal/database"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -72,26 +73,6 @@ func main() {
 
 	zap.L().Info("Server exiting")
 }
-
-// func main() {
-// 	// Initialize logger
-// 	if err := config.Init(&config.GlobalConfig); err != nil {
-// 		zap.S().Fatal("Failed to initialize logger: ", err)
-// 	}
-// 	defer zap.S().Sync()
-
-// 	app := fiber.New()
-
-// 	app.Get("/psql/:key", getState("postgresql-store"))
-// 	app.Post("/psql/:key", saveState("postgresql-store"))
-// 	app.Get("/tikv/:key", getState("tikv-store"))
-// 	app.Post("/tikv/:key", saveState("tikv-store"))
-// 	app.Post("/publish", publishEvent)
-
-// 	port := "4040"
-// 	log.Printf("Starting server on :%s", port)
-// 	log.Fatal(app.Listen(":" + port))
-// }
 
 func getState(storeName string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
