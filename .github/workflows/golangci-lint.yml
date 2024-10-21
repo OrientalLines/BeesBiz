@@ -4,7 +4,11 @@ on:
     branches:
       - main
       - master
+    paths:
+      - 'src/**'      # Only run the action if changes are made in the src directory
   pull_request:
+    paths:
+      - 'src/**'      # Same for pull requests
 
 permissions:
   contents: read
@@ -22,5 +26,5 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          working-directory: src
+          working-directory: src   # Set working directory to src
           args: --timeout=5m
