@@ -13,15 +13,16 @@ jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: stable
-          working-directory: src
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
-          working-directory: src
           args: --timeout=5m
