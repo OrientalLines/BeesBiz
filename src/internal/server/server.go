@@ -3,8 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
-
+	"github.com/orientallines/beesbiz/internal/database"
 	"github.com/orientallines/beesbiz/internal/grpc"
 	"github.com/orientallines/beesbiz/internal/rest"
 )
@@ -14,13 +13,15 @@ type Server struct {
 	restServer *rest.Server
 }
 
-func NewServer(db *sqlx.DB) *Server {
+// NewServer creates a new Server
+func NewServer(db *database.DB) *Server {
 	return &Server{
-		grpcServer: grpc.NewServer(db),
-		restServer: rest.NewServer(),
+		grpcServer: grpc.NewServer(db.DB),
+		restServer: rest.NewServer(db.DB),
 	}
 }
 
+// SetupAndRun sets up the servers and runs them
 func (s *Server) SetupAndRun(grpcAddress, restAddress string) error {
 	s.grpcServer.RegisterServices()
 	s.restServer.SetupRoutes()
@@ -39,6 +40,7 @@ func (s *Server) SetupAndRun(grpcAddress, restAddress string) error {
 	return <-errChan
 }
 
+// Shutdown shuts down the servers
 func (s *Server) Shutdown(ctx context.Context) error {
 	errChan := make(chan error, 2)
 

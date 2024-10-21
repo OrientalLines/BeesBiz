@@ -1,15 +1,25 @@
-CREATE DATABASE bee_management;
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_type typ
+        INNER JOIN pg_namespace nsp ON nsp.oid = typ.typnamespace
+        WHERE nsp.nspname = current_schema()
+          AND typ.typname = 'role'
+    ) THEN
+        CREATE TYPE role AS ENUM ('ADMIN', 'WORKER');
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
 
-\ c bee_management CREATE TYPE "role" AS ENUM ('ADMIN', 'WORKER');
-
-CREATE TABLE "region" (
+CREATE TABLE IF NOT EXISTS "region" (
 	"region_id" SERIAL,
 	"name" VARCHAR NOT NULL,
 	"climate_zone" VARCHAR,
 	PRIMARY KEY("region_id")
 );
 
-CREATE TABLE "apiary" (
+CREATE TABLE IF NOT EXISTS "apiary" (
 	"apiary_id" SERIAL,
 	"location" VARCHAR NOT NULL,
 	"manager_id" INTEGER,
@@ -17,7 +27,7 @@ CREATE TABLE "apiary" (
 	PRIMARY KEY("apiary_id")
 );
 
-CREATE TABLE "hive" (
+CREATE TABLE IF NOT EXISTS "hive" (
 	"hive_id" SERIAL,
 	"apiary_id" INTEGER,
 	"hive_type" VARCHAR,
@@ -26,7 +36,7 @@ CREATE TABLE "hive" (
 	PRIMARY KEY("hive_id")
 );
 
-CREATE TABLE "bee_community" (
+CREATE TABLE IF NOT EXISTS "bee_community" (
 	"community_id" SERIAL,
 	"hive_id" INTEGER,
 	"queen_age" INTEGER,
@@ -35,7 +45,7 @@ CREATE TABLE "bee_community" (
 	PRIMARY KEY("community_id")
 );
 
-CREATE TABLE "veterinary_passport" (
+CREATE TABLE IF NOT EXISTS "veterinary_passport" (
 	"passport_id" SERIAL,
 	"community_id" INTEGER,
 	"issue_date" DATE,
@@ -44,7 +54,7 @@ CREATE TABLE "veterinary_passport" (
 	PRIMARY KEY("passport_id")
 );
 
-CREATE TABLE "veterinary_record" (
+CREATE TABLE IF NOT EXISTS "veterinary_record" (
 	"record_id" SERIAL,
 	"passport_id" INTEGER,
 	"record_date" DATE,
@@ -53,7 +63,7 @@ CREATE TABLE "veterinary_record" (
 	PRIMARY KEY("record_id")
 );
 
-CREATE TABLE "sensor" (
+CREATE TABLE IF NOT EXISTS "sensor" (
 	"sensor_id" SERIAL,
 	"hive_id" INTEGER,
 	"sensor_type" VARCHAR,
@@ -62,7 +72,7 @@ CREATE TABLE "sensor" (
 	PRIMARY KEY("sensor_id")
 );
 
-CREATE TABLE "sensor_reading" (
+CREATE TABLE IF NOT EXISTS "sensor_reading" (
 	"reading_id" SERIAL,
 	"sensor_id" INTEGER,
 	"value" BYTEA,
@@ -70,7 +80,7 @@ CREATE TABLE "sensor_reading" (
 	PRIMARY KEY("reading_id")
 );
 
-CREATE TABLE "honey_harvest" (
+CREATE TABLE IF NOT EXISTS "honey_harvest" (
 	"harvest_id" SERIAL,
 	"hive_id" INTEGER,
 	"harvest_date" DATE,
@@ -79,7 +89,7 @@ CREATE TABLE "honey_harvest" (
 	PRIMARY KEY("harvest_id")
 );
 
-CREATE TABLE "observation_log" (
+CREATE TABLE IF NOT EXISTS "observation_log" (
 	"log_id" SERIAL,
 	"hive_id" INTEGER,
 	"observation_date" DATE,
@@ -88,7 +98,7 @@ CREATE TABLE "observation_log" (
 	PRIMARY KEY("log_id")
 );
 
-CREATE TABLE "maintenance_plan" (
+CREATE TABLE IF NOT EXISTS "maintenance_plan" (
 	"plan_id" SERIAL,
 	"apiary_id" INTEGER,
 	"planned_date" DATE,
@@ -97,7 +107,7 @@ CREATE TABLE "maintenance_plan" (
 	PRIMARY KEY("plan_id")
 );
 
-CREATE TABLE "incident" (
+CREATE TABLE IF NOT EXISTS "incident" (
 	"incident_id" SERIAL,
 	"hive_id" INTEGER,
 	"incident_date" DATE,
@@ -107,7 +117,7 @@ CREATE TABLE "incident" (
 	PRIMARY KEY("incident_id")
 );
 
-CREATE TABLE "production_report" (
+CREATE TABLE IF NOT EXISTS "production_report" (
 	"report_id" SERIAL,
 	"apiary_id" INTEGER,
 	"start_date" DATE,
@@ -117,7 +127,7 @@ CREATE TABLE "production_report" (
 	PRIMARY KEY("report_id")
 );
 
-CREATE TABLE "weather_data" (
+CREATE TABLE IF NOT EXISTS "weather_data" (
 	"weather_id" SERIAL,
 	"region_id" INTEGER,
 	"date" DATE,
@@ -128,7 +138,7 @@ CREATE TABLE "weather_data" (
 	PRIMARY KEY("weather_id")
 );
 
-CREATE TABLE "user" (
+CREATE TABLE IF NOT EXISTS "user" (
 	"user_id" SERIAL,
 	"username" VARCHAR NOT NULL UNIQUE,
 	"role" ROLE,
@@ -137,14 +147,14 @@ CREATE TABLE "user" (
 	PRIMARY KEY("user_id")
 );
 
-CREATE TABLE "allowed_region" (
+CREATE TABLE IF NOT EXISTS "allowed_region" (
 	"id" INTEGER NOT NULL UNIQUE,
-	"user_id" INTEGER,
+	"user_id" INTEGER UNIQUE,
 	"region_id" INTEGER,
 	PRIMARY KEY("id")
 );
 
-CREATE TABLE "region_apiary" (
+CREATE TABLE IF NOT EXISTS "region_apiary" (
 	"id" INTEGER NOT NULL UNIQUE,
 	"apiary_id" INTEGER,
 	"region_id" INTEGER,

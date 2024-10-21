@@ -35,18 +35,19 @@ func main() {
 		config.GlobalConfig.PostgresDB)
 
 	// Connect to the database
-	err := database.New(dbURL)
+	db, err := database.New(dbURL)
 	if err != nil {
 		zap.S().Fatal("Failed to connect to database: ", err)
 	}
+	defer db.Close()
 
 	// Initialize the database schema
-	if err := database.GetDB().InitSchema(); err != nil {
+	if err := db.InitSchema("scripts", []string{"definition.sql", "ddl.sql", "indexes.sql", "functions.sql", "trigger.sql"}); err != nil {
 		zap.S().Fatal("Failed to initialize database schema: ", err)
 	}
 
 	// Create the server
-	srv := server.NewServer(database.GetDB().DB)
+	srv := server.NewServer(db)
 
 	// Start servers
 	go func() {

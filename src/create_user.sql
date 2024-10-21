@@ -18,3 +18,18 @@ GRANT ALL PRIVILEGES ON DATABASE postgres TO "user";
 
 -- Confirm the user was created
 \du
+
+
+
+-- Create a new user named 'user' with password 'postgres'
+CREATE USER "user" WITH PASSWORD 'postgres';
+
+-- Grant all privileges on all tables in the public schema to the new user
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "user";
+
+-- Allow the new user to create databases
+ALTER USER "user" CREATEDB;
+
+
+-- Grant all privileges on the current database to the new user
+GRANT ALL PRIVILEGES ON DATABASE postgres TO "user";

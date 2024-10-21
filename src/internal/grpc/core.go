@@ -12,6 +12,7 @@ import (
 	pb "github.com/orientallines/beesbiz/proto/pb"
 )
 
+// Server is a wrapper around grpc.Server
 type Server struct {
 	server *grpc.Server
 	db     *sqlx.DB
