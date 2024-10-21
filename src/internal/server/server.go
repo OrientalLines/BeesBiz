@@ -52,7 +52,6 @@ func (s *Server) Shutdown(ctx context.Context) error {
 		errChan <- s.restServer.Shutdown(ctx)
 	}()
 
-	// Wait for both servers to shut down
 	for i := 0; i < 2; i++ {
 		if err := <-errChan; err != nil {
 			return err
