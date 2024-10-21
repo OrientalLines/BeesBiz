@@ -1,0 +1,17 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: tikv-store
+  namespace: beesbiz-data
+spec:
+  type: state.tikv
+  version: v1
+  metadata:
+    - name: pd_addr
+      value: "pd.beesbiz-data.svc.cluster.local:2379"
+    - name: timeout
+      value: "10s"
+    - name: max_retry
+      value: "3"
+    - name: max_batch_size
+      value: "128"

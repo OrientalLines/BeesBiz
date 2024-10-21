@@ -14,6 +14,10 @@ func InitDB(dbURL string) error {
 	if err != nil {
 		return err
 	}
+	_, err = DB.Exec(`SELECT 1`)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

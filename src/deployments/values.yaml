@@ -30,8 +30,11 @@ postgresql:
   password: postgres
 
 rabbitmq:
-  adminUser: admin
-  adminPassword: adminpassword
+  adminUser: guest
+  adminPassword: guest
+  auth:
+    username: guest
+    password: guest
   image: rabbitmq:4-management
   port: 5672
   managementPort: 15672

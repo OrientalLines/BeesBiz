@@ -6,7 +6,7 @@ KUBECTL := kubectl
 HELM := helm
 MINIKUBE := minikube
 
-.PHONY: start uninstall template lint package upgrade list get_all port-forward stop-port-forward recreate pause resume
+.PHONY: start uninstall template lint package upgrade list get_all port-forward stop-port-forward recreate pause resume dapr-init dapr-components dapr-status dapr-dashboard dapr-install
 
 uninstall:
 	$(HELM) uninstall $(RELEASE_NAME) --namespace $(NAMESPACE)
@@ -43,6 +43,23 @@ stop-port-forward:
 	@echo "Stopping all port-forwarding processes..."
 	@pkill -f "$(KUBECTL) port-forward"
 	@echo "Port forwarding stopped."
+
+dapr-init:
+	dapr init -k
+
+dapr-components:
+	$(KUBECTL) apply -f ./components/ -n $(NAMESPACE)
+
+dapr-status:
+	dapr status -k
+
+dapr-dashboard:
+	dapr dashboard -k -p 8080
+
+dapr-install:
+	$(HELM) repo add dapr https://dapr.github.io/helm-charts/
+	$(HELM) repo update
+	$(HELM) install dapr dapr/dapr --namespace dapr-system --create-namespace
 
 start:
 	$(MINIKUBE) start --cpus 6 --memory 10244 --disk-size 20g

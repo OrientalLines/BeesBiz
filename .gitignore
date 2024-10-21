@@ -200,3 +200,4 @@ lab*.log
 
 *.pyc
 *.tgz
+config.env

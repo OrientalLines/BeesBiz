@@ -13,6 +13,10 @@ spec:
       app: tikv
   template:
     metadata:
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "tikv"
+        dapr.io/app-port: "20160"
       labels:
         app: tikv
     spec:
@@ -77,6 +81,13 @@ spec:
               port: {{ .Values.tikv.port }}
             initialDelaySeconds: 20
             periodSeconds: 30
+      initContainers:
+        - name: init-tikv
+          image: busybox
+          command: ['sh', '-c', 'rm -rf /var/lib/tikv/data/* && rm -f /var/lib/tikv/db/CURRENT']
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/tikv
       volumes:
         - name: config
           configMap:

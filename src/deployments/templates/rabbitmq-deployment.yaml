@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: rabbitmq
+  namespace: beesbiz-data
   labels:
     app: rabbitmq
 spec:
@@ -12,6 +13,10 @@ spec:
       app: rabbitmq
   template:
     metadata:
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "rabbitmq"
+        dapr.io/app-port: "5672"
       labels:
         app: rabbitmq
     spec:
@@ -23,6 +28,17 @@ spec:
               containerPort: {{ .Values.rabbitmq.port }}
             - name: management
               containerPort: {{ .Values.rabbitmq.managementPort }}
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: username
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-secret
+                  key: password
           volumeMounts:
             - name: rabbitmq-storage
               mountPath: /var/lib/rabbitmq

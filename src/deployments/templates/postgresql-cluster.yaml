@@ -2,6 +2,7 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: postgresql
+  namespace: beesbiz-data
 spec:
   instances: {{ .Values.postgresql.instances }}
   imageName: {{ .Values.postgresql.imageName }}
