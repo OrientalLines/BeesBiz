@@ -16,8 +16,8 @@ type Server struct {
 // NewServer creates a new Server
 func NewServer(db *database.DB) *Server {
 	return &Server{
-		grpcServer: grpc.NewServer(db.DB),
-		restServer: rest.NewServer(db.DB),
+		grpcServer: grpc.NewServer(db),
+		restServer: rest.NewServer(db),
 	}
 }
 

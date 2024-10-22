@@ -7,6 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq" // PostgreSQL driver
+	types "github.com/orientallines/beesbiz/internal/types/db"
 	"go.uber.org/zap"
 )
 
@@ -75,3 +76,48 @@ func (db *DB) ExecuteSQL(sql string) error {
 	}
 	return nil
 }
+
+func (db *DB) GetApiary(id int) (types.Apiary, error) {
+	var apiary types.Apiary
+	err := db.Get(&apiary, "SELECT * FROM apiary WHERE id = $1", id)
+	if err != nil {
+		return types.Apiary{}, fmt.Errorf("error getting apiary: %w", err)
+	}
+	return apiary, nil
+}
+
+func (db *DB) CreateApiary(apiary types.Apiary) (types.Apiary, error) {
+	var createdApiary types.Apiary
+	err := db.Get(&createdApiary, "INSERT INTO apiary (location, manager_id, establishment_date) VALUES ($1, $2, $3) RETURNING *", apiary.Location, apiary.ManagerID, apiary.EstablishmentDate)
+	if err != nil {
+		return types.Apiary{}, fmt.Errorf("error creating apiary: %w", err)
+	}
+	return createdApiary, nil
+}
+
+func (db *DB) UpdateApiary(apiary types.Apiary) (types.Apiary, error) {
+	var updatedApiary types.Apiary
+	err := db.Get(&updatedApiary, "UPDATE apiary SET location = $1, manager_id = $2, establishment_date = $3 WHERE id = $4 RETURNING *", apiary.Location, apiary.ManagerID, apiary.EstablishmentDate, apiary.ID)
+	if err != nil {
+		return types.Apiary{}, fmt.Errorf("error updating apiary: %w", err)
+	}
+	return updatedApiary, nil
+}
+
+func (db *DB) DeleteApiary(id int) error {
+	_, err := db.Exec("DELETE FROM apiary WHERE id = $1", id)
+	if err != nil {
+		return fmt.Errorf("error deleting apiary: %w", err)
+	}
+	return nil
+}
+
+func (db *DB) GetAllApiaries() ([]types.Apiary, error) {
+	var apiaries []types.Apiary
+	err := db.Select(&apiaries, "SELECT * FROM apiary")
+	if err != nil {
+		return []types.Apiary{}, fmt.Errorf("error getting all apiaries: %w", err)
+	}
+	return apiaries, nil
+}
+

@@ -5,21 +5,21 @@ import (
 	"net"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/orientallines/beesbiz/internal/database"
 	pb "github.com/orientallines/beesbiz/proto/pb"
 )
 
 // Server is a wrapper around grpc.Server
 type Server struct {
 	server *grpc.Server
-	db     *sqlx.DB
+	db     *database.DB
 	pb.UnimplementedBeeManagementServiceServer
 }
 
-func NewServer(db *sqlx.DB) *Server {
+func NewServer(db *database.DB) *Server {
 	return &Server{
 		server: grpc.NewServer(),
 		db:     db,
