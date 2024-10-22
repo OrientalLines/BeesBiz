@@ -17,7 +17,7 @@ func (db *DB) GetVeterinaryPassport(id int) (types.VeterinaryPassport, error) {
 
 func (db *DB) CreateVeterinaryPassport(passport types.VeterinaryPassport) (types.VeterinaryPassport, error) {
 	var createdPassport types.VeterinaryPassport
-	err := db.Get(&createdPassport, "INSERT INTO veterinary_passport (community_id, issue_date, health_status, last_inspection_date) VALUES ($1, $2, $3, $4) RETURNING *", passport.CommunityID, passport.IssueDate, passport.HealthStatus, passport.LastInspectionDate)
+	err := db.Get(&createdPassport, "INSERT INTO veterinary_passport (bee_community_id, issue_date, health_status, last_inspection_date) VALUES ($1, $2, $3, $4) RETURNING *", passport.BeeCommunityID, passport.IssueDate, passport.HealthStatus, passport.LastInspectionDate)
 	if err != nil {
 		return types.VeterinaryPassport{}, fmt.Errorf("error creating veterinary passport: %w", err)
 	}
@@ -26,7 +26,7 @@ func (db *DB) CreateVeterinaryPassport(passport types.VeterinaryPassport) (types
 
 func (db *DB) UpdateVeterinaryPassport(passport types.VeterinaryPassport) (types.VeterinaryPassport, error) {
 	var updatedPassport types.VeterinaryPassport
-	err := db.Get(&updatedPassport, "UPDATE veterinary_passport SET community_id = $1, issue_date = $2, health_status = $3, last_inspection_date = $4 WHERE passport_id = $5 RETURNING *", passport.CommunityID, passport.IssueDate, passport.HealthStatus, passport.LastInspectionDate, passport.PassportID)
+	err := db.Get(&updatedPassport, "UPDATE veterinary_passport SET bee_community_id = $1, issue_date = $2, health_status = $3, last_inspection_date = $4 WHERE passport_id = $5 RETURNING *", passport.BeeCommunityID, passport.IssueDate, passport.HealthStatus, passport.LastInspectionDate, passport.PassportID)
 	if err != nil {
 		return types.VeterinaryPassport{}, fmt.Errorf("error updating veterinary passport: %w", err)
 	}

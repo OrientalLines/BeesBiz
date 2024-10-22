@@ -8,7 +8,7 @@ import (
 
 func (db *DB) GetRegion(id int) (types.Region, error) {
 	var region types.Region
-	err := db.Get(&region, "SELECT * FROM region WHERE id = $1", id)
+	err := db.Get(&region, "SELECT * FROM region WHERE region_id = $1", id)
 	if err != nil {
 		return types.Region{}, fmt.Errorf("error getting region: %w", err)
 	}
@@ -17,7 +17,7 @@ func (db *DB) GetRegion(id int) (types.Region, error) {
 
 func (db *DB) CreateRegion(region types.Region) (types.Region, error) {
 	var createdRegion types.Region
-	err := db.Get(&createdRegion, "INSERT INTO region (name, climate) VALUES ($1, $2) RETURNING *", region.Name, region.Climate)
+	err := db.Get(&createdRegion, "INSERT INTO region (name, climate_zone) VALUES ($1, $2) RETURNING *", region.Name, region.ClimateZone)
 	if err != nil {
 		return types.Region{}, fmt.Errorf("error creating region: %w", err)
 	}
@@ -26,7 +26,7 @@ func (db *DB) CreateRegion(region types.Region) (types.Region, error) {
 
 func (db *DB) UpdateRegion(region types.Region) (types.Region, error) {
 	var updatedRegion types.Region
-	err := db.Get(&updatedRegion, "UPDATE region SET name = $1, climate = $2 WHERE id = $3 RETURNING *", region.Name, region.Climate, region.RegionID)
+	err := db.Get(&updatedRegion, "UPDATE region SET name = $1, climate_zone = $2 WHERE region_id = $3 RETURNING *", region.Name, region.ClimateZone, region.RegionID)
 	if err != nil {
 		return types.Region{}, fmt.Errorf("error updating region: %w", err)
 	}
@@ -34,7 +34,7 @@ func (db *DB) UpdateRegion(region types.Region) (types.Region, error) {
 }
 
 func (db *DB) DeleteRegion(id int) error {
-	_, err := db.Exec("DELETE FROM region WHERE id = $1", id)
+	_, err := db.Exec("DELETE FROM region WHERE region_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("error deleting region: %w", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/orientallines/beesbiz/internal/database"
@@ -29,13 +30,19 @@ func NewServer(db *database.DB) *Server {
 func (s *Server) SetupRoutes() {
 	s.app.Use(requestid.New())
 	s.app.Use(logger.New(logger.Config{
-		// For more options, see the Config section
-		Format: "${pid} ${locals:requestid} ${status} - ${method} ${path}​\n",
+		Format: "[${time}] ${status} - ${method} ${path}\n",
 	}))
-	// s.app.Use(logger.New(logger.Config{
-	// 	Format: "[${time}] ${status} - ${method} ${path}\n",
-	// }))
-	// Apiary routes
+	s.app.Use(healthcheck.New(healthcheck.Config{
+		LivenessProbe: func(c *fiber.Ctx) bool {
+			return true
+		},
+		LivenessEndpoint: "/livez",
+		ReadinessProbe: func(c *fiber.Ctx) bool {
+			return true
+		},
+		ReadinessEndpoint: "/readyz",
+	}))
+
 	s.app.Get("/apiary/:id", handlers.GetApiary(s.db))
 	s.app.Post("/apiary", handlers.CreateApiary(s.db))
 	s.app.Put("/apiary", handlers.UpdateApiary(s.db))

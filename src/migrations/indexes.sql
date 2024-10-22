@@ -5,7 +5,7 @@ CREATE INDEX IF NOT EXISTS idx_hive_apiary ON "hive"(apiary_id);
 
 CREATE INDEX IF NOT EXISTS idx_bee_community_hive ON "bee_community"(hive_id);
 
-CREATE INDEX IF NOT EXISTS idx_veterinary_passport_community ON "veterinary_passport"(community_id);
+CREATE INDEX IF NOT EXISTS idx_veterinary_passport_community ON "veterinary_passport"(bee_community_id);
 
 CREATE INDEX IF NOT EXISTS idx_veterinary_record_passport ON "veterinary_record"(passport_id);
 
@@ -25,7 +25,8 @@ CREATE INDEX IF NOT EXISTS idx_production_report_apiary ON "production_report"(a
 
 CREATE INDEX IF NOT EXISTS idx_weather_data_region ON "weather_data"(region_id);
 
-CREATE INDEX IF NOT EXISTS idx_allowed_region_user ON "allowed_region"(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_allowed_region_user_region
+ON "allowed_region" (user_id, region_id);
 
 CREATE INDEX IF NOT EXISTS idx_allowed_region_region ON "allowed_region"(region_id);
 

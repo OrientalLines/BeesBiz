@@ -8,7 +8,7 @@ import (
 
 func (db *DB) GetApiary(id int) (types.Apiary, error) {
 	var apiary types.Apiary
-	err := db.Get(&apiary, "SELECT * FROM apiary WHERE id = $1", id)
+	err := db.Get(&apiary, "SELECT * FROM apiary WHERE apiary_id = $1", id)
 	if err != nil {
 		return types.Apiary{}, fmt.Errorf("error getting apiary: %w", err)
 	}
@@ -34,7 +34,7 @@ func (db *DB) UpdateApiary(apiary types.Apiary) (types.Apiary, error) {
 }
 
 func (db *DB) DeleteApiary(id int) error {
-	_, err := db.Exec("DELETE FROM apiary WHERE id = $1", id)
+	_, err := db.Exec("DELETE FROM apiary WHERE apiary_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("error deleting apiary: %w", err)
 	}
@@ -70,7 +70,7 @@ func (db *DB) CreateHive(hive types.Hive) (types.Hive, error) {
 
 func (db *DB) UpdateHive(hive types.Hive) (types.Hive, error) {
 	var updatedHive types.Hive
-	err := db.Get(&updatedHive, "UPDATE hive SET apiary_id = $1, hive_type = $2, installation_date = $3, current_status = $4 WHERE id = $5 RETURNING *", hive.ApiaryID, hive.HiveType, hive.InstallationDate, hive.CurrentStatus, hive.HiveID)
+	err := db.Get(&updatedHive, "UPDATE hive SET apiary_id = $1, hive_type = $2, installation_date = $3, current_status = $4 WHERE hive_id = $5 RETURNING *", hive.ApiaryID, hive.HiveType, hive.InstallationDate, hive.CurrentStatus, hive.HiveID)
 	if err != nil {
 		return types.Hive{}, fmt.Errorf("error updating hive: %w", err)
 	}
@@ -78,7 +78,7 @@ func (db *DB) UpdateHive(hive types.Hive) (types.Hive, error) {
 }
 
 func (db *DB) DeleteHive(id int) error {
-	_, err := db.Exec("DELETE FROM hive WHERE id = $1", id)
+	_, err := db.Exec("DELETE FROM hive WHERE hive_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("error deleting hive: %w", err)
 	}
@@ -114,7 +114,7 @@ func (db *DB) CreateBeeCommunity(beeCommunity types.BeeCommunity) (types.BeeComm
 
 func (db *DB) UpdateBeeCommunity(beeCommunity types.BeeCommunity) (types.BeeCommunity, error) {
 	var updatedBeeCommunity types.BeeCommunity
-	err := db.Get(&updatedBeeCommunity, "UPDATE bee_community SET hive_id = $1, queen_age = $2, population_estimate = $3, health_status = $4 WHERE id = $5 RETURNING *", beeCommunity.HiveID, beeCommunity.QueenAge, beeCommunity.PopulationEstimate, beeCommunity.HealthStatus, beeCommunity.CommunityID)
+	err := db.Get(&updatedBeeCommunity, "UPDATE bee_community SET hive_id = $1, queen_age = $2, population_estimate = $3, health_status = $4 WHERE community_id = $5 RETURNING *", beeCommunity.HiveID, beeCommunity.QueenAge, beeCommunity.PopulationEstimate, beeCommunity.HealthStatus, beeCommunity.CommunityID)
 	if err != nil {
 		return types.BeeCommunity{}, fmt.Errorf("error updating bee community: %w", err)
 	}
@@ -122,7 +122,7 @@ func (db *DB) UpdateBeeCommunity(beeCommunity types.BeeCommunity) (types.BeeComm
 }
 
 func (db *DB) DeleteBeeCommunity(id int) error {
-	_, err := db.Exec("DELETE FROM bee_community WHERE id = $1", id)
+	_, err := db.Exec("DELETE FROM bee_community WHERE community_id = $1", id)
 	if err != nil {
 		return fmt.Errorf("error deleting bee community: %w", err)
 	}

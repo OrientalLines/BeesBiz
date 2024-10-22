@@ -1,5 +1,5 @@
-DO $$ 
-BEGIN 
+DO $$
+BEGIN
     IF NOT EXISTS (
         SELECT 1
         FROM pg_type typ
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS "bee_community" (
 
 CREATE TABLE IF NOT EXISTS "veterinary_passport" (
 	"passport_id" SERIAL,
-	"community_id" INTEGER,
+	"bee_community_id" INTEGER,
 	"issue_date" DATE,
 	"health_status" VARCHAR,
 	"last_inspection_date" DATE,
@@ -124,7 +124,8 @@ CREATE TABLE IF NOT EXISTS "production_report" (
 	"end_date" DATE,
 	"total_honey_produced" FLOAT,
 	"total_expenses" FLOAT,
-	PRIMARY KEY("report_id")
+	PRIMARY KEY("report_id"),
+	UNIQUE("apiary_id", "start_date", "end_date")
 );
 
 CREATE TABLE IF NOT EXISTS "weather_data" (
@@ -148,14 +149,15 @@ CREATE TABLE IF NOT EXISTS "user" (
 );
 
 CREATE TABLE IF NOT EXISTS "allowed_region" (
-	"id" INTEGER NOT NULL UNIQUE,
-	"user_id" INTEGER UNIQUE,
-	"region_id" INTEGER,
-	PRIMARY KEY("id")
+    "id" SERIAL NOT NULL,
+    "user_id" INTEGER,
+    "region_id" INTEGER,
+    PRIMARY KEY("id"),
+    UNIQUE ("user_id", "region_id")
 );
 
 CREATE TABLE IF NOT EXISTS "region_apiary" (
-	"id" INTEGER NOT NULL UNIQUE,
+	"id" SERIAL NOT NULL UNIQUE,
 	"apiary_id" INTEGER,
 	"region_id" INTEGER,
 	PRIMARY KEY("id")
@@ -174,7 +176,7 @@ ADD
 ALTER TABLE
 	"veterinary_passport"
 ADD
-	FOREIGN KEY("community_id") REFERENCES "bee_community"("community_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+	FOREIGN KEY("bee_community_id") REFERENCES "bee_community"("community_id") ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE
 	"veterinary_record"
@@ -222,11 +224,6 @@ ADD
 	FOREIGN KEY("region_id") REFERENCES "region"("region_id") ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE
-	"user"
-ADD
-	FOREIGN KEY("user_id") REFERENCES "allowed_region"("user_id") ON UPDATE NO ACTION ON DELETE NO ACTION;
-
-ALTER TABLE
 	"allowed_region"
 ADD
 	FOREIGN KEY("region_id") REFERENCES "region"("region_id") ON UPDATE NO ACTION ON DELETE NO ACTION;
@@ -240,3 +237,8 @@ ALTER TABLE
 	"region_apiary"
 ADD
 	FOREIGN KEY("region_id") REFERENCES "region"("region_id") ON UPDATE NO ACTION ON DELETE NO ACTION;
+
+ALTER TABLE
+	"allowed_region"
+ADD
+	FOREIGN KEY("user_id") REFERENCES "user"("user_id") ON UPDATE NO ACTION ON DELETE CASCADE;

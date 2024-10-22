@@ -54,11 +54,11 @@ SELECT create_trigger_if_not_exists(
 CREATE OR REPLACE FUNCTION grant_admin_access()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NEW.role = 'admin' THEN
-        INSERT INTO "user_region_access" (user_id, region_id)
-        SELECT NEW.id, r.id
+    IF NEW.role = 'ADMIN' THEN
+        INSERT INTO "allowed_region" (user_id, region_id)
+        SELECT NEW.user_id, r.region_id
         FROM "region" r
-        ON CONFLICT (user_id, region_id) DO NOTHING;
+        ON CONFLICT ("user_id", "region_id") DO NOTHING;
     END IF;
     RETURN NEW;
 END;
@@ -78,11 +78,11 @@ BEGIN
     IF TG_OP = 'INSERT' THEN
         UPDATE "bee_community"
         SET population_estimate = population_estimate + NEW.quantity
-        WHERE id = NEW.bee_community_id;
+        WHERE community_id = (SELECT community_id FROM bee_community WHERE hive_id = NEW.hive_id);
     ELSIF TG_OP = 'DELETE' THEN
         UPDATE "bee_community"
         SET population_estimate = population_estimate - OLD.quantity
-        WHERE id = OLD.bee_community_id;
+        WHERE community_id = (SELECT community_id FROM bee_community WHERE hive_id = OLD.hive_id);
     END IF;
     RETURN NULL;
 END;
@@ -101,7 +101,7 @@ CREATE OR REPLACE FUNCTION create_veterinary_passport()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO "veterinary_passport" (bee_community_id, issue_date, last_inspection_date)
-    VALUES (NEW.id, CURRENT_DATE, CURRENT_DATE);
+    VALUES (NEW.community_id, CURRENT_DATE, CURRENT_DATE);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -120,7 +120,7 @@ RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO "production_report" (apiary_id, start_date, end_date, total_honey_produced)
     VALUES (
-        (SELECT apiary_id FROM "hive" WHERE id = NEW.hive_id),
+        (SELECT apiary_id FROM "hive" WHERE hive_id = NEW.hive_id),
         DATE_TRUNC('month', NEW.harvest_date),
         DATE_TRUNC('month', NEW.harvest_date) + INTERVAL '1 month' - INTERVAL '1 day',
         NEW.quantity

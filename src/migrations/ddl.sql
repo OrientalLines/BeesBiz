@@ -30,4 +30,5 @@ BEGIN
     PERFORM add_constraint_if_not_exists('production_report', 'check_date_range', 'CHECK ("start_date" <= "end_date")');
     PERFORM add_constraint_if_not_exists('production_report', 'check_total_honey_produced', 'CHECK ("total_honey_produced" >= 0)');
     PERFORM add_constraint_if_not_exists('weather_data', 'check_weather_date', 'CHECK ("date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('bee_community', 'unique_hive_id', 'UNIQUE ("hive_id")');
 END $$;
