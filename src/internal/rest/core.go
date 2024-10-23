@@ -5,7 +5,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/orientallines/beesbiz/internal/database"
 	"github.com/orientallines/beesbiz/internal/handlers"
@@ -29,9 +28,9 @@ func NewServer(db *database.DB) *Server {
 // SetupRoutes sets up the routes for the server
 func (s *Server) SetupRoutes() {
 	s.app.Use(requestid.New())
-	s.app.Use(logger.New(logger.Config{
-		Format: "[${time}] ${status} - ${method} ${path}\n",
-	}))
+	// s.app.Use(logger.New(logger.Config{
+	// 	Format: "[${time}] ${status} - ${method} ${path}\n",
+	// }))
 	s.app.Use(healthcheck.New(healthcheck.Config{
 		LivenessProbe: func(c *fiber.Ctx) bool {
 			return true

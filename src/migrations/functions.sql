@@ -39,7 +39,7 @@ BEGIN
     SELECT vp.health_status
     INTO health_status
     FROM veterinary_passport vp
-    WHERE vp.community_id = p_community_id
+    WHERE vp.bee_community_id = p_community_id
     ORDER BY vp.last_inspection_date DESC
     LIMIT 1;
 
@@ -125,11 +125,11 @@ CREATE OR REPLACE FUNCTION get_latest_sensor_reading(p_hive_id INTEGER, p_sensor
 RETURNS TABLE (value BYTEA, reading_timestamp TIMESTAMP) AS $$
 BEGIN
     RETURN QUERY
-    SELECT sr.value, sr.reading_timestamp
+    SELECT sr.value, sr.timestamp
     FROM sensor s
     JOIN sensor_reading sr ON s.sensor_id = sr.sensor_id
     WHERE s.hive_id = p_hive_id AND s.sensor_type = p_sensor_type
-    ORDER BY sr.reading_timestamp DESC
+    ORDER BY sr.timestamp DESC
     LIMIT 1;
 END;
 $$ LANGUAGE plpgsql;

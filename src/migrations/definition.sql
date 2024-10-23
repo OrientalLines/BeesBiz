@@ -242,3 +242,15 @@ ALTER TABLE
 	"allowed_region"
 ADD
 	FOREIGN KEY("user_id") REFERENCES "user"("user_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+    "sensor"
+ALTER COLUMN
+    "last_reading_time"
+	SET DEFAULT now();
+
+ALTER TABLE
+    "sensor_reading"
+ALTER COLUMN
+    "timestamp"
+	SET DEFAULT now();

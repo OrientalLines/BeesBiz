@@ -2,7 +2,6 @@
 BASE_URL="http://localhost:4040"
 
 # Apiary Operations
-#
 curl -X POST "${BASE_URL}/apiary" \
   -H "Content-Type: application/json" \
   -d '{"location": "Test Location", "manager_id": 1, "establishment_date": "2023-01-01T15:04:05Z"}'
@@ -14,8 +13,6 @@ curl -X GET "${BASE_URL}/apiaries"
 curl -X DELETE "${BASE_URL}/apiary/1"
 
 # Hive Operations
-
-# Get All Hives
 curl -X GET "${BASE_URL}/hives"
 curl -X POST "${BASE_URL}/hive" \
   -H "Content-Type: application/json" \
@@ -30,10 +27,6 @@ curl -X DELETE "${BASE_URL}/hive/1"
 curl -X GET "${BASE_URL}/apiary/1/hives"
 
 # Bee Community Operations
-
-# TODO: Start from here
-
-# Get All Bee Communities
 curl -X GET "${BASE_URL}/bee-communities"
 curl -X POST "${BASE_URL}/bee-community" \
   -H "Content-Type: application/json" \
@@ -50,7 +43,6 @@ curl -X GET "${BASE_URL}/hive/1/bee-communities"
 
 # Honey Harvest Operations
 
-# Get Honey Harvest (replace {harvestId} with the actual ID)
 curl -X GET "${BASE_URL}/honey-harvest/1"
 curl -X POST "${BASE_URL}/honey-harvest" \
   -H "Content-Type: application/json" \
@@ -98,8 +90,8 @@ curl -X GET "${BASE_URL}/observation-logs"
 
 # MaintenancePlan Operations
 curl -X GET "${BASE_URL}/maintenance-plan/1"
-curl -X POST "${BASE_URL}/maintenance-plan" -H "Content-Type: application/json" -d '{"apiary_id": 1, "plan_date": "2023-07-01T10:00:00Z", "description": "Regular maintenance"}'
-curl -X PUT "${BASE_URL}/maintenance-plan" -H "Content-Type: application/json" -d '{"plan_id": 1, "apiary_id": 1, "plan_date": "2023-07-01T10:00:00Z", "description": "Updated maintenance plan"}'
+curl -X POST "${BASE_URL}/maintenance-plan" -H "Content-Type: application/json" -d '{"apiary_id": 1, "work_type": "Construction", "planned_date": "2025-07-01T10:00:00Z"}'
+curl -X PUT "${BASE_URL}/maintenance-plan" -H "Content-Type: application/json" -d '{"plan_id": 1, "apiary_id": 1, "planned_date": "2027-07-01T10:00:00Z", "description": "Updated maintenance plan"}'
 curl -X DELETE "${BASE_URL}/maintenance-plan/1"
 curl -X GET "${BASE_URL}/maintenance-plans"
 
