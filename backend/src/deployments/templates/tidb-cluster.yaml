@@ -30,14 +30,12 @@ spec:
       cpu: {{ .Values.tikvCluster.pd.resources.limits.cpu }}
       memory: {{ .Values.tikvCluster.pd.resources.limits.memory }}
     config: |
+      [keyspace]
+      pre-alloc = ["a", "b", "c"]
       [pd-server]
-      # PD Configuration
-      # advertise-client-urls = "http://{{ .Values.tikvCluster.name }}-pd.beesbiz-tikv.svc:2379"
-      # advertise-peer-urls = "http://{{ .Values.tikvCluster.name }}-pd-peer.beesbiz-tikv.svc:2380"
-      # client-urls = "http://0.0.0.0:2379"
-      # peer-urls = "http://0.0.0.0:2380"
-      metric-storage = "http://{{ .Values.monitoring.name }}-prometheus.{{ .Values.monitoring.namespace }}.svc:9090/"
       initial-cluster-state = "existing"
+      [log]
+      level = "warn"
 
   tikv:
     baseImage: {{ .Values.tikvCluster.tikv.baseImage }}
@@ -51,10 +49,17 @@ spec:
     limits:
       cpu: {{ .Values.tikvCluster.tikv.resources.limits.cpu }}
       memory: {{ .Values.tikvCluster.tikv.resources.limits.memory }}
-    config:
-      storage:
-        reserve-space: "1GB"
-      rocksdb:
-        max-open-files: 1024
-      raftdb:
-        max-open-files: 1024
+    config: |
+      [log]
+      level = "warn"
+      
+      [storage]
+      api-version = 2
+      enable-ttl = true
+      reserve-space = "1GB"
+
+      [rocksdb]
+      max-open-files = 1024
+
+      [raftdb]
+      max-open-files = 1024

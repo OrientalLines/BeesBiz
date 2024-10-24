@@ -32,30 +32,7 @@ tikvCluster:
         cpu: "2"
         memory: "2Gi"
 
-monitoring:
-  enabled: true
-  namespace: beesbiz-monitoring
-  name: tikv-monitor
-  prometheus:
-    retention: 15d
-    resources:
-      requests:
-        storage: "1Gi"
-    storageClassName: "standard"
-
-  grafana:
-    auth:
-      username: admin
-      password: admin
-    persistence:
-      enabled: true
-      size: "1Gi"
-      storageClassName: "standard"
-    credentials:
-      secretName: basic-grafana
-      secretNamespace: beesbiz-monitoring
-
-cloudnativepgCluster:
+cloudnativepg:
   namespace: beesbiz-data
   instances: 3
   imageName: ghcr.io/cloudnative-pg/postgresql:14.7
@@ -80,13 +57,11 @@ cloudnativepgCluster:
 
 rabbitmq:
   namespace: beesbiz-rabbitmq
-  port: 5672
-  managementPort: 15672
+  name: rabbitmq-cluster
   replicas: 1
   image: rabbitmq:4-management
   imagePullPolicy: IfNotPresent
   persistence:
-    enabled: true
     size: 2Gi
     storageClass: "standard"
   resources:
@@ -98,7 +73,3 @@ rabbitmq:
       cpu: "2"
       memory: "2Gi"
       ephemeralStorage: "2Gi"
-
-  auth:
-    username: rabbitmq
-    password: rabbitmq

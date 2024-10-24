@@ -2,29 +2,29 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: postgresql
-  namespace: {{ .Values.cloudnativepgCluster.namespace }}
+  namespace: {{ .Values.cloudnativepg.namespace }}
 spec:
-  instances: {{ .Values.cloudnativepgCluster.instances }}
-  imageName: {{ .Values.cloudnativepgCluster.imageName }}
-  imagePullPolicy: {{ .Values.cloudnativepgCluster.imagePullPolicy }}
+  instances: {{ .Values.cloudnativepg.instances }}
+  imageName: {{ .Values.cloudnativepg.imageName }}
+  imagePullPolicy: {{ .Values.cloudnativepg.imagePullPolicy }}
   primaryUpdateStrategy: unsupervised
   storage:
-    size: {{ .Values.cloudnativepgCluster.storage.size }}
-    storageClass: {{ .Values.cloudnativepgCluster.storage.storageClass }}
+    size: {{ .Values.cloudnativepg.storage.size }}
+    storageClass: {{ .Values.cloudnativepg.storage.storageClass }}
   superuserSecret:
-    name: {{ .Values.cloudnativepgCluster.superuserSecret.name }}
+    name: {{ .Values.cloudnativepg.superuserSecret.name }}
   bootstrap:
     initdb:
-      database: {{ .Values.cloudnativepgCluster.bootstrap.initdb.database }}
-      owner: {{ .Values.cloudnativepgCluster.bootstrap.initdb.owner }}
+      database: {{ .Values.cloudnativepg.bootstrap.initdb.database }}
+      owner: {{ .Values.cloudnativepg.bootstrap.initdb.owner }}
   postgresql:
     parameters:
       max_connections: "1000"
       shared_buffers: 256MB
   resources:
     requests:
-      cpu: {{ .Values.cloudnativepgCluster.resources.requests.cpu }}
-      memory: {{ .Values.cloudnativepgCluster.resources.requests.memory }}
+      cpu: {{ .Values.cloudnativepg.resources.requests.cpu }}
+      memory: {{ .Values.cloudnativepg.resources.requests.memory }}
     limits:
-      cpu: {{ .Values.cloudnativepgCluster.resources.limits.cpu }}
-      memory: {{ .Values.cloudnativepgCluster.resources.limits.memory }}
+      cpu: {{ .Values.cloudnativepg.resources.limits.cpu }}
+      memory: {{ .Values.cloudnativepg.resources.limits.memory }}
