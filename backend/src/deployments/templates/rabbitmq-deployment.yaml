@@ -2,12 +2,12 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: rabbitmq
-  namespace: beesbiz-data
+  namespace: {{ .Values.rabbitmq.namespace }}
   labels:
     app: rabbitmq
 spec:
   serviceName: "rabbitmq"
-  replicas: {{ .Values.replicaCount.rabbitmq }}
+  replicas: {{ .Values.rabbitmq.replicas }}
   selector:
     matchLabels:
       app: rabbitmq
@@ -44,13 +44,13 @@ spec:
               mountPath: /var/lib/rabbitmq
           resources:
             limits:
-              cpu: {{ .Values.resources.limits.cpu }}
-              memory: {{ .Values.resources.limits.memory }}
-              ephemeral-storage: {{ .Values.resources.limits.ephemeralStorage }}
+              cpu: {{ .Values.rabbitmq.resources.limits.cpu }}
+              memory: {{ .Values.rabbitmq.resources.limits.memory }}
+              ephemeral-storage: {{ .Values.rabbitmq.resources.limits.ephemeralStorage }}
             requests:
-              cpu: {{ .Values.resources.requests.cpu }}
-              memory: {{ .Values.resources.requests.memory }}
-              ephemeral-storage: {{ .Values.resources.requests.ephemeralStorage }}
+              cpu: {{ .Values.rabbitmq.resources.requests.cpu }}
+              memory: {{ .Values.rabbitmq.resources.requests.memory }}
+              ephemeral-storage: {{ .Values.rabbitmq.resources.requests.ephemeralStorage }}
 
           readinessProbe:
             exec:

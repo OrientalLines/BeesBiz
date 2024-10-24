@@ -1,0 +1,60 @@
+apiVersion: pingcap.com/v1alpha1
+kind: TidbCluster
+
+metadata:
+  name: {{ .Values.tikvCluster.name }}
+  namespace: {{ .Values.tikvCluster.namespace }}
+
+spec:
+  version: v8.1.0
+  timezone: UTC
+  pvReclaimPolicy: Retain
+  enableDynamicConfiguration: true
+  configUpdateStrategy: RollingUpdate
+  discovery: {}
+  helper:
+    image: alpine:3.16.0
+
+  pd:
+    baseImage: {{ .Values.tikvCluster.pd.baseImage }}
+    maxFailoverCount: {{ .Values.tikvCluster.pd.maxFailoverCount }}
+    replicas: {{ .Values.tikvCluster.pd.replicas }}
+    storageClassName: "{{ .Values.tikvCluster.pd.storageClassName }}"
+    readinessProbe:
+      type: "tcp"
+    requests:
+      cpu: {{ .Values.tikvCluster.pd.resources.requests.cpu }}
+      memory: {{ .Values.tikvCluster.pd.resources.requests.memory }}
+      storage: {{ .Values.tikvCluster.pd.resources.requests.storage }}
+    limits:
+      cpu: {{ .Values.tikvCluster.pd.resources.limits.cpu }}
+      memory: {{ .Values.tikvCluster.pd.resources.limits.memory }}
+    config: |
+      [pd-server]
+      # PD Configuration
+      # advertise-client-urls = "http://{{ .Values.tikvCluster.name }}-pd.beesbiz-tikv.svc:2379"
+      # advertise-peer-urls = "http://{{ .Values.tikvCluster.name }}-pd-peer.beesbiz-tikv.svc:2380"
+      # client-urls = "http://0.0.0.0:2379"
+      # peer-urls = "http://0.0.0.0:2380"
+      metric-storage = "http://{{ .Values.monitoring.name }}-prometheus.{{ .Values.monitoring.namespace }}.svc:9090/"
+      initial-cluster-state = "existing"
+
+  tikv:
+    baseImage: {{ .Values.tikvCluster.tikv.baseImage }}
+    maxFailoverCount: {{ .Values.tikvCluster.tikv.maxFailoverCount }}
+    replicas: {{ .Values.tikvCluster.tikv.replicas }}
+    storageClassName: "{{ .Values.tikvCluster.tikv.storageClassName }}"
+    requests:
+      storage: {{ .Values.tikvCluster.tikv.resources.requests.storage }}
+      cpu: {{ .Values.tikvCluster.tikv.resources.requests.cpu }}
+      memory: {{ .Values.tikvCluster.tikv.resources.requests.memory }}
+    limits:
+      cpu: {{ .Values.tikvCluster.tikv.resources.limits.cpu }}
+      memory: {{ .Values.tikvCluster.tikv.resources.limits.memory }}
+    config:
+      storage:
+        reserve-space: "1GB"
+      rocksdb:
+        max-open-files: 1024
+      raftdb:
+        max-open-files: 1024

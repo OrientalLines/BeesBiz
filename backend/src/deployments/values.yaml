@@ -1,59 +1,104 @@
-replicaCount:
-  postgresql: 1
-  tikv: 3
-  pd: 3
-  rabbitmq: 1
+namespace: beesbiz-data
+clusterScoped: false
 
-resources:
-  limits:
-    cpu: "1"
-    memory: "2Gi"
-    ephemeralStorage: "2Gi"
-  requests:
-    cpu: "500m"
-    memory: "512Mi"
-    ephemeralStorage: "2Gi"
+tikvCluster:
+  namespace: beesbiz-tikv
+  name: tikv-cluster
+  pd:
+    baseImage: pingcap/pd
+    maxFailoverCount: 3
+    replicas: 3
+    storageClassName: "standard"
+    resources:
+      requests:
+        storage: "2Gi"
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2"
+        memory: "2Gi"
 
-postgresql:
+  tikv:
+    baseImage: pingcap/tikv
+    maxFailoverCount: 3
+    replicas: 3
+    storageClassName: "standard"
+    resources:
+      requests:
+        storage: "2Gi"
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "2"
+        memory: "2Gi"
+
+monitoring:
+  enabled: true
+  namespace: beesbiz-monitoring
+  name: tikv-monitor
+  prometheus:
+    retention: 15d
+    resources:
+      requests:
+        storage: "1Gi"
+    storageClassName: "standard"
+
+  grafana:
+    auth:
+      username: admin
+      password: admin
+    persistence:
+      enabled: true
+      size: "1Gi"
+      storageClassName: "standard"
+    credentials:
+      secretName: basic-grafana
+      secretNamespace: beesbiz-monitoring
+
+cloudnativepgCluster:
+  namespace: beesbiz-data
   instances: 3
   imageName: ghcr.io/cloudnative-pg/postgresql:14.7
   imagePullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
   storage:
     size: 2Gi
     storageClass: "standard"
   superuserSecret:
     name: postgresql-superuser
+    namespace: beesbiz-data
   bootstrap:
     initdb:
       database: postgres
       owner: postgres
-  password: postgres
 
 rabbitmq:
-  adminUser: guest
-  adminPassword: guest
-  auth:
-    username: guest
-    password: guest
-  image: rabbitmq:4-management
+  namespace: beesbiz-rabbitmq
   port: 5672
   managementPort: 15672
-  persistence:
-    enabled: true
-    size: 512Mi
-    storageClass: "standard" # Adjust based on your Minikube storage class
-
-tikv:
-  image: pingcap/tikv:v5.3.0
-  port: 20160
+  replicas: 1
+  image: rabbitmq:4-management
+  imagePullPolicy: IfNotPresent
   persistence:
     enabled: true
     size: 2Gi
     storageClass: "standard"
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+      ephemeralStorage: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
+      ephemeralStorage: "2Gi"
 
-pd:
-  image: pingcap/pd:v5.3.0
-  persistence:
-    enabled: true
-    size: 2Gi
-    storageClass: "standard"
+  auth:
+    username: rabbitmq
+    password: rabbitmq

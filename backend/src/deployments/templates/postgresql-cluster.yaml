@@ -2,29 +2,29 @@ apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
 metadata:
   name: postgresql
-  namespace: beesbiz-data
+  namespace: {{ .Values.cloudnativepgCluster.namespace }}
 spec:
-  instances: {{ .Values.postgresql.instances }}
-  imageName: {{ .Values.postgresql.imageName }}
-  imagePullPolicy: {{ .Values.postgresql.imagePullPolicy }}
+  instances: {{ .Values.cloudnativepgCluster.instances }}
+  imageName: {{ .Values.cloudnativepgCluster.imageName }}
+  imagePullPolicy: {{ .Values.cloudnativepgCluster.imagePullPolicy }}
   primaryUpdateStrategy: unsupervised
   storage:
-    size: {{ .Values.postgresql.storage.size }}
-    storageClass: {{ .Values.postgresql.storage.storageClass }}
+    size: {{ .Values.cloudnativepgCluster.storage.size }}
+    storageClass: {{ .Values.cloudnativepgCluster.storage.storageClass }}
   superuserSecret:
-    name: {{ .Values.postgresql.superuserSecret.name }}
+    name: {{ .Values.cloudnativepgCluster.superuserSecret.name }}
   bootstrap:
     initdb:
-      database: {{ .Values.postgresql.bootstrap.initdb.database }}
-      owner: {{ .Values.postgresql.bootstrap.initdb.owner }}
+      database: {{ .Values.cloudnativepgCluster.bootstrap.initdb.database }}
+      owner: {{ .Values.cloudnativepgCluster.bootstrap.initdb.owner }}
   postgresql:
     parameters:
-      max_connections: "100"
+      max_connections: "1000"
       shared_buffers: 256MB
   resources:
     requests:
-      cpu: {{ .Values.resources.requests.cpu }}
-      memory: {{ .Values.resources.requests.memory }}
+      cpu: {{ .Values.cloudnativepgCluster.resources.requests.cpu }}
+      memory: {{ .Values.cloudnativepgCluster.resources.requests.memory }}
     limits:
-      cpu: {{ .Values.resources.limits.cpu }}
-      memory: {{ .Values.resources.limits.memory }}
+      cpu: {{ .Values.cloudnativepgCluster.resources.limits.cpu }}
+      memory: {{ .Values.cloudnativepgCluster.resources.limits.memory }}
