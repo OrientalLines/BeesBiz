@@ -57,11 +57,11 @@ func LoadConfig() error {
 
 	// Populate GlobalConfig using Viper
 	GlobalConfig = Config{
-		PostgresUser:     v.GetString("PSQL_USER"),
-		PostgresPassword: v.GetString("PSQL_PASSWORD"),
-		PostgresDB:       v.GetString("PSQL_DB"),
-		PostgresHost:     v.GetString("PSQL_HOST"),
-		PostgresPort:     v.GetString("PSQL_PORT"),
+		PostgresUser:     v.GetString("POSTGRES_USER"),
+		PostgresPassword: v.GetString("POSTGRES_PASSWORD"),
+		PostgresDB:       v.GetString("POSTGRES_DB"),
+		PostgresHost:     v.GetString("POSTGRES_HOST"),
+		PostgresPort:     v.GetString("POSTGRES_PORT"),
 		TiKV: TiKVConfig{
 			PDEndpoints: v.GetStringSlice("TIKV_PD_ENDPOINTS"),
 			Username:    v.GetString("TIKV_USERNAME"),
