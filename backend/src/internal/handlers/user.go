@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+
 	"github.com/orientallines/beesbiz/internal/database"
 	types "github.com/orientallines/beesbiz/internal/types/db"
 )
@@ -71,20 +72,5 @@ func GetAllUsers(db *database.DB) fiber.Handler {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to get all users: %v", err)})
 		}
 		return c.JSON(users)
-	}
-}
-
-// AllowedRegion handler
-func GetAllowedRegion(db *database.DB) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		id, err := c.ParamsInt("id")
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": fmt.Sprintf("Invalid allowed region ID: %v", err)})
-		}
-		allowedRegion, err := db.GetAllowedRegion(id)
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to get allowed region: %v", err)})
-		}
-		return c.JSON(allowedRegion)
 	}
 }

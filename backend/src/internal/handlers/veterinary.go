@@ -4,11 +4,14 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+
 	"github.com/orientallines/beesbiz/internal/database"
 	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
 // VeterinaryPassport handlers
+
+// GetVeterinaryPassport gets a veterinary passport by ID
 func GetVeterinaryPassport(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -23,6 +26,7 @@ func GetVeterinaryPassport(db *database.DB) fiber.Handler {
 	}
 }
 
+// CreateVeterinaryPassport creates a new veterinary passport
 func CreateVeterinaryPassport(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var passport types.VeterinaryPassport
@@ -37,6 +41,7 @@ func CreateVeterinaryPassport(db *database.DB) fiber.Handler {
 	}
 }
 
+// UpdateVeterinaryPassport updates a veterinary passport
 func UpdateVeterinaryPassport(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var passport types.VeterinaryPassport
@@ -51,6 +56,7 @@ func UpdateVeterinaryPassport(db *database.DB) fiber.Handler {
 	}
 }
 
+// DeleteVeterinaryPassport deletes a veterinary passport
 func DeleteVeterinaryPassport(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -64,6 +70,7 @@ func DeleteVeterinaryPassport(db *database.DB) fiber.Handler {
 	}
 }
 
+// GetAllVeterinaryPassports gets all veterinary passports
 func GetAllVeterinaryPassports(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		passports, err := db.GetAllVeterinaryPassports()
@@ -75,6 +82,8 @@ func GetAllVeterinaryPassports(db *database.DB) fiber.Handler {
 }
 
 // VeterinaryRecord handlers
+
+// GetVeterinaryRecord gets a veterinary record by ID
 func GetVeterinaryRecord(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -89,6 +98,7 @@ func GetVeterinaryRecord(db *database.DB) fiber.Handler {
 	}
 }
 
+// CreateVeterinaryRecord creates a new veterinary record
 func CreateVeterinaryRecord(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var record types.VeterinaryRecord
@@ -103,6 +113,7 @@ func CreateVeterinaryRecord(db *database.DB) fiber.Handler {
 	}
 }
 
+// UpdateVeterinaryRecord updates a veterinary record
 func UpdateVeterinaryRecord(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var record types.VeterinaryRecord
@@ -117,6 +128,7 @@ func UpdateVeterinaryRecord(db *database.DB) fiber.Handler {
 	}
 }
 
+// DeleteVeterinaryRecord deletes a veterinary record
 func DeleteVeterinaryRecord(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -130,6 +142,7 @@ func DeleteVeterinaryRecord(db *database.DB) fiber.Handler {
 	}
 }
 
+// GetAllVeterinaryRecords gets all veterinary records
 func GetAllVeterinaryRecords(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		records, err := db.GetAllVeterinaryRecords()

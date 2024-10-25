@@ -53,7 +53,7 @@ func main() {
 	// username: user
 	// password: password
 	// vhost: beesbiz
-	rmq, err := rabbitmq.New(config.GlobalConfig.RabbitMQ.Host, config.GlobalConfig.RabbitMQ.Port, config.GlobalConfig.RabbitMQ.Username, config.GlobalConfig.RabbitMQ.Password, config.GlobalConfig.RabbitMQ.VHost)
+	rmq, err := rabbitmq.NewClient(config.GlobalConfig.RabbitMQ.Host, config.GlobalConfig.RabbitMQ.Port, config.GlobalConfig.RabbitMQ.Username, config.GlobalConfig.RabbitMQ.Password, config.GlobalConfig.RabbitMQ.VHost)
 	if err != nil {
 		zap.S().Fatal("Failed to connect to RabbitMQ: ", err)
 	}

@@ -7,6 +7,7 @@ import (
 
 var log *zap.Logger
 
+
 func Init(config *Config) error {
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder

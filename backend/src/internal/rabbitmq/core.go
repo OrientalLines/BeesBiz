@@ -12,7 +12,8 @@ type RabbitMQ struct {
 	channel *amqp.Channel
 }
 
-func New(host, port, username, password, vhost string) (*RabbitMQ, error) {
+// NewClient creates a new RabbitMQ client
+func NewClient(host, port, username, password, vhost string) (*RabbitMQ, error) {
 	url := fmt.Sprintf("amqp://%s:%s@%s:%s/%s",
 		username, password, host, port, vhost)
 
@@ -34,6 +35,7 @@ func New(host, port, username, password, vhost string) (*RabbitMQ, error) {
 	}, nil
 }
 
+// Close closes the underlying RabbitMQ connection and channel
 func (r *RabbitMQ) Close() error {
 	if r.channel != nil {
 		if err := r.channel.Close(); err != nil {
@@ -48,10 +50,12 @@ func (r *RabbitMQ) Close() error {
 	return nil
 }
 
+// GetChannel returns the underlying RabbitMQ channel
 func (r *RabbitMQ) GetChannel() *amqp.Channel {
 	return r.channel
 }
 
+// GetConnection returns the underlying RabbitMQ connection
 func (r *RabbitMQ) GetConnection() *amqp.Connection {
 	return r.conn
 }

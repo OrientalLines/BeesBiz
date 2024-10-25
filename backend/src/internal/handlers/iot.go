@@ -4,11 +4,14 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+
 	"github.com/orientallines/beesbiz/internal/database"
 	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
 // Sensor handlers
+
+// GetSensor gets a sensor by ID
 func GetSensor(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -23,6 +26,7 @@ func GetSensor(db *database.DB) fiber.Handler {
 	}
 }
 
+// CreateSensor creates a new sensor
 func CreateSensor(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var sensor types.Sensor
@@ -37,6 +41,7 @@ func CreateSensor(db *database.DB) fiber.Handler {
 	}
 }
 
+// UpdateSensor updates a sensor
 func UpdateSensor(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var sensor types.Sensor
@@ -51,6 +56,7 @@ func UpdateSensor(db *database.DB) fiber.Handler {
 	}
 }
 
+// DeleteSensor deletes a sensor
 func DeleteSensor(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -64,6 +70,7 @@ func DeleteSensor(db *database.DB) fiber.Handler {
 	}
 }
 
+// GetAllSensors gets all sensors
 func GetAllSensors(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		sensors, err := db.GetAllSensors()
@@ -75,6 +82,8 @@ func GetAllSensors(db *database.DB) fiber.Handler {
 }
 
 // SensorReading handlers
+
+// GetSensorReading gets a sensor reading by ID
 func GetSensorReading(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -89,6 +98,7 @@ func GetSensorReading(db *database.DB) fiber.Handler {
 	}
 }
 
+// CreateSensorReading creates a new sensor reading
 func CreateSensorReading(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var reading types.SensorReading
@@ -103,6 +113,7 @@ func CreateSensorReading(db *database.DB) fiber.Handler {
 	}
 }
 
+// UpdateSensorReading updates a sensor reading
 func UpdateSensorReading(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var reading types.SensorReading
@@ -117,6 +128,7 @@ func UpdateSensorReading(db *database.DB) fiber.Handler {
 	}
 }
 
+// DeleteSensorReading deletes a sensor reading
 func DeleteSensorReading(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -130,6 +142,7 @@ func DeleteSensorReading(db *database.DB) fiber.Handler {
 	}
 }
 
+// GetAllSensorReadings gets all sensor readings
 func GetAllSensorReadings(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		readings, err := db.GetAllSensorReadings()

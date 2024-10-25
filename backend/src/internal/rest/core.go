@@ -6,22 +6,26 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+
+	"github.com/orientallines/beesbiz/internal/config"
 	"github.com/orientallines/beesbiz/internal/database"
 	"github.com/orientallines/beesbiz/internal/handlers"
+	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
 // Server is a wrapper around fiber.App
 type Server struct {
-	app *fiber.App
-	db  *database.DB
+	app    *fiber.App
+	db     *database.DB
+	jwtKey []byte
 }
 
 // NewServer creates a new Server
 func NewServer(db *database.DB) *Server {
-
 	return &Server{
-		app: fiber.New(),
-		db:  db,
+		app:    fiber.New(),
+		db:     db,
+		jwtKey: []byte(config.GlobalConfig.JwtSecret),
 	}
 }
 
@@ -42,123 +46,120 @@ func (s *Server) SetupRoutes() {
 		ReadinessEndpoint: "/readyz",
 	}))
 
-	s.app.Get("/apiary/:id", handlers.GetApiary(s.db))
-	s.app.Post("/apiary", handlers.CreateApiary(s.db))
-	s.app.Put("/apiary", handlers.UpdateApiary(s.db))
-	s.app.Delete("/apiary/:id", handlers.DeleteApiary(s.db))
-	s.app.Get("/apiaries", handlers.GetAllApiaries(s.db))
+	auth := s.app.Group("/auth")
+
+	auth.Post("/login", handlers.Login(s.db, s.jwtKey))
+	auth.Post("/register", handlers.Register(s.db))
+
+	api := s.app.Group("/api", jwtMiddleware(s.jwtKey))
+
+	// Apiary routes
+	apiary := api.Group("/apiary", roleMiddleware(types.Worker, types.Manager, types.Admin))
+
+	apiary.Get("/:id", handlers.GetApiary(s.db))
+	apiary.Post("/", handlers.CreateApiary(s.db))
+	apiary.Put("/", handlers.UpdateApiary(s.db))
+	apiary.Delete("/:id", handlers.DeleteApiary(s.db))
+	apiary.Get("/", handlers.GetAllApiaries(s.db))
 
 	// Hive routes
-	s.app.Get("/hives", handlers.GetAllHives(s.db))
-	s.app.Post("/hive", handlers.CreateHive(s.db))
-	s.app.Put("/hive", handlers.UpdateHive(s.db))
-	s.app.Delete("/hive/:id", handlers.DeleteHive(s.db))
-	s.app.Get("/apiary/:apiaryID/hives", handlers.GetAllHivesByApiaryID(s.db))
+	hive := api.Group("/hive", roleMiddleware(types.Worker, types.Manager, types.Admin))
+
+	hive.Get("/", handlers.GetAllHives(s.db))
+	hive.Post("/", handlers.CreateHive(s.db))
+	hive.Put("/", handlers.UpdateHive(s.db))
+	hive.Delete("/:id", handlers.DeleteHive(s.db))
+	hive.Get("/:apiaryID/hives", handlers.GetAllHivesByApiaryID(s.db))
 
 	// BeeCommunity routes
-	s.app.Get("/bee-communities", handlers.GetAllBeeCommunities(s.db))
-	s.app.Post("/bee-community", handlers.CreateBeeCommunity(s.db))
-	s.app.Put("/bee-community", handlers.UpdateBeeCommunity(s.db))
-	s.app.Delete("/bee-community/:id", handlers.DeleteBeeCommunity(s.db))
-	s.app.Get("/hive/:hiveID/bee-communities", handlers.GetAllBeeCommunitiesByHiveID(s.db))
+	beeCommunity := api.Group("/bee-community", roleMiddleware(types.Worker, types.Manager, types.Admin))
+
+	beeCommunity.Get("/", handlers.GetAllBeeCommunities(s.db))
+	beeCommunity.Post("/", handlers.CreateBeeCommunity(s.db))
+	beeCommunity.Put("/", handlers.UpdateBeeCommunity(s.db))
+	beeCommunity.Delete("/:id", handlers.DeleteBeeCommunity(s.db))
+	beeCommunity.Get("/:hiveID/bee-communities", handlers.GetAllBeeCommunitiesByHiveID(s.db))
 
 	// HoneyHarvest routes
-	s.app.Get("/honey-harvest/:id", handlers.GetHoneyHarvest(s.db))
-	s.app.Post("/honey-harvest", handlers.CreateHoneyHarvest(s.db))
-	s.app.Put("/honey-harvest", handlers.UpdateHoneyHarvest(s.db))
-	s.app.Delete("/honey-harvest/:id", handlers.DeleteHoneyHarvest(s.db))
-	s.app.Get("/honey-harvests", handlers.GetAllHoneyHarvests(s.db))
+	honeyHarvest := api.Group("/honey-harvest", roleMiddleware(types.Worker, types.Manager, types.Admin))
+
+	honeyHarvest.Get("/:id", handlers.GetHoneyHarvest(s.db))
+	honeyHarvest.Post("/", handlers.CreateHoneyHarvest(s.db))
+	honeyHarvest.Put("/", handlers.UpdateHoneyHarvest(s.db))
+	honeyHarvest.Delete("/:id", handlers.DeleteHoneyHarvest(s.db))
+	honeyHarvest.Get("/", handlers.GetAllHoneyHarvests(s.db))
 
 	// Region routes
-	s.app.Get("/region/:id", handlers.GetRegion(s.db))
-	s.app.Post("/region", handlers.CreateRegion(s.db))
-	s.app.Put("/region", handlers.UpdateRegion(s.db))
-	s.app.Delete("/region/:id", handlers.DeleteRegion(s.db))
-	s.app.Get("/regions", handlers.GetAllRegions(s.db))
+	region := api.Group("/region", roleMiddleware(types.Manager, types.Admin))
+
+	region.Get("/:id", handlers.GetRegion(s.db))
+	region.Post("/", handlers.CreateRegion(s.db))
+	region.Put("/", handlers.UpdateRegion(s.db))
+	region.Delete("/:id", handlers.DeleteRegion(s.db))
+	region.Get("/", handlers.GetAllRegions(s.db))
 
 	// AllowedRegion routes
-	s.app.Get("/allowed-region/:id", handlers.GetAllowedRegion(s.db))
-	s.app.Post("/allowed-region", handlers.CreateAllowedRegion(s.db))
-	s.app.Put("/allowed-region", handlers.UpdateAllowedRegion(s.db))
-	s.app.Delete("/allowed-region/:id", handlers.DeleteAllowedRegion(s.db))
-	s.app.Get("/allowed-regions", handlers.GetAllAllowedRegions(s.db))
+	allowedRegion := api.Group("/allowed-region", roleMiddleware(types.Manager, types.Admin))
+
+	allowedRegion.Get("/user/:id", handlers.GetAllowedRegionsForUser(s.db))
+	allowedRegion.Post("/", handlers.CreateAllowedRegion(s.db))
+	allowedRegion.Put("/", handlers.UpdateAllowedRegion(s.db))
+	allowedRegion.Delete("/:id", handlers.DeleteAllowedRegion(s.db))
+	allowedRegion.Get("/", handlers.GetAllAllowedRegions(s.db))
 
 	// RegionApiary routes
-	s.app.Get("/region-apiary/:id", handlers.GetRegionApiary(s.db))
-	s.app.Post("/region-apiary", handlers.CreateRegionApiary(s.db))
-	s.app.Put("/region-apiary", handlers.UpdateRegionApiary(s.db))
-	s.app.Delete("/region-apiary/:id", handlers.DeleteRegionApiary(s.db))
-	s.app.Get("/region-apiaries", handlers.GetAllRegionApiaries(s.db))
+	regionApiary := api.Group("/region-apiary", roleMiddleware(types.Manager, types.Admin))
 
-	// ObservationLog routes
-	s.app.Get("/observation-log/:id", handlers.GetObservationLog(s.db))
-	s.app.Post("/observation-log", handlers.CreateObservationLog(s.db))
-	s.app.Put("/observation-log", handlers.UpdateObservationLog(s.db))
-	s.app.Delete("/observation-log/:id", handlers.DeleteObservationLog(s.db))
-	s.app.Get("/observation-logs", handlers.GetAllObservationLogs(s.db))
-
-	// MaintenancePlan routes
-	s.app.Get("/maintenance-plan/:id", handlers.GetMaintenancePlan(s.db))
-	s.app.Post("/maintenance-plan", handlers.CreateMaintenancePlan(s.db))
-	s.app.Put("/maintenance-plan", handlers.UpdateMaintenancePlan(s.db))
-	s.app.Delete("/maintenance-plan/:id", handlers.DeleteMaintenancePlan(s.db))
-	s.app.Get("/maintenance-plans", handlers.GetAllMaintenancePlans(s.db))
-
-	// Incident routes
-	s.app.Get("/incident/:id", handlers.GetIncident(s.db))
-	s.app.Post("/incident", handlers.CreateIncident(s.db))
-	s.app.Put("/incident", handlers.UpdateIncident(s.db))
-	s.app.Delete("/incident/:id", handlers.DeleteIncident(s.db))
-	s.app.Get("/incidents", handlers.GetAllIncidents(s.db))
-
-	// VeterinaryPassport routes
-	s.app.Get("/veterinary-passport/:id", handlers.GetVeterinaryPassport(s.db))
-	s.app.Post("/veterinary-passport", handlers.CreateVeterinaryPassport(s.db))
-	s.app.Put("/veterinary-passport", handlers.UpdateVeterinaryPassport(s.db))
-	s.app.Delete("/veterinary-passport/:id", handlers.DeleteVeterinaryPassport(s.db))
-	s.app.Get("/veterinary-passports", handlers.GetAllVeterinaryPassports(s.db))
-
-	// VeterinaryRecord routes
-	s.app.Get("/veterinary-record/:id", handlers.GetVeterinaryRecord(s.db))
-	s.app.Post("/veterinary-record", handlers.CreateVeterinaryRecord(s.db))
-	s.app.Put("/veterinary-record", handlers.UpdateVeterinaryRecord(s.db))
-	s.app.Delete("/veterinary-record/:id", handlers.DeleteVeterinaryRecord(s.db))
-	s.app.Get("/veterinary-records", handlers.GetAllVeterinaryRecords(s.db))
+	regionApiary.Get("/:id", handlers.GetRegionApiary(s.db))
+	regionApiary.Post("/", handlers.CreateRegionApiary(s.db))
+	regionApiary.Put("/", handlers.UpdateRegionApiary(s.db))
+	regionApiary.Delete("/:id", handlers.DeleteRegionApiary(s.db))
+	regionApiary.Get("/", handlers.GetAllRegionApiaries(s.db))
 
 	// User routes
-	s.app.Get("/user/:id", handlers.GetUser(s.db))
-	s.app.Post("/user", handlers.CreateUser(s.db))
-	s.app.Put("/user", handlers.UpdateUser(s.db))
-	s.app.Delete("/user/:id", handlers.DeleteUser(s.db))
-	s.app.Get("/users", handlers.GetAllUsers(s.db))
+	user := api.Group("/user", roleMiddleware(types.Admin, types.Manager))
+
+	user.Get("/:id", handlers.GetUser(s.db))
+	user.Post("/", handlers.CreateUser(s.db))
+	user.Put("/", handlers.UpdateUser(s.db))
+	user.Delete("/:id", handlers.DeleteUser(s.db))
+	user.Get("/", handlers.GetAllUsers(s.db))
 
 	// ProductionReport routes
-	s.app.Get("/production-report/:id", handlers.GetProductionReport(s.db))
-	s.app.Post("/production-report", handlers.CreateProductionReport(s.db))
-	s.app.Put("/production-report", handlers.UpdateProductionReport(s.db))
-	s.app.Delete("/production-report/:id", handlers.DeleteProductionReport(s.db))
-	s.app.Get("/production-reports", handlers.GetAllProductionReports(s.db))
+	productionReport := api.Group("/production-report", roleMiddleware(types.Manager, types.Worker, types.Admin))
+
+	productionReport.Get("/:id", handlers.GetProductionReport(s.db))
+	productionReport.Post("/", handlers.CreateProductionReport(s.db))
+	productionReport.Put("/", handlers.UpdateProductionReport(s.db))
+	productionReport.Delete("/:id", handlers.DeleteProductionReport(s.db))
+	productionReport.Get("/", handlers.GetAllProductionReports(s.db))
 
 	// Sensor routes
-	s.app.Get("/sensor/:id", handlers.GetSensor(s.db))
-	s.app.Post("/sensor", handlers.CreateSensor(s.db))
-	s.app.Put("/sensor", handlers.UpdateSensor(s.db))
-	s.app.Delete("/sensor/:id", handlers.DeleteSensor(s.db))
-	s.app.Get("/sensors", handlers.GetAllSensors(s.db))
+	sensor := api.Group("/sensor", roleMiddleware(types.Admin, types.Manager, types.Worker))
+
+	sensor.Get("/:id", handlers.GetSensor(s.db))
+	sensor.Post("/", handlers.CreateSensor(s.db))
+	sensor.Put("/", handlers.UpdateSensor(s.db))
+	sensor.Delete("/:id", handlers.DeleteSensor(s.db))
+	sensor.Get("/", handlers.GetAllSensors(s.db))
 
 	// SensorReading routes
-	s.app.Get("/sensor-reading/:id", handlers.GetSensorReading(s.db))
-	s.app.Post("/sensor-reading", handlers.CreateSensorReading(s.db))
-	s.app.Put("/sensor-reading", handlers.UpdateSensorReading(s.db))
-	s.app.Delete("/sensor-reading/:id", handlers.DeleteSensorReading(s.db))
-	s.app.Get("/sensor-readings", handlers.GetAllSensorReadings(s.db))
+	sensorReading := api.Group("/sensor-reading", roleMiddleware(types.Admin, types.Manager, types.Worker))
+
+	sensorReading.Get("/:id", handlers.GetSensorReading(s.db))
+	sensorReading.Post("/", handlers.CreateSensorReading(s.db))
+	sensorReading.Put("/", handlers.UpdateSensorReading(s.db))
+	sensorReading.Delete("/:id", handlers.DeleteSensorReading(s.db))
+	sensorReading.Get("/", handlers.GetAllSensorReadings(s.db))
 
 	// WeatherData routes
-	s.app.Get("/weather-data/:id", handlers.GetWeatherData(s.db))
-	s.app.Post("/weather-data", handlers.CreateWeatherData(s.db))
-	s.app.Put("/weather-data", handlers.UpdateWeatherData(s.db))
-	s.app.Delete("/weather-data/:id", handlers.DeleteWeatherData(s.db))
-	s.app.Get("/weather-data-all", handlers.GetAllWeatherData(s.db))
+	weatherData := api.Group("/weather-data", roleMiddleware(types.Admin, types.Manager, types.Worker))
+
+	weatherData.Get("/:id", handlers.GetWeatherData(s.db))
+	weatherData.Post("/", handlers.CreateWeatherData(s.db))
+	weatherData.Put("/", handlers.UpdateWeatherData(s.db))
+	weatherData.Delete("/:id", handlers.DeleteWeatherData(s.db))
+	weatherData.Get("/", handlers.GetAllWeatherData(s.db))
 
 }
 

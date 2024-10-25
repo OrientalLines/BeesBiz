@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+
 	"github.com/orientallines/beesbiz/internal/database"
 	types "github.com/orientallines/beesbiz/internal/types/db"
 )

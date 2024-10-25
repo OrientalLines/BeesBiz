@@ -30,6 +30,7 @@ const (
 	BeeManagementService_RegisterIncident_FullMethodName         = "/bee_management.BeeManagementService/RegisterIncident"
 	BeeManagementService_GetLatestSensorReading_FullMethodName   = "/bee_management.BeeManagementService/GetLatestSensorReading"
 	BeeManagementService_CreateProductionReport_FullMethodName   = "/bee_management.BeeManagementService/CreateProductionReport"
+	BeeManagementService_SetRegionAccess_FullMethodName          = "/bee_management.BeeManagementService/SetRegionAccess"
 )
 
 // BeeManagementServiceClient is the client API for BeeManagementService service.
@@ -58,6 +59,8 @@ type BeeManagementServiceClient interface {
 	GetLatestSensorReading(ctx context.Context, in *GetLatestSensorReadingRequest, opts ...grpc.CallOption) (*GetLatestSensorReadingResponse, error)
 	// 10. Create Production Report
 	CreateProductionReport(ctx context.Context, in *CreateProductionReportRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// 11. Set Region Access
+	SetRegionAccess(ctx context.Context, in *SetRegionAccessRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type beeManagementServiceClient struct {
@@ -168,6 +171,16 @@ func (c *beeManagementServiceClient) CreateProductionReport(ctx context.Context,
 	return out, nil
 }
 
+func (c *beeManagementServiceClient) SetRegionAccess(ctx context.Context, in *SetRegionAccessRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, BeeManagementService_SetRegionAccess_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BeeManagementServiceServer is the server API for BeeManagementService service.
 // All implementations must embed UnimplementedBeeManagementServiceServer
 // for forward compatibility.
@@ -194,6 +207,8 @@ type BeeManagementServiceServer interface {
 	GetLatestSensorReading(context.Context, *GetLatestSensorReadingRequest) (*GetLatestSensorReadingResponse, error)
 	// 10. Create Production Report
 	CreateProductionReport(context.Context, *CreateProductionReportRequest) (*emptypb.Empty, error)
+	// 11. Set Region Access
+	SetRegionAccess(context.Context, *SetRegionAccessRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedBeeManagementServiceServer()
 }
 
@@ -233,6 +248,9 @@ func (UnimplementedBeeManagementServiceServer) GetLatestSensorReading(context.Co
 }
 func (UnimplementedBeeManagementServiceServer) CreateProductionReport(context.Context, *CreateProductionReportRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateProductionReport not implemented")
+}
+func (UnimplementedBeeManagementServiceServer) SetRegionAccess(context.Context, *SetRegionAccessRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetRegionAccess not implemented")
 }
 func (UnimplementedBeeManagementServiceServer) mustEmbedUnimplementedBeeManagementServiceServer() {}
 func (UnimplementedBeeManagementServiceServer) testEmbeddedByValue()                              {}
@@ -435,6 +453,24 @@ func _BeeManagementService_CreateProductionReport_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BeeManagementService_SetRegionAccess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetRegionAccessRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BeeManagementServiceServer).SetRegionAccess(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: BeeManagementService_SetRegionAccess_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BeeManagementServiceServer).SetRegionAccess(ctx, req.(*SetRegionAccessRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BeeManagementService_ServiceDesc is the grpc.ServiceDesc for BeeManagementService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -481,6 +517,10 @@ var BeeManagementService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateProductionReport",
 			Handler:    _BeeManagementService_CreateProductionReport_Handler,
+		},
+		{
+			MethodName: "SetRegionAccess",
+			Handler:    _BeeManagementService_SetRegionAccess_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

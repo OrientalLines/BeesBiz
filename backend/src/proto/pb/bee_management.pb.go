@@ -834,6 +834,60 @@ func (x *CreateProductionReportRequest) GetEndDate() string {
 	return ""
 }
 
+// 11. SetRegionAccess
+type SetRegionAccessRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	UserId   int32 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	RegionId int32 `protobuf:"varint,2,opt,name=region_id,json=regionId,proto3" json:"region_id,omitempty"`
+}
+
+func (x *SetRegionAccessRequest) Reset() {
+	*x = SetRegionAccessRequest{}
+	mi := &file_bee_management_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetRegionAccessRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetRegionAccessRequest) ProtoMessage() {}
+
+func (x *SetRegionAccessRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bee_management_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetRegionAccessRequest.ProtoReflect.Descriptor instead.
+func (*SetRegionAccessRequest) Descriptor() ([]byte, []int) {
+	return file_bee_management_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *SetRegionAccessRequest) GetUserId() int32 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *SetRegionAccessRequest) GetRegionId() int32 {
+	if x != nil {
+		return x.RegionId
+	}
+	return 0
+}
+
 var File_bee_management_proto protoreflect.FileDescriptor
 
 var file_bee_management_proto_rawDesc = []byte{
@@ -928,7 +982,12 @@ var file_bee_management_proto_rawDesc = []byte{
 	0x73, 0x74, 0x61, 0x72, 0x74, 0x5f, 0x64, 0x61, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x09, 0x73, 0x74, 0x61, 0x72, 0x74, 0x44, 0x61, 0x74, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x65,
 	0x6e, 0x64, 0x5f, 0x64, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x65,
-	0x6e, 0x64, 0x44, 0x61, 0x74, 0x65, 0x32, 0xa4, 0x08, 0x0a, 0x14, 0x42, 0x65, 0x65, 0x4d, 0x61,
+	0x6e, 0x64, 0x44, 0x61, 0x74, 0x65, 0x22, 0x4e, 0x0a, 0x16, 0x53, 0x65, 0x74, 0x52, 0x65, 0x67,
+	0x69, 0x6f, 0x6e, 0x41, 0x63, 0x63, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x17, 0x0a, 0x07, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x05, 0x52, 0x06, 0x75, 0x73, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x72, 0x65, 0x67,
+	0x69, 0x6f, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x72, 0x65,
+	0x67, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x32, 0xf9, 0x08, 0x0a, 0x14, 0x42, 0x65, 0x65, 0x4d, 0x61,
 	0x6e, 0x61, 0x67, 0x65, 0x6d, 0x65, 0x6e, 0x74, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12,
 	0x79, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x48, 0x6f, 0x6e, 0x65, 0x79,
 	0x48, 0x61, 0x72, 0x76, 0x65, 0x73, 0x74, 0x65, 0x64, 0x12, 0x2d, 0x2e, 0x62, 0x65, 0x65, 0x5f,
@@ -994,11 +1053,16 @@ var file_bee_management_proto_rawDesc = []byte{
 	0x65, 0x6d, 0x65, 0x6e, 0x74, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x64,
 	0x75, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x31, 0x5a,
-	0x2f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6f, 0x72, 0x69, 0x65,
-	0x6e, 0x74, 0x61, 0x6c, 0x6c, 0x69, 0x6e, 0x65, 0x73, 0x2f, 0x62, 0x65, 0x65, 0x73, 0x62, 0x69,
-	0x7a, 0x2f, 0x62, 0x65, 0x65, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x6d, 0x65, 0x6e, 0x74,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x53, 0x0a,
+	0x0f, 0x53, 0x65, 0x74, 0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x41, 0x63, 0x63, 0x65, 0x73, 0x73,
+	0x12, 0x26, 0x2e, 0x62, 0x65, 0x65, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x6d, 0x65, 0x6e,
+	0x74, 0x2e, 0x53, 0x65, 0x74, 0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x41, 0x63, 0x63, 0x65, 0x73,
+	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
+	0x22, 0x00, 0x42, 0x31, 0x5a, 0x2f, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x6f, 0x72, 0x69, 0x65, 0x6e, 0x74, 0x61, 0x6c, 0x6c, 0x69, 0x6e, 0x65, 0x73, 0x2f, 0x62,
+	0x65, 0x65, 0x73, 0x62, 0x69, 0x7a, 0x2f, 0x62, 0x65, 0x65, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67,
+	0x65, 0x6d, 0x65, 0x6e, 0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1013,7 +1077,7 @@ func file_bee_management_proto_rawDescGZIP() []byte {
 	return file_bee_management_proto_rawDescData
 }
 
-var file_bee_management_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_bee_management_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_bee_management_proto_goTypes = []any{
 	(*GetTotalHoneyHarvestedRequest)(nil),    // 0: bee_management.GetTotalHoneyHarvestedRequest
 	(*GetTotalHoneyHarvestedResponse)(nil),   // 1: bee_management.GetTotalHoneyHarvestedResponse
@@ -1030,7 +1094,8 @@ var file_bee_management_proto_goTypes = []any{
 	(*GetLatestSensorReadingRequest)(nil),    // 12: bee_management.GetLatestSensorReadingRequest
 	(*GetLatestSensorReadingResponse)(nil),   // 13: bee_management.GetLatestSensorReadingResponse
 	(*CreateProductionReportRequest)(nil),    // 14: bee_management.CreateProductionReportRequest
-	(*emptypb.Empty)(nil),                    // 15: google.protobuf.Empty
+	(*SetRegionAccessRequest)(nil),           // 15: bee_management.SetRegionAccessRequest
+	(*emptypb.Empty)(nil),                    // 16: google.protobuf.Empty
 }
 var file_bee_management_proto_depIdxs = []int32{
 	0,  // 0: bee_management.BeeManagementService.GetTotalHoneyHarvested:input_type -> bee_management.GetTotalHoneyHarvestedRequest
@@ -1043,18 +1108,20 @@ var file_bee_management_proto_depIdxs = []int32{
 	11, // 7: bee_management.BeeManagementService.RegisterIncident:input_type -> bee_management.RegisterIncidentRequest
 	12, // 8: bee_management.BeeManagementService.GetLatestSensorReading:input_type -> bee_management.GetLatestSensorReadingRequest
 	14, // 9: bee_management.BeeManagementService.CreateProductionReport:input_type -> bee_management.CreateProductionReportRequest
-	1,  // 10: bee_management.BeeManagementService.GetTotalHoneyHarvested:output_type -> bee_management.GetTotalHoneyHarvestedResponse
-	15, // 11: bee_management.BeeManagementService.AddObservation:output_type -> google.protobuf.Empty
-	4,  // 12: bee_management.BeeManagementService.GetCommunityHealthStatus:output_type -> bee_management.GetCommunityHealthStatusResponse
-	15, // 13: bee_management.BeeManagementService.UpdateHiveStatus:output_type -> google.protobuf.Empty
-	7,  // 14: bee_management.BeeManagementService.GetAvgTemperature:output_type -> bee_management.GetAvgTemperatureResponse
-	15, // 15: bee_management.BeeManagementService.AssignMaintenancePlan:output_type -> google.protobuf.Empty
-	10, // 16: bee_management.BeeManagementService.HasRegionAccess:output_type -> bee_management.HasRegionAccessResponse
-	15, // 17: bee_management.BeeManagementService.RegisterIncident:output_type -> google.protobuf.Empty
-	13, // 18: bee_management.BeeManagementService.GetLatestSensorReading:output_type -> bee_management.GetLatestSensorReadingResponse
-	15, // 19: bee_management.BeeManagementService.CreateProductionReport:output_type -> google.protobuf.Empty
-	10, // [10:20] is the sub-list for method output_type
-	0,  // [0:10] is the sub-list for method input_type
+	15, // 10: bee_management.BeeManagementService.SetRegionAccess:input_type -> bee_management.SetRegionAccessRequest
+	1,  // 11: bee_management.BeeManagementService.GetTotalHoneyHarvested:output_type -> bee_management.GetTotalHoneyHarvestedResponse
+	16, // 12: bee_management.BeeManagementService.AddObservation:output_type -> google.protobuf.Empty
+	4,  // 13: bee_management.BeeManagementService.GetCommunityHealthStatus:output_type -> bee_management.GetCommunityHealthStatusResponse
+	16, // 14: bee_management.BeeManagementService.UpdateHiveStatus:output_type -> google.protobuf.Empty
+	7,  // 15: bee_management.BeeManagementService.GetAvgTemperature:output_type -> bee_management.GetAvgTemperatureResponse
+	16, // 16: bee_management.BeeManagementService.AssignMaintenancePlan:output_type -> google.protobuf.Empty
+	10, // 17: bee_management.BeeManagementService.HasRegionAccess:output_type -> bee_management.HasRegionAccessResponse
+	16, // 18: bee_management.BeeManagementService.RegisterIncident:output_type -> google.protobuf.Empty
+	13, // 19: bee_management.BeeManagementService.GetLatestSensorReading:output_type -> bee_management.GetLatestSensorReadingResponse
+	16, // 20: bee_management.BeeManagementService.CreateProductionReport:output_type -> google.protobuf.Empty
+	16, // 21: bee_management.BeeManagementService.SetRegionAccess:output_type -> google.protobuf.Empty
+	11, // [11:22] is the sub-list for method output_type
+	0,  // [0:11] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name
@@ -1071,7 +1138,7 @@ func file_bee_management_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bee_management_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

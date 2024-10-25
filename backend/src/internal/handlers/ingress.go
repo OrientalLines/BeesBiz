@@ -4,11 +4,18 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
+
 	"github.com/orientallines/beesbiz/internal/database"
+	"github.com/orientallines/beesbiz/internal/rabbitmq"
 	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
+const IncidentQueue = "incident_queue"
+
 // ObservationLog handlers
+
+// GetObservationLog gets an observation log by ID
 func GetObservationLog(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -23,6 +30,7 @@ func GetObservationLog(db *database.DB) fiber.Handler {
 	}
 }
 
+// CreateObservationLog creates a new observation log
 func CreateObservationLog(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var log types.ObservationLog
@@ -37,6 +45,7 @@ func CreateObservationLog(db *database.DB) fiber.Handler {
 	}
 }
 
+// UpdateObservationLog updates an observation log
 func UpdateObservationLog(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var log types.ObservationLog
@@ -51,6 +60,7 @@ func UpdateObservationLog(db *database.DB) fiber.Handler {
 	}
 }
 
+// DeleteObservationLog deletes an observation log
 func DeleteObservationLog(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -64,6 +74,7 @@ func DeleteObservationLog(db *database.DB) fiber.Handler {
 	}
 }
 
+// GetAllObservationLogs gets all observation logs
 func GetAllObservationLogs(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		logs, err := db.GetAllObservationLogs()
@@ -75,6 +86,8 @@ func GetAllObservationLogs(db *database.DB) fiber.Handler {
 }
 
 // MaintenancePlan handlers
+
+// GetMaintenancePlan gets a maintenance plan by ID
 func GetMaintenancePlan(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -89,6 +102,7 @@ func GetMaintenancePlan(db *database.DB) fiber.Handler {
 	}
 }
 
+// CreateMaintenancePlan creates a new maintenance plan
 func CreateMaintenancePlan(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var plan types.MaintenancePlan
@@ -103,6 +117,7 @@ func CreateMaintenancePlan(db *database.DB) fiber.Handler {
 	}
 }
 
+// UpdateMaintenancePlan updates a maintenance plan
 func UpdateMaintenancePlan(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var plan types.MaintenancePlan
@@ -117,6 +132,7 @@ func UpdateMaintenancePlan(db *database.DB) fiber.Handler {
 	}
 }
 
+// DeleteMaintenancePlan deletes a maintenance plan
 func DeleteMaintenancePlan(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -130,6 +146,7 @@ func DeleteMaintenancePlan(db *database.DB) fiber.Handler {
 	}
 }
 
+// GetAllMaintenancePlans gets all maintenance plans
 func GetAllMaintenancePlans(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		plans, err := db.GetAllMaintenancePlans()
@@ -141,6 +158,8 @@ func GetAllMaintenancePlans(db *database.DB) fiber.Handler {
 }
 
 // Incident handlers
+
+// GetIncident gets an incident by ID
 func GetIncident(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -155,7 +174,8 @@ func GetIncident(db *database.DB) fiber.Handler {
 	}
 }
 
-func CreateIncident(db *database.DB) fiber.Handler {
+// CreateIncident creates a new incident
+func CreateIncident(db *database.DB, rmq *rabbitmq.RabbitMQ) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var incident types.Incident
 		if err := c.BodyParser(&incident); err != nil {
@@ -165,10 +185,18 @@ func CreateIncident(db *database.DB) fiber.Handler {
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to create incident: %v", err)})
 		}
+
+		// Publish RabbitMQ notification
+		if err := rmq.PublishMessage("incident_queue", createdIncident); err != nil {
+			// Log the error but don't fail the request
+			zap.L().Error("Failed to publish incident notification", zap.Error(err))
+		}
+
 		return c.JSON(createdIncident)
 	}
 }
 
+// UpdateIncident updates an incident
 func UpdateIncident(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var incident types.Incident
@@ -183,6 +211,7 @@ func UpdateIncident(db *database.DB) fiber.Handler {
 	}
 }
 
+// DeleteIncident deletes an incident
 func DeleteIncident(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -196,6 +225,7 @@ func DeleteIncident(db *database.DB) fiber.Handler {
 	}
 }
 
+// GetAllIncidents gets all incidents
 func GetAllIncidents(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		incidents, err := db.GetAllIncidents()

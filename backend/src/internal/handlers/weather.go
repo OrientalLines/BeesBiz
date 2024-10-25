@@ -4,11 +4,14 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+
 	"github.com/orientallines/beesbiz/internal/database"
 	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
 // WeatherData handlers
+
+// GetWeatherData gets weather data by ID
 func GetWeatherData(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -23,6 +26,7 @@ func GetWeatherData(db *database.DB) fiber.Handler {
 	}
 }
 
+// CreateWeatherData creates a new weather data
 func CreateWeatherData(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var weatherData types.WeatherData
@@ -37,6 +41,7 @@ func CreateWeatherData(db *database.DB) fiber.Handler {
 	}
 }
 
+// UpdateWeatherData updates a weather data
 func UpdateWeatherData(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var weatherData types.WeatherData
@@ -51,6 +56,7 @@ func UpdateWeatherData(db *database.DB) fiber.Handler {
 	}
 }
 
+// DeleteWeatherData deletes a weather data
 func DeleteWeatherData(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -64,6 +70,7 @@ func DeleteWeatherData(db *database.DB) fiber.Handler {
 	}
 }
 
+// GetAllWeatherData gets all weather data
 func GetAllWeatherData(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		weatherDataList, err := db.GetAllWeatherData()

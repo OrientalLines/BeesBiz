@@ -4,12 +4,14 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+
 	"github.com/orientallines/beesbiz/internal/database"
 	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
 // Production Report Handlers
 
+// GetProductionReport gets a production report by ID
 func GetProductionReport(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -24,6 +26,7 @@ func GetProductionReport(db *database.DB) fiber.Handler {
 	}
 }
 
+// CreateProductionReport creates a new production report
 func CreateProductionReport(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var report types.ProductionReport
@@ -38,6 +41,7 @@ func CreateProductionReport(db *database.DB) fiber.Handler {
 	}
 }
 
+// UpdateProductionReport updates a production report
 func UpdateProductionReport(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var report types.ProductionReport
@@ -52,6 +56,7 @@ func UpdateProductionReport(db *database.DB) fiber.Handler {
 	}
 }
 
+// DeleteProductionReport deletes a production report
 func DeleteProductionReport(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
@@ -65,6 +70,7 @@ func DeleteProductionReport(db *database.DB) fiber.Handler {
 	}
 }
 
+// GetAllProductionReports gets all production reports
 func GetAllProductionReports(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		reports, err := db.GetAllProductionReports()

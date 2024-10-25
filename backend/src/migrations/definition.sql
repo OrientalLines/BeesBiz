@@ -1,16 +1,19 @@
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_type typ
-        INNER JOIN pg_namespace nsp ON nsp.oid = typ.typnamespace
-        WHERE nsp.nspname = current_schema()
-          AND typ.typname = 'role'
-    ) THEN
-        CREATE TYPE role AS ENUM ('ADMIN', 'WORKER');
-    END IF;
+DO $ $ BEGIN IF NOT EXISTS (
+	SELECT
+		1
+	FROM
+		pg_type typ
+		INNER JOIN pg_namespace nsp ON nsp.oid = typ.typnamespace
+	WHERE
+		nsp.nspname = current_schema()
+		AND typ.typname = 'role'
+) THEN CREATE TYPE role AS ENUM ('ADMIN', 'WORKER');
+
+END IF;
+
 END;
-$$ LANGUAGE plpgsql;
+
+$ $ LANGUAGE plpgsql;
 
 CREATE TABLE IF NOT EXISTS "region" (
 	"region_id" SERIAL,
@@ -142,18 +145,20 @@ CREATE TABLE IF NOT EXISTS "weather_data" (
 CREATE TABLE IF NOT EXISTS "user" (
 	"user_id" SERIAL,
 	"username" VARCHAR NOT NULL UNIQUE,
+	"full_name" VARCHAR NOT NULL,
 	"role" ROLE,
 	"email" VARCHAR NOT NULL UNIQUE,
+	"password" VARCHAR NOT NULL,
 	"last_login" TIMESTAMP,
 	PRIMARY KEY("user_id")
 );
 
 CREATE TABLE IF NOT EXISTS "allowed_region" (
-    "id" SERIAL NOT NULL,
-    "user_id" INTEGER,
-    "region_id" INTEGER,
-    PRIMARY KEY("id"),
-    UNIQUE ("user_id", "region_id")
+	"id" SERIAL NOT NULL,
+	"user_id" INTEGER,
+	"region_id" INTEGER,
+	PRIMARY KEY("id"),
+	UNIQUE ("user_id", "region_id")
 );
 
 CREATE TABLE IF NOT EXISTS "region_apiary" (
@@ -244,13 +249,15 @@ ADD
 	FOREIGN KEY("user_id") REFERENCES "user"("user_id") ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE
-    "sensor"
+	"sensor"
 ALTER COLUMN
-    "last_reading_time"
-	SET DEFAULT now();
+	"last_reading_time"
+SET
+	DEFAULT now();
 
 ALTER TABLE
-    "sensor_reading"
+	"sensor_reading"
 ALTER COLUMN
-    "timestamp"
-	SET DEFAULT now();
+	"timestamp"
+SET
+	DEFAULT now();

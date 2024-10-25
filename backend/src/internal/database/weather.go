@@ -3,10 +3,14 @@ package database
 import (
 	"fmt"
 
-	types "github.com/orientallines/beesbiz/internal/types/db"
 	"go.uber.org/zap"
+
+	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
+// GetWeatherData gets weather data by ID
+//
+// It returns the weather data and an error
 func (db *DB) GetWeatherData(id int) (types.WeatherData, error) {
 	var weather types.WeatherData
 	err := db.Get(&weather, "SELECT * FROM weather_data WHERE weather_id = $1", id)
@@ -17,6 +21,9 @@ func (db *DB) GetWeatherData(id int) (types.WeatherData, error) {
 	return weather, nil
 }
 
+// CreateWeatherData creates a new weather data
+//
+// It returns the created weather data and an error
 func (db *DB) CreateWeatherData(weather types.WeatherData) (types.WeatherData, error) {
 	var createdWeather types.WeatherData
 	err := db.Get(&createdWeather, "INSERT INTO weather_data (region_id, date, temperature, humidity, wind_speed, precipitation) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", weather.RegionID, weather.Date, weather.Temperature, weather.Humidity, weather.WindSpeed, weather.Precipitation)
@@ -27,6 +34,9 @@ func (db *DB) CreateWeatherData(weather types.WeatherData) (types.WeatherData, e
 	return createdWeather, nil
 }
 
+// UpdateWeatherData updates a weather data
+//
+// It returns the updated weather data and an error
 func (db *DB) UpdateWeatherData(weather types.WeatherData) (types.WeatherData, error) {
 	var updatedWeather types.WeatherData
 	err := db.Get(&updatedWeather, "UPDATE weather_data SET region_id = $1, date = $2, temperature = $3, humidity = $4, wind_speed = $5, precipitation = $6 WHERE weather_id = $7 RETURNING *", weather.RegionID, weather.Date, weather.Temperature, weather.Humidity, weather.WindSpeed, weather.Precipitation, weather.WeatherID)
@@ -37,6 +47,9 @@ func (db *DB) UpdateWeatherData(weather types.WeatherData) (types.WeatherData, e
 	return updatedWeather, nil
 }
 
+// DeleteWeatherData deletes a weather data
+//
+// It returns an error
 func (db *DB) DeleteWeatherData(id int) error {
 	_, err := db.Exec("DELETE FROM weather_data WHERE weather_id = $1", id)
 	if err != nil {
@@ -46,6 +59,9 @@ func (db *DB) DeleteWeatherData(id int) error {
 	return nil
 }
 
+// GetAllWeatherData gets all weather data
+// 
+// It returns a list of weather data and an error
 func (db *DB) GetAllWeatherData() ([]types.WeatherData, error) {
 	var weatherDataList []types.WeatherData
 	err := db.Select(&weatherDataList, "SELECT * FROM weather_data")

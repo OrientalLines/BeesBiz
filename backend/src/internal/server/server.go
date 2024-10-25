@@ -40,7 +40,7 @@ func (s *Server) SetupAndRun(grpcAddress, restAddress string) error {
 	s.grpcServer.RegisterServices()
 	s.restServer.SetupRoutes()
 
-	errChan := make(chan error, 4)
+	errChan := make(chan error, 3)
 
 	go func() {
 		errChan <- s.grpcServer.Run(grpcAddress)

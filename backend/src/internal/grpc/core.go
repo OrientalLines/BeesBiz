@@ -4,17 +4,16 @@ import (
 	"context"
 	"net"
 	"time"
+	"database/sql"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
-
-	"database/sql"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/orientallines/beesbiz/internal/database"
 	pb "github.com/orientallines/beesbiz/proto/pb"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type Server struct {
@@ -146,6 +145,16 @@ func (s *Server) CreateProductionReport(ctx context.Context, req *pb.CreateProdu
 	_, err := s.db.ExecContext(ctx, "CALL create_production_report($1, $2, $3)", req.ApiaryId, req.StartDate, req.EndDate)
 	if err != nil {
 		zap.S().Error("Error creating production report: ", err)
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}
+
+// SetRegionAccess
+func (s *Server) SetRegionAccess(ctx context.Context, req *pb.SetRegionAccessRequest) (*emptypb.Empty, error) {
+	_, err := s.db.ExecContext(ctx, "CALL set_region_access($1, $2)", req.UserId, req.RegionId)
+	if err != nil {
+		zap.S().Error("Error setting region access: ", err)
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil

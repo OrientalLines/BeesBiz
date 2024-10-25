@@ -3,8 +3,9 @@ package database
 import (
 	"fmt"
 
-	types "github.com/orientallines/beesbiz/internal/types/db"
 	"go.uber.org/zap"
+
+	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
 func (db *DB) GetUser(id int) (types.User, error) {
@@ -19,7 +20,7 @@ func (db *DB) GetUser(id int) (types.User, error) {
 
 func (db *DB) CreateUser(user types.User) (types.User, error) {
 	var createdUser types.User
-	err := db.Get(&createdUser, "INSERT INTO \"user\" (username, role, email, last_login) VALUES ($1, $2, $3, $4) RETURNING *", user.Username, user.Role, user.Email, user.LastLogin)
+	err := db.Get(&createdUser, "INSERT INTO \"user\" (username, full_name, role, email, password, last_login) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", user.Username, user.FullName, user.Role, user.Email, user.Password, user.LastLogin)
 	if err != nil {
 		zap.S().Error("Error creating user: ", err)
 		return types.User{}, fmt.Errorf("error creating user: %w", err)
@@ -29,7 +30,7 @@ func (db *DB) CreateUser(user types.User) (types.User, error) {
 
 func (db *DB) UpdateUser(user types.User) (types.User, error) {
 	var updatedUser types.User
-	err := db.Get(&updatedUser, "UPDATE \"user\" SET username = $1, role = $2, email = $3, last_login = $4 WHERE user_id = $5 RETURNING *", user.Username, user.Role, user.Email, user.LastLogin, user.UserID)
+	err := db.Get(&updatedUser, "UPDATE \"user\" SET username = $1, full_name = $2, role = $3, email = $4, password = $5, last_login = $6 WHERE user_id = $7 RETURNING *", user.Username, user.FullName, user.Role, user.Email, user.Password, user.LastLogin, user.UserID)
 	if err != nil {
 		zap.S().Error("Error updating user: ", err)
 		return types.User{}, fmt.Errorf("error updating user: %w", err)
@@ -55,12 +56,32 @@ func (db *DB) GetAllUsers() ([]types.User, error) {
 	}
 	return users, nil
 }
-func (db *DB) GetAllowedRegion(id int) (types.AllowedRegion, error) {
-	var allowedRegion types.AllowedRegion
-	err := db.Get(&allowedRegion, "SELECT * FROM allowed_region WHERE id = $1", id)
+func (db *DB) GetAllowedRegions(userID int) ([]types.AllowedRegion, error) {
+	var allowedRegions []types.AllowedRegion
+	err := db.Select(&allowedRegions, "SELECT * FROM allowed_region WHERE user_id = $1", userID)
 	if err != nil {
-		zap.S().Error("Error getting allowed region: ", err)
-		return types.AllowedRegion{}, fmt.Errorf("error getting allowed region: %w", err)
+		zap.S().Error("Error getting allowed regions: ", err)
+		return []types.AllowedRegion{}, fmt.Errorf("error getting allowed regions: %w", err)
 	}
-	return allowedRegion, nil
+	return allowedRegions, nil
+}
+
+func (db *DB) GetUserByEmail(email string) (types.User, error) {
+	var user types.User
+	err := db.Get(&user, "SELECT * FROM \"user\" WHERE email = $1", email)
+	if err != nil {
+		zap.S().Error("Error getting user by email: ", err)
+		return types.User{}, fmt.Errorf("error getting user by email: %w", err)
+	}
+	return user, nil
+}
+
+func (db *DB) GetUserByUsername(username string) (types.User, error) {
+	var user types.User
+	err := db.Get(&user, "SELECT * FROM \"user\" WHERE username = $1", username)
+	if err != nil {
+		zap.S().Error("Error getting user by username: ", err)
+		return types.User{}, fmt.Errorf("error getting user by username: %w", err)
+	}
+	return user, nil
 }

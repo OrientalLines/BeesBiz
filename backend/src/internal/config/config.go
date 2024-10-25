@@ -13,6 +13,7 @@ type Config struct {
 	PostgresDB       string `mapstructure:"PSQL_DB"`
 	PostgresHost     string `mapstructure:"PSQL_HOST"`
 	PostgresPort     string `mapstructure:"PSQL_PORT"`
+	JwtSecret        string `mapstructure:"JWT_SECRET"`
 	TiKV             TiKVConfig
 	RabbitMQ         RabbitMQConfig
 	App              AppConfig
@@ -62,6 +63,7 @@ func LoadConfig() error {
 		PostgresDB:       v.GetString("POSTGRES_DB"),
 		PostgresHost:     v.GetString("POSTGRES_HOST"),
 		PostgresPort:     v.GetString("POSTGRES_PORT"),
+		JwtSecret:        v.GetString("JWT_SECRET"),
 		TiKV: TiKVConfig{
 			PDEndpoints: v.GetStringSlice("TIKV_PD_ENDPOINTS"),
 			Username:    v.GetString("TIKV_USERNAME"),

@@ -10,6 +10,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/tikv/client-go/v2 v2.0.7
 	go.uber.org/zap v1.27.0
+	golang.org/x/crypto v0.24.0
 )
 
 require (
@@ -56,6 +57,8 @@ require (
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jmoiron/sqlx v1.4.0

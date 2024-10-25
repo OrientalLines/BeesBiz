@@ -3,8 +3,9 @@ package database
 import (
 	"fmt"
 
-	types "github.com/orientallines/beesbiz/internal/types/db"
 	"go.uber.org/zap"
+
+	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
 func (db *DB) GetRegion(id int) (types.Region, error) {

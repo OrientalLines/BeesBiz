@@ -5,9 +5,10 @@ import (
 	"fmt"
 
 	"github.com/bytedance/sonic"
+	"go.uber.org/zap"
+
 	"github.com/orientallines/beesbiz/internal/database"
 	types "github.com/orientallines/beesbiz/internal/types/db"
-	"go.uber.org/zap"
 )
 
 type Server struct {
@@ -20,6 +21,7 @@ const (
 	SensorReadingQueue = "sensor_reading_queue"
 )
 
+// NewServer creates a new RabbitMQ server
 func NewServer(rmq *RabbitMQ, db *database.DB) (*Server, error) {
 	server := &Server{
 		rmq: rmq,
@@ -45,6 +47,7 @@ func NewServer(rmq *RabbitMQ, db *database.DB) (*Server, error) {
 	return server, nil
 }
 
+// Run starts the RabbitMQ server
 func (s *Server) Run() error {
 	// Start consumers
 	go s.consumeSensorData()
@@ -53,6 +56,7 @@ func (s *Server) Run() error {
 	return nil
 }
 
+// Shutdown closes the RabbitMQ connection and channel
 func (s *Server) Shutdown(ctx context.Context) error {
 	return s.rmq.Close()
 }
@@ -78,7 +82,7 @@ func (s *Server) consumeSensorData() {
 		var sensor types.Sensor
 		if err := sonic.Unmarshal(msg.Body, &sensor); err != nil {
 			zap.L().Error("Failed to unmarshal sensor data", zap.Error(err))
-			msg.Nack(false, true) // Negative acknowledgement, requeue
+			msg.Nack(false, false) // Negative acknowledgement, requeue
 			continue
 		}
 
@@ -92,7 +96,7 @@ func (s *Server) consumeSensorData() {
 
 		if err != nil {
 			zap.L().Error("Failed to save sensor data", zap.Error(err))
-			msg.Nack(false, true)
+			msg.Nack(false, false)
 			continue
 		}
 
@@ -124,7 +128,7 @@ func (s *Server) consumeSensorReadingData() {
 		var reading types.SensorReading
 		if err := sonic.Unmarshal(msg.Body, &reading); err != nil {
 			zap.L().Error("Failed to unmarshal sensor reading data", zap.Error(err))
-			msg.Nack(false, true)
+			msg.Nack(false, false)
 			continue
 		}
 
@@ -132,7 +136,7 @@ func (s *Server) consumeSensorReadingData() {
 		_, err = s.db.CreateSensorReading(reading)
 		if err != nil {
 			zap.L().Error("Failed to save sensor reading data", zap.Error(err))
-			msg.Nack(false, true)
+			msg.Nack(false, false)
 			continue
 		}
 
@@ -142,7 +146,7 @@ func (s *Server) consumeSensorReadingData() {
 			zap.L().Error("Failed to get sensor for updating last reading",
 				zap.Error(err),
 				zap.Int("sensor_id", reading.SensorID))
-			msg.Nack(false, true)
+			msg.Nack(false, false)
 			continue
 		}
 
@@ -154,13 +158,13 @@ func (s *Server) consumeSensorReadingData() {
 			zap.L().Error("Failed to update sensor's last reading",
 				zap.Error(err),
 				zap.Int("sensor_id", reading.SensorID))
-			msg.Nack(false, true)
+			msg.Nack(false, false)
 			continue
 		}
 
 		msg.Ack(false)
 		zap.L().Info("Successfully processed sensor reading",
-			zap.Int("reading_id", reading.ReadingID),
-			zap.Int("sensor_id", reading.SensorID))
+			zap.Int("sensor_id", reading.SensorID),
+			zap.String("sensor_value", string(reading.Value)))
 	}
 }
