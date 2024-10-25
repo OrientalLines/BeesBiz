@@ -16,3 +16,7 @@ spec:
     limits:
       cpu: {{ .Values.rabbitmq.resources.limits.cpu }}
       memory: {{ .Values.rabbitmq.resources.limits.memory }}
+  rabbitmq:
+    additionalConfig: |
+      default_user = {{ .Values.rabbitmq.auth.username }}
+      default_pass = {{ .Values.rabbitmq.auth.password }}

@@ -73,3 +73,6 @@ rabbitmq:
       cpu: "2"
       memory: "2Gi"
       ephemeralStorage: "2Gi"
+  auth:
+    username: "beesbiz"
+    password: "beesbiz"

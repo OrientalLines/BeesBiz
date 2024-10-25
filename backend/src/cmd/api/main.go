@@ -14,7 +14,6 @@ import (
 	"github.com/orientallines/beesbiz/internal/database"
 	"github.com/orientallines/beesbiz/internal/rabbitmq"
 	"github.com/orientallines/beesbiz/internal/server"
-	"github.com/orientallines/beesbiz/internal/tikv"
 )
 
 func main() {
@@ -60,13 +59,14 @@ func main() {
 	}
 	// Example
 	// endpoint: tikv-cluster-pd.beesbiz-tikv.svc:2379
-	tikv, err := tikv.New(config.GlobalConfig.TiKV.PDEndpoints)
-	if err != nil {
-		zap.S().Fatal("Failed to connect to TiKV: ", err)
-	}
+	// tikv, err := tikv.New(config.GlobalConfig.TiKV.PDEndpoints)
+	// if err != nil {
+	// 	zap.S().Fatal("Failed to connect to TiKV: ", err)
+	// }
 
 	// Create the server
-	srv, err := server.NewServer(db, rmq, tikv)
+	// srv, err := server.NewServer(db, rmq, tikv)
+	srv, err := server.NewServer(db, rmq)
 	if err != nil {
 		zap.S().Fatal("Failed to create server: ", err)
 	}
