@@ -104,3 +104,17 @@ func (db *DB) GetAllSensorReadings() ([]types.SensorReading, error) {
 	}
 	return readings, nil
 }
+
+func (db *DB) GetLatestSensorReadings(limit int) ([]types.SensorReading, error) {
+	var readings []types.SensorReading
+	query := `
+        SELECT * FROM sensor_reading
+        ORDER BY timestamp DESC
+        LIMIT $1
+    `
+	err := db.Select(&readings, query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest sensor readings: %w", err)
+	}
+	return readings, nil
+}

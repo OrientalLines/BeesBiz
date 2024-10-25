@@ -55,3 +55,17 @@ func (db *DB) GetAllProductionReports() ([]types.ProductionReport, error) {
 	}
 	return reports, nil
 }
+
+func (db *DB) GetRecentProductionReports(limit int) ([]types.ProductionReport, error) {
+	var reports []types.ProductionReport
+	query := `
+        SELECT * FROM production_report
+        ORDER BY end_date DESC
+        LIMIT $1
+    `
+	err := db.Select(&reports, query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get recent production reports: %w", err)
+	}
+	return reports, nil
+}

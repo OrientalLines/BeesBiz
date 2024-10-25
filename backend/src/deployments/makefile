@@ -5,7 +5,7 @@ MONITORING_NAMESPACE := beesbiz-monitoring
 CLOUDNATIVEPG_NAMESPACE := beesbiz-data
 RABBITMQ_NAMESPACE := beesbiz-rabbitmq
 RUNTIME_NAMESPACE := beesbiz-runtime
-TIKV_RUNTIME := my-go-app
+TIKV_RUNTIME := beesbiz-server
 
 RELEASE_NAME := beesbiz
 CHART_FILE := BeesBizData-0.1.0.tgz
@@ -13,7 +13,7 @@ KUBECTL := kubectl
 HELM := helm
 MINIKUBE := minikube
 
-.PHONY: start uninstall template lint package upgrade list get_all port-forward stop-port-forward recreate pause resume dapr-init dapr-components dapr-status dapr-dashboard dapr-install pubsub postgresql dapr-install uninstall uninstall-all upgrade upgrade-all recreate recreate-all install-tikv install-monitoring install-postgresql install-rabbitmq uninstall-tikv uninstall-monitoring uninstall-postgresql uninstall-rabbitmq
+.PHONY: start uninstall template lint package upgrade list get_all port-forward stop-port-forward recreate pause resume dapr-init dapr-components dapr-status dapr-dashboard dapr-install pubsub postgresql dapr-install uninstall uninstall-all upgrade upgrade-all recreate recreate-all install-tikv install-monitoring install-postgresql install-rabbitmq uninstall-tikv uninstall-monitoring uninstall-postgresql uninstall-rabbitmq docker-build
 
 uninstall:
 	$(HELM) uninstall $(RELEASE_NAME) --namespace $(NAMESPACE)
@@ -41,6 +41,9 @@ dapr-dashboard:
 pubsub:
 	$(KUBECTL) apply -f ./components/pubsub.yaml -n $(NAMESPACE);
 	$(KUBECTL) rollout restart deployment -n dapr-system
+
+docker-build:
+	docker build -t $(TIKV_RUNTIME):latest .
 
 load:
 	$(MINIKUBE) image load $(TIKV_RUNTIME):latest

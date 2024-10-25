@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: beesbiz-runtime
+  name: beesbiz-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: beesbiz-server
+  template:
+    metadata:
+      labels:
+        app: beesbiz-server
+    spec:
+      containers:
+        - name: beesbiz-server
+          image: beesbiz-server:latest
+          imagePullPolicy: IfNotPresent # Changed from Never to IfNotPresent
+          ports:
+            - containerPort: 2379

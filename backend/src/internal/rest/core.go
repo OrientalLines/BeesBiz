@@ -160,10 +160,6 @@ func (s *Server) SetupRoutes() {
 	s.app.Delete("/weather-data/:id", handlers.DeleteWeatherData(s.db))
 	s.app.Get("/weather-data-all", handlers.GetAllWeatherData(s.db))
 
-	// TODO: Implement saveState logic
-	s.app.Post("/tikv/:key", func(c *fiber.Ctx) error {
-		return c.SendString("Save state placeholder")
-	})
 }
 
 // Run starts the server

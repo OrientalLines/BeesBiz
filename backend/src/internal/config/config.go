@@ -13,6 +13,8 @@ type Config struct {
 	PostgresDB       string `mapstructure:"PSQL_DB"`
 	PostgresHost     string `mapstructure:"PSQL_HOST"`
 	PostgresPort     string `mapstructure:"PSQL_PORT"`
+	TiKV             TiKVConfig
+	RabbitMQ         RabbitMQConfig
 	App              AppConfig
 	API              APIConfig
 }
@@ -25,6 +27,20 @@ type APIConfig struct {
 	LimitEnabled    bool `mapstructure:"API_LIMIT_ENABLED"`
 	LimitAmount     int  `mapstructure:"API_LIMIT_AMOUNT"`
 	LimitExpiration int  `mapstructure:"API_LIMIT_EXPIRATION"`
+}
+
+type TiKVConfig struct {
+	PDEndpoints []string `mapstructure:"TIKV_PD_ENDPOINTS"`
+	Username    string   `mapstructure:"TIKV_USERNAME"`
+	Password    string   `mapstructure:"TIKV_PASSWORD"`
+}
+
+type RabbitMQConfig struct {
+	Host     string `mapstructure:"RABBITMQ_HOST"`
+	Port     string `mapstructure:"RABBITMQ_PORT"`
+	Username string `mapstructure:"RABBITMQ_USERNAME"`
+	Password string `mapstructure:"RABBITMQ_PASSWORD"`
+	VHost    string `mapstructure:"RABBITMQ_VHOST"`
 }
 
 var GlobalConfig Config
@@ -46,6 +62,18 @@ func LoadConfig() error {
 		PostgresDB:       v.GetString("PSQL_DB"),
 		PostgresHost:     v.GetString("PSQL_HOST"),
 		PostgresPort:     v.GetString("PSQL_PORT"),
+		TiKV: TiKVConfig{
+			PDEndpoints: v.GetStringSlice("TIKV_PD_ENDPOINTS"),
+			Username:    v.GetString("TIKV_USERNAME"),
+			Password:    v.GetString("TIKV_PASSWORD"),
+		},
+		RabbitMQ: RabbitMQConfig{
+			Host:     v.GetString("RABBITMQ_HOST"),
+			Port:     v.GetString("RABBITMQ_PORT"),
+			Username: v.GetString("RABBITMQ_USERNAME"),
+			Password: v.GetString("RABBITMQ_PASSWORD"),
+			VHost:    v.GetString("RABBITMQ_VHOST"),
+		},
 		App: AppConfig{
 			Environment: v.GetString("APP_ENV"),
 		},

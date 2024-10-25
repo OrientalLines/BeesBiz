@@ -12,7 +12,9 @@ import (
 
 	"github.com/orientallines/beesbiz/internal/config"
 	"github.com/orientallines/beesbiz/internal/database"
+	"github.com/orientallines/beesbiz/internal/rabbitmq"
 	"github.com/orientallines/beesbiz/internal/server"
+	"github.com/orientallines/beesbiz/internal/tikv"
 )
 
 func main() {
@@ -46,10 +48,31 @@ func main() {
 		zap.S().Fatal("Failed to initialize database schema: ", err)
 	}
 
+	// Example
+	// host: rabbitmq.beesbiz-rabbitmq.svc
+	// port: 5672
+	// username: user
+	// password: password
+	// vhost: beesbiz
+	rmq, err := rabbitmq.New(config.GlobalConfig.RabbitMQ.Host, config.GlobalConfig.RabbitMQ.Port, config.GlobalConfig.RabbitMQ.Username, config.GlobalConfig.RabbitMQ.Password, config.GlobalConfig.RabbitMQ.VHost)
+	if err != nil {
+		zap.S().Fatal("Failed to connect to RabbitMQ: ", err)
+	}
+	// Example
+	// endpoint: tikv-cluster-pd.beesbiz-tikv.svc:2379
+	tikv, err := tikv.New(config.GlobalConfig.TiKV.PDEndpoints)
+	if err != nil {
+		zap.S().Fatal("Failed to connect to TiKV: ", err)
+	}
+
 	// Create the server
-	srv := server.NewServer(db)
+	srv, err := server.NewServer(db, rmq, tikv)
+	if err != nil {
+		zap.S().Fatal("Failed to create server: ", err)
+	}
 
 	// Start servers
+	// TODO: Why are we even using goroutines here?
 	go func() {
 		if err := srv.SetupAndRun(":50051", ":4040"); err != nil {
 			zap.S().Fatal("Failed to start servers: ", err)
