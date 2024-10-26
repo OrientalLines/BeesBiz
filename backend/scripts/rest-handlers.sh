@@ -6,11 +6,11 @@ API_URL="${BASE_URL}/api"
 
 # Auth Operations
 curl -X POST "${BASE_URL}/auth/register" -H "Content-Type: application/json" -d '{"username": "John Doe", "email": "john@example.com", "password": "password", "fullName": "John Doe"}'
-curl -X POST "${BASE_URL}/auth/login" -H "Content-Type: application/json" -d '{"emailOrUsername": "john.doe@example.com", "password": "password"}'
+curl -X POST "${BASE_URL}/auth/login" -H "Content-Type: application/json" -d '{"email_or_username": "john@example.com", "password": "password"}'
 
 
 # Apiary Operations
-curl -X POST "${API_URL}/apiary" \>
+curl -X POST "${API_URL}/apiary" \
   -H "Content-Type: application/json" \
   -d '{"location": "Test Location", "manager_id": 1, "establishment_date": "2023-01-01T15:04:05Z"}'
 curl -X GET "${API_URL}/apiary/1"

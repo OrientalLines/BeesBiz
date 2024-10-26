@@ -80,7 +80,7 @@ func (s *Server) SetupAndRun(grpcAddress, restAddress string) error {
 
 // Shutdown shuts down the servers
 func (s *Server) Shutdown(ctx context.Context) error {
-	errChan := make(chan error, 4)
+	errChan := make(chan error, 3)
 
 	go func() {
 		errChan <- s.grpcServer.Shutdown(ctx)
@@ -98,7 +98,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	// 	errChan <- s.tikvServer.Shutdown()
 	// }()
 
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 3; i++ {
 		if err := <-errChan; err != nil {
 			return err
 		}

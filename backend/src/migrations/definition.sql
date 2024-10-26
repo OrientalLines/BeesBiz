@@ -1,4 +1,4 @@
-DO $ $ BEGIN IF NOT EXISTS (
+DO $$ BEGIN IF NOT EXISTS (
 	SELECT
 		1
 	FROM
@@ -13,7 +13,7 @@ END IF;
 
 END;
 
-$ $ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE TABLE IF NOT EXISTS "region" (
 	"region_id" SERIAL,
