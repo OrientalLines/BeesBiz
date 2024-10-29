@@ -5,6 +5,7 @@ __pycache__
 .pytest_cache
 
 /target
+target
 /frontend/spa/build
 /frontend/spa/node_modules
 
