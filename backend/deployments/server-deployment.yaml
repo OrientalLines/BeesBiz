@@ -16,6 +16,21 @@ spec:
       containers:
         - name: beesbiz-server
           image: beesbiz-server:latest
-          imagePullPolicy: IfNotPresent # Changed from Never to IfNotPresent
+          imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 2379
+            - containerPort: 4040
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config.env
+              subPath: config.env
+          resources:
+            limits:
+              cpu: 1
+              memory: 1Gi
+            requests:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: config-volume
+          secret:
+            secretName: config-env

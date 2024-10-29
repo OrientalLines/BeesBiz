@@ -1,0 +1,902 @@
+\documentclass{article}
+\usepackage{import}
+\usepackage{amsmath}
+\usepackage{tabularray}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{svg}
+
+\import{lib/latex/}{wgmlgz_course}
+\patchcmd{\thebibliography}{\section*}{\section}{}{}
+
+\begin{document}
+\itmo[
+      variant=Пасека,
+      labn=2,
+      discipline=Информационные системы,
+      group=P3312,
+      student=Соколов Анатолий Владимирович \\ Пархоменко Кирилл Александрович,
+      teacher=Бострикова Дарья Константиновна
+]
+\lstset{language=java}
+\newgeometry{
+  a4paper,
+  top=20mm,
+  right=10mm,
+  bottom=20mm,
+  left=30mm
+}
+\tableofcontents
+
+\section{Отчет второй части}
+
+\textbf{Предметная область:} гео-распределенная пасека
+
+\subsection{Подробное текстовое описание предметной области}
+
+\subsubsection{Улей}
+\begin{itemize}
+    \item \textbf{Характеристики}: Номер улья, тип улья (например, лежак, многокорпусный), дата установки.
+    \item \textbf{Источник}: Основы пчеловодства, где рассматриваются различные типы ульев и их использование [8].
+\end{itemize}
+
+\subsubsection{Пчелосемья}
+\begin{itemize}
+    \item \textbf{Характеристики}: Номер семьи, количество пчел, состояние (здоровая, больная).
+    \item \textbf{Источник}: Статья о контроле летной активности пчел и их состоянии [7].
+\end{itemize}
+
+\subsubsection{Датчик температуры и влажности}
+\begin{itemize}
+    \item \textbf{Характеристики}: Идентификатор датчика, значения температуры и влажности, дата и время измерения.
+    \item \textbf{Источник}: Описание систем мониторинга в пчеловодстве, где используются датчики для контроля условий в улье [7].
+\end{itemize}
+
+\subsubsection{Запись о медосборе}
+\begin{itemize}
+    \item \textbf{Характеристики}: Дата сбора меда, количество собранного меда, качество.
+    \item \textbf{Источник}: Основы пчеловодства и практики сбора меда [8].
+\end{itemize}
+
+\subsubsection{Журнал наблюдений}
+\begin{itemize}
+    \item \textbf{Характеристики}: Дата записи, описание наблюдений (поведение пчел, состояние улья), рекомендации.
+    \item \textbf{Источник}: Методические рекомендации по ведению журнала наблюдений за пчелами [8].
+\end{itemize}
+
+\subsubsection{Ветеринарный паспорт}
+\begin{itemize}
+    \item \textbf{Характеристики}: Номер паспорта, дата выдачи, состояние здоровья пчелосемьи.
+    \item \textbf{Источник}: Ветеринарные документы для учета здоровья животных на пасеке [8].
+\end{itemize}
+
+\subsubsection{Система управления}
+\begin{itemize}
+    \item \textbf{Характеристики}: Название системы, версия программного обеспечения, дата установки.
+    \item \textbf{Источник}: Описание программных решений для управления пасеками [7].
+\end{itemize}
+
+\subsubsection{План обслуживания}
+\begin{itemize}
+    \item \textbf{Характеристики}: Дата планового обслуживания, виды работ (например, осмотр ульев), ответственный за выполнение.
+    \item \textbf{Источник}: Рекомендации по техническому обслуживанию ульев и оборудования [7].
+\end{itemize}
+
+\subsubsection{Инциденты}
+\begin{itemize}
+    \item \textbf{Характеристики}: Дата инцидента, описание (например, болезни пчел), принятые меры.
+    \item \textbf{Источник}: Нормативные акты по регистрации инцидентов на пасеке [8].
+\end{itemize}
+
+\subsubsection{Отчетность по производству}
+\begin{itemize}
+    \item \textbf{Характеристики}: Период отчета, количество произведенного меда, расходы на содержание пасеки.
+    \item \textbf{Источник}: Статья о ведении отчетности в пчеловодстве [8].
+\end{itemize}
+
+\begin{itemize}
+    \item \textbf{Характеристики}: Период отчета, количество произведенного меда, расходы на содержание пасеки.
+    \item \textbf{Источник}: Статья о ведении отчетности в пчеловодстве [8].
+\end{itemize}
+
+\subsection{Сформировать ER-модель базы данных (на основе описаний предметной области и прецедентов из предыдущего этапа).}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{mermaid-er.png}
+    \caption{ER диаграмма}
+    \label{fig:enter-label}
+\end{figure}
+
+\subsection{Реализовать даталогическую модель в реляционной СУБД PostgreSQL}
+
+\begin{lstlisting}
+CREATE OR REPLACE FUNCTION add_constraint_if_not_exists(
+    p_table_name TEXT,
+    p_constraint_name TEXT,
+    p_constraint_sql TEXT
+) RETURNS VOID AS $$
+BEGIN
+    EXECUTE format('ALTER TABLE %I ADD CONSTRAINT %I %s', p_table_name, p_constraint_name, p_constraint_sql);
+EXCEPTION
+    WHEN duplicate_table THEN
+        RAISE NOTICE 'Table constraint %.% already exists', p_table_name, p_constraint_name;
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'Table constraint %.% already exists', p_table_name, p_constraint_name;
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$
+BEGIN
+    PERFORM add_constraint_if_not_exists('apiary', 'check_establishment_date', 'CHECK ("establishment_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('hive', 'check_installation_date', 'CHECK ("installation_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('bee_community', 'check_queen_age', 'CHECK ("queen_age" >= 0)');
+    PERFORM add_constraint_if_not_exists('bee_community', 'check_population_estimate', 'CHECK ("population_estimate" >= 0)');
+    PERFORM add_constraint_if_not_exists('veterinary_passport', 'check_issue_date', 'CHECK ("issue_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('veterinary_passport', 'check_last_inspection_date', 'CHECK ("last_inspection_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('veterinary_record', 'check_record_date', 'CHECK ("record_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('honey_harvest', 'check_harvest_date', 'CHECK ("harvest_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('honey_harvest', 'check_quantity', 'CHECK ("quantity" >= 0)');
+    PERFORM add_constraint_if_not_exists('observation_log', 'check_observation_date', 'CHECK ("observation_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('maintenance_plan', 'check_planned_date', 'CHECK ("planned_date" >= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('incident', 'check_incident_date', 'CHECK ("incident_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('production_report', 'check_date_range', 'CHECK ("start_date" <= "end_date")');
+    PERFORM add_constraint_if_not_exists('production_report', 'check_total_honey_produced', 'CHECK ("total_honey_produced" >= 0)');
+    PERFORM add_constraint_if_not_exists('weather_data', 'check_weather_date', 'CHECK ("date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('bee_community', 'unique_hive_id', 'UNIQUE ("hive_id")');
+END $$;
+
+
+DO $$ BEGIN IF NOT EXISTS (
+	SELECT
+		1
+	FROM
+		pg_type typ
+		INNER JOIN pg_namespace nsp ON nsp.oid = typ.typnamespace
+	WHERE
+		nsp.nspname = current_schema()
+		AND typ.typname = 'role'
+) THEN CREATE TYPE role AS ENUM ('ADMIN', 'WORKER');
+
+END IF;
+
+END;
+
+$$ LANGUAGE plpgsql;
+
+CREATE TABLE IF NOT EXISTS "region" (
+	"region_id" SERIAL,
+	"name" VARCHAR NOT NULL,
+	"climate_zone" VARCHAR,
+	PRIMARY KEY("region_id")
+);
+
+CREATE TABLE IF NOT EXISTS "apiary" (
+	"apiary_id" SERIAL,
+	"location" VARCHAR NOT NULL,
+	"manager_id" INTEGER,
+	"establishment_date" DATE,
+	PRIMARY KEY("apiary_id")
+);
+
+CREATE TABLE IF NOT EXISTS "hive" (
+	"hive_id" SERIAL,
+	"apiary_id" INTEGER,
+	"hive_type" VARCHAR,
+	"installation_date" DATE,
+	"current_status" VARCHAR,
+	PRIMARY KEY("hive_id")
+);
+
+CREATE TABLE IF NOT EXISTS "bee_community" (
+	"community_id" SERIAL,
+	"hive_id" INTEGER,
+	"queen_age" INTEGER,
+	"population_estimate" INTEGER,
+	"health_status" VARCHAR,
+	PRIMARY KEY("community_id")
+);
+
+CREATE TABLE IF NOT EXISTS "veterinary_passport" (
+	"passport_id" SERIAL,
+	"bee_community_id" INTEGER,
+	"issue_date" DATE,
+	"health_status" VARCHAR,
+	"last_inspection_date" DATE,
+	PRIMARY KEY("passport_id")
+);
+
+CREATE TABLE IF NOT EXISTS "veterinary_record" (
+	"record_id" SERIAL,
+	"passport_id" INTEGER,
+	"record_date" DATE,
+	"description" TEXT,
+	"treatment" TEXT,
+	PRIMARY KEY("record_id")
+);
+
+CREATE TABLE IF NOT EXISTS "sensor" (
+	"sensor_id" SERIAL,
+	"hive_id" INTEGER,
+	"sensor_type" VARCHAR,
+	"last_reading" BYTEA,
+	"last_reading_time" TIMESTAMP,
+	PRIMARY KEY("sensor_id")
+);
+
+CREATE TABLE IF NOT EXISTS "sensor_reading" (
+	"reading_id" SERIAL,
+	"sensor_id" INTEGER,
+	"value" BYTEA,
+	"timestamp" TIMESTAMP,
+	PRIMARY KEY("reading_id")
+);
+
+CREATE TABLE IF NOT EXISTS "honey_harvest" (
+	"harvest_id" SERIAL,
+	"hive_id" INTEGER,
+	"harvest_date" DATE,
+	"quantity" FLOAT,
+	"quality_grade" VARCHAR,
+	PRIMARY KEY("harvest_id")
+);
+
+CREATE TABLE IF NOT EXISTS "observation_log" (
+	"log_id" SERIAL,
+	"hive_id" INTEGER,
+	"observation_date" DATE,
+	"description" TEXT,
+	"recommendations" TEXT,
+	PRIMARY KEY("log_id")
+);
+
+CREATE TABLE IF NOT EXISTS "maintenance_plan" (
+	"plan_id" SERIAL,
+	"apiary_id" INTEGER,
+	"planned_date" DATE,
+	"work_type" VARCHAR,
+	"assigned_to" INTEGER,
+	PRIMARY KEY("plan_id")
+);
+
+CREATE TABLE IF NOT EXISTS "incident" (
+	"incident_id" SERIAL,
+	"hive_id" INTEGER,
+	"incident_date" DATE,
+	"description" TEXT,
+	"severity" VARCHAR,
+	"actions_taken" TEXT,
+	PRIMARY KEY("incident_id")
+);
+
+CREATE TABLE IF NOT EXISTS "production_report" (
+	"report_id" SERIAL,
+	"apiary_id" INTEGER,
+	"start_date" DATE,
+	"end_date" DATE,
+	"total_honey_produced" FLOAT,
+	"total_expenses" FLOAT,
+	PRIMARY KEY("report_id"),
+	UNIQUE("apiary_id", "start_date", "end_date")
+);
+
+CREATE TABLE IF NOT EXISTS "weather_data" (
+	"weather_id" SERIAL,
+	"region_id" INTEGER,
+	"date" DATE,
+	"temperature" FLOAT,
+	"humidity" FLOAT,
+	"wind_speed" FLOAT,
+	"precipitation" FLOAT,
+	PRIMARY KEY("weather_id")
+);
+
+CREATE TABLE IF NOT EXISTS "user" (
+	"user_id" SERIAL,
+	"username" VARCHAR NOT NULL UNIQUE,
+	"full_name" VARCHAR NOT NULL,
+	"role" ROLE,
+	"email" VARCHAR NOT NULL UNIQUE,
+	"password" VARCHAR NOT NULL,
+	"last_login" TIMESTAMP,
+	PRIMARY KEY("user_id")
+);
+
+CREATE TABLE IF NOT EXISTS "allowed_region" (
+	"id" SERIAL NOT NULL,
+	"user_id" INTEGER,
+	"region_id" INTEGER,
+	PRIMARY KEY("id"),
+	UNIQUE ("user_id", "region_id")
+);
+
+CREATE TABLE IF NOT EXISTS "region_apiary" (
+	"id" SERIAL NOT NULL UNIQUE,
+	"apiary_id" INTEGER,
+	"region_id" INTEGER,
+	PRIMARY KEY("id")
+);
+
+ALTER TABLE
+	"hive"
+ADD
+	FOREIGN KEY("apiary_id") REFERENCES "apiary"("apiary_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"bee_community"
+ADD
+	FOREIGN KEY("hive_id") REFERENCES "hive"("hive_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"veterinary_passport"
+ADD
+	FOREIGN KEY("bee_community_id") REFERENCES "bee_community"("community_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"veterinary_record"
+ADD
+	FOREIGN KEY("passport_id") REFERENCES "veterinary_passport"("passport_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"sensor"
+ADD
+	FOREIGN KEY("hive_id") REFERENCES "hive"("hive_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"sensor_reading"
+ADD
+	FOREIGN KEY("sensor_id") REFERENCES "sensor"("sensor_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"honey_harvest"
+ADD
+	FOREIGN KEY("hive_id") REFERENCES "hive"("hive_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"observation_log"
+ADD
+	FOREIGN KEY("hive_id") REFERENCES "hive"("hive_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"maintenance_plan"
+ADD
+	FOREIGN KEY("apiary_id") REFERENCES "apiary"("apiary_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"incident"
+ADD
+	FOREIGN KEY("hive_id") REFERENCES "hive"("hive_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"production_report"
+ADD
+	FOREIGN KEY("apiary_id") REFERENCES "apiary"("apiary_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"weather_data"
+ADD
+	FOREIGN KEY("region_id") REFERENCES "region"("region_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"allowed_region"
+ADD
+	FOREIGN KEY("region_id") REFERENCES "region"("region_id") ON UPDATE NO ACTION ON DELETE NO ACTION;
+
+ALTER TABLE
+	"region_apiary"
+ADD
+	FOREIGN KEY("apiary_id") REFERENCES "apiary"("apiary_id") ON UPDATE NO ACTION ON DELETE NO ACTION;
+
+ALTER TABLE
+	"region_apiary"
+ADD
+	FOREIGN KEY("region_id") REFERENCES "region"("region_id") ON UPDATE NO ACTION ON DELETE NO ACTION;
+
+ALTER TABLE
+	"allowed_region"
+ADD
+	FOREIGN KEY("user_id") REFERENCES "user"("user_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"sensor"
+ALTER COLUMN
+	"last_reading_time"
+SET
+	DEFAULT now();
+
+ALTER TABLE
+	"sensor_reading"
+ALTER COLUMN
+	"timestamp"
+SET
+	DEFAULT now();
+\end{lstlisting}
+
+\subsection{Обеспечить целостность данных при помощи средств языка DDL и триггеров}
+\begin{lstlisting}
+CREATE OR REPLACE FUNCTION add_constraint_if_not_exists(
+    p_table_name TEXT,
+    p_constraint_name TEXT,
+    p_constraint_sql TEXT
+) RETURNS VOID AS $$
+BEGIN
+    EXECUTE format('ALTER TABLE %I ADD CONSTRAINT %I %s', p_table_name, p_constraint_name, p_constraint_sql);
+EXCEPTION
+    WHEN duplicate_table THEN
+        RAISE NOTICE 'Table constraint %.% already exists', p_table_name, p_constraint_name;
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'Table constraint %.% already exists', p_table_name, p_constraint_name;
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$
+BEGIN
+    PERFORM add_constraint_if_not_exists('apiary', 'check_establishment_date', 'CHECK ("establishment_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('hive', 'check_installation_date', 'CHECK ("installation_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('bee_community', 'check_queen_age', 'CHECK ("queen_age" >= 0)');
+    PERFORM add_constraint_if_not_exists('bee_community', 'check_population_estimate', 'CHECK ("population_estimate" >= 0)');
+    PERFORM add_constraint_if_not_exists('veterinary_passport', 'check_issue_date', 'CHECK ("issue_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('veterinary_passport', 'check_last_inspection_date', 'CHECK ("last_inspection_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('veterinary_record', 'check_record_date', 'CHECK ("record_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('honey_harvest', 'check_harvest_date', 'CHECK ("harvest_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('honey_harvest', 'check_quantity', 'CHECK ("quantity" >= 0)');
+    PERFORM add_constraint_if_not_exists('observation_log', 'check_observation_date', 'CHECK ("observation_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('maintenance_plan', 'check_planned_date', 'CHECK ("planned_date" >= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('incident', 'check_incident_date', 'CHECK ("incident_date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('production_report', 'check_date_range', 'CHECK ("start_date" <= "end_date")');
+    PERFORM add_constraint_if_not_exists('production_report', 'check_total_honey_produced', 'CHECK ("total_honey_produced" >= 0)');
+    PERFORM add_constraint_if_not_exists('weather_data', 'check_weather_date', 'CHECK ("date" <= CURRENT_DATE)');
+    PERFORM add_constraint_if_not_exists('bee_community', 'unique_hive_id', 'UNIQUE ("hive_id")');
+END $$;
+
+\end{lstlisting}
+
+\subsection{Реализовать скрипты для создания, удаления базы данных, заполнения базы тестовыми данными.}
+
+\begin{lstlisting}
+
+-- Function to populate the database with test data
+CREATE OR REPLACE FUNCTION populate_test_data()
+RETURNS VOID AS $$
+BEGIN
+    -- Insert test data for Region
+    INSERT INTO Region (name, climate_zone) VALUES
+    ('North', 'Temperate'),
+    ('South', 'Mediterranean'),
+    ('East', 'Continental'),
+    ('West', 'Oceanic');
+
+    -- Insert test data for Apiary
+    INSERT INTO Apiary (location, establishment_date, region_id) VALUES
+    ('Forest Edge', '2020-05-15', 1),
+    ('Meadow', '2019-07-20', 2),
+    ('Mountain Side', '2021-03-10', 3),
+    ('Coastal Area', '2018-09-01', 4);
+
+    -- Insert test data for Hive
+    INSERT INTO Hive (apiary_id, installation_date) VALUES
+    (1, '2020-06-01'),
+    (1, '2020-06-02'),
+    (2, '2019-08-01'),
+    (3, '2021-04-01'),
+    (4, '2018-10-01');
+
+    -- Insert test data for BeeCommunity
+    INSERT INTO BeeCommunity (hive_id, queen_age, population_estimate) VALUES
+    (1, 2, 50000),
+    (2, 1, 40000),
+    (3, 3, 60000),
+    (4, 1, 45000),
+    (5, 2, 55000);
+
+    -- Insert test data for User
+    INSERT INTO "User" (username, password_hash, role) VALUES
+    ('admin', 'hashed_password', 'admin'),
+    ('user1', 'hashed_password', 'user'),
+    ('user2', 'hashed_password', 'user');
+
+    -- Insert test data for UserRegionAccess
+    INSERT INTO UserRegionAccess (user_id, region_id) VALUES
+    (2, 1),
+    (2, 2),
+    (3, 3),
+    (3, 4);
+
+    -- Insert test data for HoneyHarvest
+    INSERT INTO HoneyHarvest (hive_id, harvest_date, quantity) VALUES
+    (1, '2021-08-15', 25.5),
+    (2, '2021-08-16', 22.0),
+    (3, '2021-08-20', 30.5),
+    (4, '2021-09-01', 28.0),
+    (5, '2021-09-05', 26.5);
+
+    -- Insert test data for ObservationLog
+    INSERT INTO ObservationLog (hive_id, user_id, observation_date, notes) VALUES
+    (1, 2, '2021-07-01', 'Bees appear healthy and active'),
+    (2, 2, '2021-07-02', 'Queen spotted, laying eggs'),
+    (3, 3, '2021-07-10', 'Hive population growing steadily'),
+    (4, 3, '2021-07-15', 'Some signs of possible mite infestation'),
+    (5, 2, '2021-07-20', 'Honey production looks promising');
+
+    -- Insert test data for MaintenancePlan
+    INSERT INTO MaintenancePlan (hive_id, planned_date, description) VALUES
+    (1, '2021-10-01', 'Winter preparation'),
+    (2, '2021-10-02', 'Winter preparation'),
+    (3, '2021-10-05', 'Winter preparation'),
+    (4, '2021-10-10', 'Mite treatment'),
+    (5, '2021-10-15', 'Winter preparation');
+
+    -- Insert test data for Incident
+    INSERT INTO Incident (hive_id, incident_date, description) VALUES
+    (4, '2021-07-20', 'Mite infestation detected');
+
+    -- Insert test data for WeatherData
+    INSERT INTO WeatherData (region_id, date, temperature, humidity, precipitation) VALUES
+    (1, '2021-08-01', 25.5, 60.0, 0.0),
+    (2, '2021-08-01', 28.0, 55.0, 0.0),
+    (3, '2021-08-01', 23.0, 65.0, 5.0),
+    (4, '2021-08-01', 22.0, 70.0, 2.0);
+
+END;
+$$ LANGUAGE plpgsql;
+
+-- Execute the function to populate the database
+SELECT populate_test_data();
+
+-- Confirm population
+SELECT 'Test data inserted successfully!' AS result;
+
+\end{lstlisting}
+
+\subsection{Предложить pl/pgsql-функции и процедуры, для выполнения критически важных запросов (которые потребуются при последующей реализации прецедентов).}
+\begin{lstlisting}
+    -- Create function to create triggers if they don't exist
+CREATE OR REPLACE FUNCTION create_trigger_if_not_exists(
+    p_trigger_name TEXT,
+    p_table_name TEXT,
+    p_trigger_timing TEXT,
+    p_trigger_event TEXT,
+    p_trigger_function TEXT
+) RETURNS VOID AS $$
+BEGIN
+    -- Check if the trigger already exists
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.triggers
+        WHERE trigger_name = p_trigger_name
+          AND event_object_table = p_table_name
+    ) THEN
+        -- Create the trigger if it doesn't exist
+        EXECUTE format(
+            'CREATE TRIGGER %I
+             %s %s ON %I
+             FOR EACH ROW
+             EXECUTE FUNCTION %s()',
+            p_trigger_name,
+            p_trigger_timing,
+            p_trigger_event,
+            p_table_name,
+            p_trigger_function
+        );
+        RAISE NOTICE 'Trigger % created on table %', p_trigger_name, p_table_name;
+    ELSE
+        RAISE NOTICE 'Trigger % already exists on table %', p_trigger_name, p_table_name;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create triggers
+CREATE OR REPLACE FUNCTION update_last_login()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.last_login = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT create_trigger_if_not_exists(
+    'update_user_last_login',
+    'user',
+    'BEFORE',
+    'UPDATE',
+    'update_last_login'
+);
+
+-- Create a function to grant access to all regions for admin users
+CREATE OR REPLACE FUNCTION grant_admin_access()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.role = 'ADMIN' THEN
+        INSERT INTO "allowed_region" (user_id, region_id)
+        SELECT NEW.user_id, r.region_id
+        FROM "region" r
+        ON CONFLICT ("user_id", "region_id") DO NOTHING;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT create_trigger_if_not_exists(
+    'admin_access_trigger',
+    'user',
+    'AFTER',
+    'INSERT OR UPDATE',
+    'grant_admin_access'
+);
+
+CREATE OR REPLACE FUNCTION update_population_estimate()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE "bee_community"
+        SET population_estimate = population_estimate + NEW.quantity
+        WHERE community_id = (SELECT community_id FROM bee_community WHERE hive_id = NEW.hive_id);
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE "bee_community"
+        SET population_estimate = population_estimate - OLD.quantity
+        WHERE community_id = (SELECT community_id FROM bee_community WHERE hive_id = OLD.hive_id);
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT create_trigger_if_not_exists(
+    'update_bee_population',
+    'honey_harvest',
+    'AFTER',
+    'INSERT OR DELETE',
+    'update_population_estimate'
+);
+
+-- Trigger to automatically create a veterinary passport for new bee communities
+CREATE OR REPLACE FUNCTION create_veterinary_passport()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO "veterinary_passport" (bee_community_id, issue_date, last_inspection_date)
+    VALUES (NEW.community_id, CURRENT_DATE, CURRENT_DATE);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT create_trigger_if_not_exists(
+    'new_bee_community_passport',
+    'bee_community',
+    'AFTER',
+    'INSERT',
+    'create_veterinary_passport'
+);
+
+-- Trigger to update production report when new honey harvest is added
+CREATE OR REPLACE FUNCTION update_production_report()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO "production_report" (apiary_id, start_date, end_date, total_honey_produced)
+    VALUES (
+        (SELECT apiary_id FROM "hive" WHERE hive_id = NEW.hive_id),
+        DATE_TRUNC('month', NEW.harvest_date),
+        DATE_TRUNC('month', NEW.harvest_date) + INTERVAL '1 month' - INTERVAL '1 day',
+        NEW.quantity
+    )
+    ON CONFLICT (apiary_id, start_date, end_date)
+    DO UPDATE SET total_honey_produced = "production_report".total_honey_produced + NEW.quantity;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT create_trigger_if_not_exists(
+    'update_honey_production',
+    'honey_harvest',
+    'AFTER',
+    'INSERT',
+    'update_production_report'
+);
+
+
+-- 1. Функция для получения общего количества меда, собранного в конкретном улье за определенный период
+CREATE OR REPLACE FUNCTION get_total_honey_harvested(
+    p_hive_id INTEGER,
+    p_start_date DATE,
+    p_end_date DATE
+) RETURNS DECIMAL AS $$
+DECLARE
+    total_honey DECIMAL;
+BEGIN
+    SELECT COALESCE(SUM(quantity::DECIMAL), 0)
+    INTO total_honey
+    FROM honey_harvest
+    WHERE hive_id = p_hive_id
+    AND harvest_date BETWEEN p_start_date AND p_end_date;
+
+    RETURN total_honey;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 2. Процедура для добавления нового наблюдения в журнал
+CREATE OR REPLACE PROCEDURE add_observation(
+    p_hive_id INTEGER,
+    p_observation_date DATE,
+    p_description TEXT,
+    p_recommendations TEXT
+) AS $$
+BEGIN
+    INSERT INTO observation_log (hive_id, observation_date, description, recommendations)
+    VALUES (p_hive_id, p_observation_date, p_description, p_recommendations);
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Функция для получения текущего состояния здоровья пчелиной общины
+CREATE OR REPLACE FUNCTION get_community_health_status(p_community_id INTEGER)
+RETURNS VARCHAR AS $$
+DECLARE
+    health_status VARCHAR;
+BEGIN
+    SELECT vp.health_status
+    INTO health_status
+    FROM veterinary_passport vp
+    WHERE vp.bee_community_id = p_community_id
+    ORDER BY vp.last_inspection_date DESC
+    LIMIT 1;
+
+    RETURN COALESCE(health_status, 'Unknown');
+END;
+$$ LANGUAGE plpgsql;
+
+-- 4. Процедура для обновления статуса улья
+CREATE OR REPLACE PROCEDURE update_hive_status(
+    p_hive_id INTEGER,
+    p_new_status VARCHAR
+) AS $$
+BEGIN
+    UPDATE hive
+    SET current_status = p_new_status
+    WHERE hive_id = p_hive_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 5. Функция для расчета средней температуры в регионе за последние N дней
+CREATE OR REPLACE FUNCTION get_avg_temperature(
+    p_region_id INTEGER,
+    p_days INTEGER
+) RETURNS DECIMAL AS $$
+DECLARE
+    avg_temp DECIMAL;
+BEGIN
+    SELECT AVG(temperature::DECIMAL)
+    INTO avg_temp
+    FROM weather_data
+    WHERE region_id = p_region_id
+    AND date >= CURRENT_DATE - p_days;
+
+    RETURN COALESCE(avg_temp, 0);
+END;
+$$ LANGUAGE plpgsql;
+
+-- 6. Процедура для назначения работника на план обслуживания
+CREATE OR REPLACE PROCEDURE assign_maintenance_plan(
+    p_plan_id INTEGER,
+    p_user_id INTEGER
+) AS $$
+BEGIN
+    UPDATE maintenance_plan
+    SET assigned_to = p_user_id
+    WHERE plan_id = p_plan_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 7. Функция для проверки доступа пользователя к региону
+CREATE OR REPLACE FUNCTION has_region_access(
+    p_user_id INTEGER,
+    p_region_id INTEGER
+) RETURNS BOOLEAN AS $$
+DECLARE
+    has_access BOOLEAN;
+BEGIN
+    SELECT EXISTS (
+        SELECT 1
+        FROM allowed_region
+        WHERE user_id = p_user_id AND region_id = p_region_id
+    ) INTO has_access;
+
+    RETURN has_access;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 8. Процедура для регистрации инцидента
+CREATE OR REPLACE PROCEDURE register_incident(
+    p_hive_id INTEGER,
+    p_incident_date DATE,
+    p_description TEXT,
+    p_severity VARCHAR
+) AS $$
+BEGIN
+    INSERT INTO incident (hive_id, incident_date, description, severity)
+    VALUES (p_hive_id, p_incident_date, p_description, p_severity);
+END;
+$$ LANGUAGE plpgsql;
+
+-- 9. Функция для получения последних показаний датчика
+CREATE OR REPLACE FUNCTION get_latest_sensor_reading(p_hive_id INTEGER, p_sensor_type VARCHAR)
+RETURNS TABLE (value BYTEA, reading_timestamp TIMESTAMP) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT sr.value, sr.timestamp
+    FROM sensor s
+    JOIN sensor_reading sr ON s.sensor_id = sr.sensor_id
+    WHERE s.hive_id = p_hive_id AND s.sensor_type = p_sensor_type
+    ORDER BY sr.timestamp DESC
+    LIMIT 1;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 10. Процедура для создания отчета о производстве
+CREATE OR REPLACE PROCEDURE create_production_report(
+    p_apiary_id INTEGER,
+    p_start_date DATE,
+    p_end_date DATE
+) AS $$
+DECLARE
+    total_honey DECIMAL;
+    total_expenses DECIMAL;
+BEGIN
+    -- Расчет общего количества собранного меда
+    SELECT COALESCE(SUM(quantity::DECIMAL), 0)
+    INTO total_honey
+    FROM honey_harvest hh
+    JOIN hive h ON hh.hive_id = h.hive_id
+    WHERE h.apiary_id = p_apiary_id
+    AND hh.harvest_date BETWEEN p_start_date AND p_end_date;
+
+    -- Здесь должен быть расчет общих расходов (пример)
+    total_expenses := 1000.00;
+
+    -- Создание отчета
+    INSERT INTO production_report (apiary_id, start_date, end_date, total_honey_produced, total_expenses)
+    VALUES (p_apiary_id, p_start_date, p_end_date, total_honey, total_expenses);
+END;
+$$ LANGUAGE plpgsql;
+
+\end{lstlisting}
+
+\subsection{Создать индексы на основе анализа использования базы данных в контексте описанных на первом этапе прецедентов. Обосновать полезность созданных индексов для реализации представленных на первом этапе бизнес-процессов.}
+
+\begin{lstlisting}
+    -- Add indexes for performance
+CREATE INDEX IF NOT EXISTS idx_apiary_manager ON "apiary"(manager_id);
+
+CREATE INDEX IF NOT EXISTS idx_hive_apiary ON "hive"(apiary_id);
+
+CREATE INDEX IF NOT EXISTS idx_bee_community_hive ON "bee_community"(hive_id);
+
+CREATE INDEX IF NOT EXISTS idx_veterinary_passport_community ON "veterinary_passport"(bee_community_id);
+
+CREATE INDEX IF NOT EXISTS idx_veterinary_record_passport ON "veterinary_record"(passport_id);
+
+CREATE INDEX IF NOT EXISTS idx_sensor_hive ON "sensor"(hive_id);
+
+CREATE INDEX IF NOT EXISTS idx_sensor_reading_sensor ON "sensor_reading"(sensor_id);
+
+CREATE INDEX IF NOT EXISTS idx_honey_harvest_hive ON "honey_harvest"(hive_id);
+
+CREATE INDEX IF NOT EXISTS idx_observation_log_hive ON "observation_log"(hive_id);
+
+CREATE INDEX IF NOT EXISTS idx_maintenance_plan_apiary ON "maintenance_plan"(apiary_id);
+
+CREATE INDEX IF NOT EXISTS idx_incident_hive ON "incident"(hive_id);
+
+CREATE INDEX IF NOT EXISTS idx_production_report_apiary ON "production_report"(apiary_id);
+
+CREATE INDEX IF NOT EXISTS idx_weather_data_region ON "weather_data"(region_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_allowed_region_user_region
+ON "allowed_region" (user_id, region_id);
+
+CREATE INDEX IF NOT EXISTS idx_allowed_region_region ON "allowed_region"(region_id);
+
+CREATE INDEX IF NOT EXISTS idx_region_apiary_apiary ON "region_apiary"(apiary_id);
+
+CREATE INDEX IF NOT EXISTS idx_region_apiary_region ON "region_apiary"(region_id);
+
+\end{lstlisting}
+
+\end{document}

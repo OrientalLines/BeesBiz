@@ -72,8 +72,7 @@ func (s *Server) cacheSensorReadings() {
 		case <-s.ctx.Done():
 			return
 		case <-ticker.C:
-			// Fetch latest sensor readings from database
-			readings, err := s.db.GetLatestSensorReadings(100) // example limit
+			readings, err := s.db.GetLatestSensorReadings(100)
 			if err != nil {
 				s.ErrCh <- fmt.Errorf("failed to fetch sensor readings: %w", err)
 				continue
@@ -114,7 +113,6 @@ func (s *Server) cacheProductionReports() {
 		case <-s.ctx.Done():
 			return
 		case <-ticker.C:
-			// Fetch latest production reports from database
 			reports, err := s.db.GetRecentProductionReports(50) // example limit
 			if err != nil {
 				s.ErrCh <- fmt.Errorf("failed to fetch production reports: %w", err)
@@ -135,8 +133,11 @@ func (s *Server) cacheProductionReports() {
 				}
 				values[i] = value
 			}
-			// TODO: Implement BatchPutWithTTL
-			if err := s.client.BatchPut(s.ctx, keys, values); err != nil {
+			ttls := make([]uint64, len(reports))
+			for i := range reports {
+				ttls[i] = 7200
+			}
+			if err := s.client.BatchPutWithTTL(s.ctx, keys, values, ttls); err != nil {
 				s.ErrCh <- fmt.Errorf("failed to batch put production reports: %w", err)
 			}
 		}
@@ -146,7 +147,30 @@ func (s *Server) cacheProductionReports() {
 // TODO: Implement this
 // GetProductionReports retrieves production reports by IDs
 func (s *Server) GetProductionReports(ids []int) ([]types.ProductionReport, error) {
-	return nil, nil
+	keys := make([][]byte, len(ids))
+	for i, id := range ids {
+		keys[i] = []byte(fmt.Sprintf("production_report:%d", id))
+	}
+	// Consider TTL
+	values, err := s.client.BatchGet(s.ctx, keys)
+	if err != nil {
+		return nil, fmt.Errorf("failed to batch get production reports: %w", err)
+	}
+
+	reports := make([]types.ProductionReport, 0, len(values))
+	for i, value := range values {
+		if value == nil {
+			continue
+		}
+		var report types.ProductionReport
+		if err := sonic.Unmarshal(value, &report); err != nil {
+			s.ErrCh <- fmt.Errorf("failed to unmarshal report for id %d: %w", ids[i], err)
+			continue
+		}
+		reports = append(reports, report)
+	}
+
+	return reports, nil
 }
 
 // TODO: Test this and implement it in the rest server
