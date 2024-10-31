@@ -1,4 +1,7 @@
+// iot/src/main.rs
+
 use actix::prelude::*;
+use lapin::{options::QueueDeclareOptions, types::FieldTable, Connection};
 use std::env;
 
 mod apiary;
@@ -10,34 +13,36 @@ mod types;
 use apiary::Apiary;
 use config::Config;
 
-#[actix::main]
+#[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    // Load configuration
-    let config_path = env::args()
-        .nth(1)
-        .unwrap_or_else(|| "config.toml".to_string());
-    let config = Config::from_file(&config_path).expect("Failed to load configuration");
+    let args: Vec<String> = env::args().collect();
+    let config_path = args.get(1).expect("Config file path required");
+    let config = Config::from_file(config_path).expect("Failed to load configuration");
 
-    // Start Apiary Actor
-    let apiary = Apiary::new(&config.apiary.rabbitmq_url)
+    // Create RabbitMQ connection
+    let conn = Connection::connect(&config.apiary.rabbitmq_url, Default::default())
         .await
-        .expect("Failed to create Apiary");
+        .expect("Failed to connect to RabbitMQ");
 
-    let apiary_addr = apiary.start();
+    // Create and start the Apiary actor
+    let apiary_addr = Apiary::new(&config.apiary.rabbitmq_url)
+        .await
+        .expect("Failed to create Apiary")
+        .start();
 
-    // Optionally, create initial hives based on configuration
+    // Create initial hives based on configuration
     for hive_cfg in config.apiary.hives {
         let _ = apiary_addr
             .send(messages::CreateHive {
-                hive_id: hive_cfg.name.parse().unwrap_or(0), // Assuming hive_id is derived from name
+                hive_id: hive_cfg.id, // Use numeric ID from config
                 sensors: hive_cfg
                     .sensors
                     .into_iter()
                     .map(|s| types::Sensor {
                         sensor_id: s.sensor_id,
-                        hive_id: hive_cfg.name.parse().unwrap_or(0), // Assuming hive_id is derived from name
+                        hive_id: hive_cfg.id, // Use numeric ID
                         sensor_type: s.sensor_type,
-                        last_reading: Vec::new(),
+                        last_reading: String::new(),
                         last_reading_time: None,
                     })
                     .collect(),
@@ -45,9 +50,34 @@ async fn main() -> std::io::Result<()> {
             .await
             .unwrap_or_else(|e| {
                 println!("Failed to send CreateHive message: {}", e);
-                Ok(()) // Return Result<(), ()> as expected
+                Ok(())
             });
     }
-    // Start the Actix system and keep it running
-    actix_rt::System::new().block_on(async { Ok(()) })
+
+    println!("System running. Press Ctrl-C to exit.");
+
+    // Keep the system running
+    tokio::signal::ctrl_c().await?;
+    println!("Shutting down...");
+
+    // After starting the Apiary
+    println!("Checking RabbitMQ queues...");
+    if let Ok(channel) = conn.create_channel().await {
+        if let Ok(queue) = channel
+            .queue_declare(
+                "sensor_reading_queue",
+                QueueDeclareOptions::default(),
+                FieldTable::default(),
+            )
+            .await
+        {
+            println!(
+                "sensor_reading_queue status: {} messages, {} consumers",
+                queue.message_count(),
+                queue.consumer_count()
+            );
+        }
+    }
+
+    Ok(())
 }

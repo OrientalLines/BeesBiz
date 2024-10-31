@@ -15,6 +15,7 @@ pub struct ApiaryConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct HiveConfig {
+    pub id: i32, // Added field
     pub name: String,
     pub sensors: Vec<SensorConfig>,
 }
