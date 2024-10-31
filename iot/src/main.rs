@@ -10,7 +10,7 @@ mod hive;
 mod messages;
 mod types;
 
-use apiary::Apiary;
+use apiary::{Apiary, LoadExistingHives, StartConsumers};
 use config::Config;
 
 #[actix_rt::main]
@@ -30,29 +30,38 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create Apiary")
         .start();
 
-    // Create initial hives based on configuration
-    for hive_cfg in config.apiary.hives {
-        let _ = apiary_addr
-            .send(messages::CreateHive {
-                hive_id: hive_cfg.id, // Use numeric ID from config
-                sensors: hive_cfg
-                    .sensors
-                    .into_iter()
-                    .map(|s| types::Sensor {
-                        sensor_id: s.sensor_id,
-                        hive_id: hive_cfg.id, // Use numeric ID
-                        sensor_type: s.sensor_type,
-                        last_reading: String::new(),
-                        last_reading_time: None,
-                    })
-                    .collect(),
-            })
-            .await
-            .unwrap_or_else(|e| {
-                println!("Failed to send CreateHive message: {}", e);
-                Ok(())
-            });
+    // First, explicitly load existing hives and wait for completion
+    println!("Loading existing hives from queue...");
+    if let Err(e) = apiary_addr.send(LoadExistingHives).await {
+        println!("Failed to load existing hives: {}", e);
     }
+
+    // Then load hives from config
+    println!("Loading hives from configuration...");
+    for hive_cfg in config.apiary.hives {
+        let create_hive = messages::CreateHive {
+            hive_id: hive_cfg.id,
+            sensors: hive_cfg
+                .sensors
+                .into_iter()
+                .map(|s| types::Sensor {
+                    sensor_id: s.sensor_id,
+                    hive_id: hive_cfg.id,
+                    sensor_type: s.sensor_type,
+                    last_reading: String::new(),
+                    last_reading_time: None,
+                })
+                .collect(),
+        };
+
+        if let Err(e) = apiary_addr.send(create_hive).await {
+            println!("Failed to create hive from config: {}", e);
+        }
+    }
+
+    // Now start the regular consumers
+    println!("Starting regular consumers...");
+    apiary_addr.send(StartConsumers).await.expect("Failed to start consumers");
 
     println!("System running. Press Ctrl-C to exit.");
 

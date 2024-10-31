@@ -1,6 +1,7 @@
 // iot/src/hive.rs
 
 use actix::prelude::*;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use chrono::Utc;
 use lapin::options::BasicPublishOptions;
 use lapin::{BasicProperties, Channel, Connection, ConnectionProperties};
@@ -9,7 +10,6 @@ use serde_json::json;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 
 use crate::messages::SensorReadingData;
 use crate::types::SensorReading;

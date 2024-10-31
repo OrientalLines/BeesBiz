@@ -21,36 +21,23 @@ pub struct Apiary {
 impl Apiary {
     pub async fn new(rabbitmq_url: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let conn = Connection::connect(rabbitmq_url, ConnectionProperties::default()).await?;
-
         let channel = conn.create_channel().await?;
 
-        // Declare necessary queues with specific options
-        for queue in &["sensor_queue", "hive_queue"] {
+        // Declare queues with persistence
+        for queue in &["sensor_queue", "hive_queue", "sensor_reading_queue"] {
             channel
                 .queue_declare(
                     queue,
                     QueueDeclareOptions {
                         durable: true,
+                        auto_delete: false,
+                        exclusive: false,
                         ..Default::default()
                     },
                     FieldTable::default(),
                 )
                 .await?;
         }
-
-        // Declare sensor_reading_queue separately with specific options
-        channel
-            .queue_declare(
-                "sensor_reading_queue",
-                QueueDeclareOptions {
-                    durable: true,
-                    auto_delete: false,
-                    exclusive: false,
-                    ..Default::default()
-                },
-                FieldTable::default(),
-            )
-            .await?;
 
         Ok(Apiary {
             rabbitmq_connection: Arc::new(Mutex::new(conn)),
@@ -59,6 +46,27 @@ impl Apiary {
             rabbitmq_url: rabbitmq_url.to_string(),
         })
     }
+
+    // New method to load existing hives from queue
+    pub async fn load_existing_hives(&self) -> Result<(), Box<dyn std::error::Error>> {
+        let channel = self.rabbitmq_channel.lock().await;
+
+        // Get all messages from hive_queue without consuming them
+        let queue = channel
+            .queue_declare(
+                "hive_queue",
+                QueueDeclareOptions {
+                    passive: true, // Don't create, just check
+                    ..Default::default()
+                },
+                FieldTable::default(),
+            )
+            .await?;
+
+        println!("Found {} existing hives in queue", queue.message_count());
+
+        Ok(())
+    }
 }
 
 impl Actor for Apiary {
@@ -66,7 +74,219 @@ impl Actor for Apiary {
 
     fn started(&mut self, ctx: &mut Context<Self>) {
         println!("Apiary started");
+        // Don't start consumers here anymore
+    }
+}
+
+// Add a new message type to start consumers
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct StartConsumers;
+
+impl Handler<StartConsumers> for Apiary {
+    type Result = ();
+
+    fn handle(&mut self, _msg: StartConsumers, ctx: &mut Context<Self>) {
+        println!("Starting regular consumers...");
         self.start_consumers(ctx);
+    }
+}
+
+#[derive(Message)]
+#[rtype(result = "Result<(), String>")]
+pub struct LoadExistingHives;
+
+impl Handler<LoadExistingHives> for Apiary {
+    type Result = ResponseActFuture<Self, Result<(), String>>;
+
+    fn handle(&mut self, _msg: LoadExistingHives, _ctx: &mut Context<Self>) -> Self::Result {
+        let channel = self.rabbitmq_channel.clone();
+
+        Box::pin(
+            async move {
+                let mut stored_hives: Vec<(i32, Vec<Sensor>)> = Vec::new();
+                let channel = channel.lock().await;
+
+                println!("Starting initial load of hives from queue...");
+                let queue = channel
+                    .queue_declare(
+                        "hive_queue",
+                        QueueDeclareOptions {
+                            passive: true, // Don't create, just check
+                            ..Default::default()
+                        },
+                        FieldTable::default(),
+                    )
+                    .await
+                    .map_err(|e| format!("Failed to check queue: {}", e))?;
+
+                println!("Found {} messages in hive_queue", queue.message_count());
+
+                if queue.message_count() > 0 {
+                    let mut consumer = channel
+                        .basic_consume(
+                            "hive_queue",
+                            "initial_load_consumer",
+                            BasicConsumeOptions {
+                                no_ack: false,
+                                exclusive: true,
+                                ..Default::default()
+                            },
+                            FieldTable::default(),
+                        )
+                        .await
+                        .map_err(|e| format!("Failed to create consumer: {}", e))?;
+
+                    let mut message_count = 0;
+                    while let Some(delivery_result) = consumer.next().await {
+                        match delivery_result {
+                            Ok(delivery) => {
+                                println!("Processing message {} from queue...", message_count + 1);
+                                let payload = String::from_utf8_lossy(&delivery.data);
+                                println!("Message payload: {}", payload);
+
+                                match serde_json::from_slice::<Value>(&delivery.data) {
+                                    Ok(hive_request) => {
+                                        let hive_id = hive_request["hive_id"].as_i64().unwrap_or(0) as i32;
+                                        println!("Found hive_id: {} in queue", hive_id);
+
+                                        match serde_json::from_value::<Vec<Sensor>>(hive_request["sensors"].clone()) {
+                                            Ok(sensors) => {
+                                                println!("Successfully parsed {} sensors for hive {}", sensors.len(), hive_id);
+                                                for sensor in &sensors {
+                                                    println!("  - Sensor {}: {}", sensor.sensor_id, sensor.sensor_type);
+                                                }
+                                                stored_hives.push((hive_id, sensors));
+
+                                                if let Err(e) = channel
+                                                    .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
+                                                    .await
+                                                {
+                                                    println!("Failed to acknowledge message: {}", e);
+                                                } else {
+                                                    println!("✅ Successfully acknowledged message for hive {}", hive_id);
+                                                }
+                                            },
+                                            Err(e) => {
+                                                println!("Failed to parse sensors for hive {}: {}", hive_id, e);
+                                                if let Err(e) = channel
+                                                    .basic_reject(delivery.delivery_tag, BasicRejectOptions { requeue: true })
+                                                    .await
+                                                {
+                                                    println!("Failed to reject message: {}", e);
+                                                }
+                                            }
+                                        }
+                                    },
+                                    Err(e) => {
+                                        println!("Failed to parse message as JSON: {}", e);
+                                        if let Err(e) = channel
+                                            .basic_reject(delivery.delivery_tag, BasicRejectOptions { requeue: true })
+                                            .await
+                                        {
+                                            println!("Failed to reject message: {}", e);
+                                        }
+                                    }
+                                }
+                                message_count += 1;
+                                if message_count >= queue.message_count() {
+                                    break;
+                                }
+                            },
+                            Err(e) => {
+                                println!("Error receiving message: {}", e);
+                                break;
+                            }
+                        }
+                    }
+
+                    // Cancel the consumer
+                    if let Err(e) = channel
+                        .basic_cancel("initial_load_consumer", BasicCancelOptions::default())
+                        .await
+                    {
+                        println!("Failed to cancel consumer: {}", e);
+                    }
+                }
+
+                println!("Finished loading {} hives from queue", stored_hives.len());
+                Ok(stored_hives)
+            }
+            .into_actor(self)
+            .map(|result, actor, ctx| {
+                match result {
+                    Ok(hives) => {
+                        println!("Creating {} hives from queue", hives.len());
+                        for (hive_id, sensors) in hives {
+                            println!("Creating hive {} from queue data", hive_id);
+                            let create_hive = CreateHive { hive_id, sensors };
+                            ctx.notify(create_hive);
+                        }
+                        Ok(())
+                    },
+                    Err(e) => Err(e),
+                }
+            }),
+        )
+    }
+}
+
+// Update CreateHive handler to be more verbose
+impl Handler<CreateHive> for Apiary {
+    type Result = ResponseActFuture<Self, Result<(), ()>>;
+
+    fn handle(&mut self, msg: CreateHive, _ctx: &mut Context<Self>) -> Self::Result {
+        println!("Received CreateHive request for hive {}", msg.hive_id);
+
+        // Check if hive already exists
+        if self.hives.contains_key(&msg.hive_id) {
+            println!("⚠️ Hive {} already exists, skipping creation", msg.hive_id);
+            return Box::pin(async move { Ok(()) }.into_actor(self));
+        }
+
+        let rabbitmq_url = self.rabbitmq_url.clone();
+        let hive_id = msg.hive_id;
+        let sensors = msg.sensors;
+
+        println!(
+            "Creating new hive {} with {} sensors:",
+            hive_id,
+            sensors.len()
+        );
+        for sensor in &sensors {
+            println!(
+                "  - Sensor {}: {} (type: {})",
+                sensor.sensor_id, sensor.sensor_type, sensor.hive_id
+            );
+        }
+
+        let sensor_ids = sensors.iter().map(|s| s.sensor_id).collect::<Vec<_>>();
+
+        Box::pin(
+            async move {
+                let hive = Hive {
+                    hive_id,
+                    sensors: sensor_ids,
+                    rabbitmq_url,
+                    channel: None,
+                };
+                Ok((hive_id, hive.start()))
+            }
+            .into_actor(self)
+            .map(
+                move |result: Result<(i32, Addr<Hive>), ()>, actor, _ctx| match result {
+                    Ok((hive_id, addr)) => {
+                        actor.hives.insert(hive_id, addr);
+                        println!("✅ Hive {} successfully created and started", hive_id);
+                        Ok(())
+                    }
+                    Err(_) => {
+                        println!("❌ Failed to create hive {}", hive_id);
+                        Err(())
+                    }
+                },
+            ),
+        )
     }
 }
 
@@ -287,41 +507,6 @@ impl Apiary {
     }
 }
 
-impl Handler<CreateHive> for Apiary {
-    type Result = ResponseActFuture<Self, Result<(), ()>>;
-
-    fn handle(&mut self, msg: CreateHive, _ctx: &mut Context<Self>) -> Self::Result {
-        println!("Handling CreateHive message for hive ID: {}", msg.hive_id);
-        let rabbitmq_url = self.rabbitmq_url.clone();
-        let hive_id = msg.hive_id;
-        let sensors = msg.sensors.iter().map(|s| s.sensor_id).collect::<Vec<_>>();
-
-        Box::pin(
-            async move {
-                let hive_addr = Hive {
-                    hive_id,
-                    sensors,
-                    rabbitmq_url,
-                    channel: None,
-                }
-                .start();
-
-                Ok((hive_id, hive_addr))
-            }
-            .into_actor(self)
-            .map(
-                |result: Result<(i32, Addr<Hive>), ()>, actor, _ctx| match result {
-                    Ok((hive_id, hive_addr)) => {
-                        actor.hives.insert(hive_id, hive_addr);
-                        println!("Hive {} inserted into Apiary's hives.", hive_id);
-                        Ok(())
-                    }
-                    Err(_) => Err(()),
-                },
-            ),
-        )
-    }
-}
 // Handler for NewSensorData
 impl Handler<NewSensorData> for Apiary {
     type Result = ResponseActFuture<Self, Result<(), ()>>;
