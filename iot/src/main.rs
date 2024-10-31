@@ -1,56 +1,53 @@
-use actix::{Actor, Context, Handler, Message};
+use actix::prelude::*;
+use std::env;
 
-// Define the state of your "GenServer"
-struct Counter {
-    count: i32,
-}
+mod apiary;
+mod config;
+mod hive;
+mod messages;
+mod types;
 
-// Implement Actor trait for your state
-impl Actor for Counter {
-    type Context = Context<Self>;
+use apiary::Apiary;
+use config::Config;
 
-    fn started(&mut self, _ctx: &mut Self::Context) {
-        println!("Counter actor started");
-    }
-}
-
-// Define messages that your actor can handle
-#[derive(Message)]
-#[rtype(result = "i32")]
-struct Increment;
-
-#[derive(Message)]
-#[rtype(result = "i32")]
-struct GetCount;
-
-// Implement handlers for your messages
-impl Handler<Increment> for Counter {
-    type Result = i32;
-
-    fn handle(&mut self, _msg: Increment, _ctx: &mut Context<Self>) -> Self::Result {
-        self.count += 1;
-        self.count
-    }
-}
-
-impl Handler<GetCount> for Counter {
-    type Result = i32;
-
-    fn handle(&mut self, _msg: GetCount, _ctx: &mut Context<Self>) -> Self::Result {
-        self.count
-    }
-}
-
-// Usage example
 #[actix::main]
-async fn main() {
-    // Start the actor
-    let addr = Counter { count: 0 }.start();
+async fn main() -> std::io::Result<()> {
+    // Load configuration
+    let config_path = env::args()
+        .nth(1)
+        .unwrap_or_else(|| "config.toml".to_string());
+    let config = Config::from_file(&config_path).expect("Failed to load configuration");
 
-    // Send messages to the actor
-    let result = addr.send(Increment).await.unwrap();
-    println!("After increment: {}", result);
+    // Start Apiary Actor
+    let apiary = Apiary::new(&config.apiary.rabbitmq_url)
+        .await
+        .expect("Failed to create Apiary");
 
-    let count = addr.send(GetCount).await.unwrap();
-    println!("Current count: {}", count);
+    let apiary_addr = apiary.start();
+
+    // Optionally, create initial hives based on configuration
+    for hive_cfg in config.apiary.hives {
+        let _ = apiary_addr
+            .send(messages::CreateHive {
+                hive_id: hive_cfg.name.parse().unwrap_or(0), // Assuming hive_id is derived from name
+                sensors: hive_cfg
+                    .sensors
+                    .into_iter()
+                    .map(|s| types::Sensor {
+                        sensor_id: s.sensor_id,
+                        hive_id: hive_cfg.name.parse().unwrap_or(0), // Assuming hive_id is derived from name
+                        sensor_type: s.sensor_type,
+                        last_reading: Vec::new(),
+                        last_reading_time: None,
+                    })
+                    .collect(),
+            })
+            .await
+            .unwrap_or_else(|e| {
+                println!("Failed to send CreateHive message: {}", e);
+                Ok(()) // Return Result<(), ()> as expected
+            });
+    }
+    // Start the Actix system and keep it running
+    actix_rt::System::new().block_on(async { Ok(()) })
 }

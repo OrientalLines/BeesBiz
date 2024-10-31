@@ -1,0 +1,19 @@
+[apiary]
+name = "MainApiary"
+rabbitmq_url = "amqp://guest:guest@localhost:5672/%2f"
+hives = [
+    {
+        name = "Hive1",
+        sensors = [
+            { sensor_id = 1, sensor_type = "Temperature" },
+            { sensor_id = 2, sensor_type = "Humidity" }
+        ]
+    },
+    {
+        name = "Hive2",
+        sensors = [
+            { sensor_id = 3, sensor_type = "Temperature" },
+            { sensor_id = 4, sensor_type = "Pressure" }
+        ]
+    }
+]
