@@ -35,6 +35,12 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create Apiary")
         .start();
 
+    info!("Starting regular consumers...");
+    apiary_addr
+        .send(StartConsumers)
+        .await
+        .expect("Failed to start consumers");
+
     info!("Loading existing hives from queue...");
     if let Err(e) = apiary_addr.send(LoadExistingHives).await {
         error!("Failed to load existing hives: {}", e);
@@ -61,12 +67,6 @@ async fn main() -> std::io::Result<()> {
             error!("Failed to create hive from config: {}", e);
         }
     }
-
-    info!("Starting regular consumers...");
-    apiary_addr
-        .send(StartConsumers)
-        .await
-        .expect("Failed to start consumers");
 
     info!("System running. Press Ctrl-C to exit.");
 
