@@ -1,7 +1,6 @@
 use crate::types::{Sensor, SensorReading};
 use actix::Message;
 
-// Message to create a new Hive
 #[derive(Message)]
 #[rtype(result = "Result<(), ()>")]
 pub struct CreateHive {
@@ -9,14 +8,12 @@ pub struct CreateHive {
     pub sensors: Vec<Sensor>,
 }
 
-// Message to handle new sensor data
 #[derive(Message)]
 #[rtype(result = "Result<(), ()>")]
 pub struct NewSensorData {
     pub sensor: Sensor,
 }
 
-// Message to handle sensor readings
 #[derive(Message)]
 #[rtype(result = "Result<(), ()>")]
 pub struct SensorReadingData {

@@ -1,3 +1,4 @@
+use log::LevelFilter;
 use serde::Deserialize;
 use std::fs;
 
@@ -8,15 +9,27 @@ pub struct Config {
 
 #[derive(Debug, Deserialize)]
 pub struct ApiaryConfig {
-    pub name: String,
     pub rabbitmq_url: String,
+    pub log_level: String,
     pub hives: Vec<HiveConfig>,
+}
+
+impl ApiaryConfig {
+    pub fn get_log_level(&self) -> LevelFilter {
+        match self.log_level.to_lowercase().as_str() {
+            "trace" => LevelFilter::Trace,
+            "debug" => LevelFilter::Debug,
+            "info" => LevelFilter::Info,
+            "warn" => LevelFilter::Warn,
+            "error" => LevelFilter::Error,
+            _ => LevelFilter::Info,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
 pub struct HiveConfig {
-    pub id: i32, // Added field
-    pub name: String,
+    pub id: i32,
     pub sensors: Vec<SensorConfig>,
 }
 

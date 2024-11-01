@@ -1,47 +1,33 @@
-// iot/src/hive.rs
-
 use actix::prelude::*;
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
 use chrono::Utc;
 use lapin::options::BasicPublishOptions;
-use lapin::{BasicProperties, Channel, Connection, ConnectionProperties};
+use lapin::{Channel, Connection, ConnectionProperties};
+use log::{debug, error, info};
 use rand::Rng;
-use serde_json::json;
-use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::Mutex;
 
 use crate::messages::SensorReadingData;
 use crate::types::SensorReading;
 
 pub struct Hive {
     pub hive_id: i32,
-    pub sensors: Vec<i32>,        // List of sensor IDs
-    pub rabbitmq_url: String,     // Store URL instead of channel
-    pub channel: Option<Channel>, // Make it Option<Channel>
-}
-
-impl Hive {
-    // Initialize the channel when the actor starts
-    async fn initialize_channel(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let conn = Connection::connect(&self.rabbitmq_url, ConnectionProperties::default()).await?;
-        self.channel = Some(conn.create_channel().await?);
-        Ok(())
-    }
+    pub sensors: Vec<i32>,
+    pub rabbitmq_url: String,
+    pub channel: Option<Channel>,
 }
 
 impl Actor for Hive {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-        println!(
+        info!(
             "Hive {} started with {} sensors",
             self.hive_id,
             self.sensors.len()
         );
-        println!("Registered sensors: {:?}", self.sensors);
+        info!("Registered sensors: {:?}", self.sensors);
 
-        // Initialize channel
         let hive_id = self.hive_id;
         let rabbitmq_url = self.rabbitmq_url.clone();
 
@@ -57,27 +43,26 @@ impl Actor for Hive {
             .into_actor(self)
             .map(move |channel, act, ctx| {
                 act.channel = Some(channel);
-                println!("Hive {} initialized RabbitMQ channel", hive_id);
+                info!("Hive {} initialized RabbitMQ channel", hive_id);
 
                 // Set up sensor reading interval after channel is initialized
-                ctx.run_interval(Duration::from_secs(5), move |act, _ctx| {
+                ctx.run_interval(Duration::from_secs(10), move |act, _ctx| {
                     if let Some(channel) = &act.channel {
-                        println!("\nGenerating sensor readings for hive {}:", act.hive_id);
+                        info!("Generating sensor readings for hive {}:", act.hive_id);
                         for sensor_id in &act.sensors {
                             let reading = SensorReading {
                                 reading_id: None,
                                 sensor_id: *sensor_id,
-                                value: act.generate_mock_value(*sensor_id),
+                                value: act.generate_mock_value(),
                                 timestamp: Some(Utc::now().to_rfc3339()),
                             };
 
-                            println!("  - Generated reading: {:?}", reading);
+                            info!("Generated reading: {:?}", reading);
 
                             // Clone necessary data for async block
                             let channel = channel.clone();
                             let reading_clone = reading.clone();
 
-                            // Spawn a future to publish the message
                             actix::spawn(async move {
                                 match serde_json::to_vec(&reading_clone) {
                                     Ok(payload) => {
@@ -101,18 +86,18 @@ impl Actor for Hive {
                                         {
                                             Ok(confirm) => {
                                                 match confirm.await {
-                                                    Ok(_) => println!(
-                                                        "✅ Successfully published reading for sensor {} (value: {:?})",
+                                                    Ok(_) => info!(
+                                                        "Successfully published reading for sensor {} (value: {:?})",
                                                         reading_clone.sensor_id,
                                                         reading_clone.value
                                                     ),
-                                                    Err(e) => println!("❌ Failed to confirm publish: {}", e),
+                                                    Err(e) => error!("Failed to confirm publish: {}", e),
                                                 }
                                             }
-                                            Err(e) => println!("❌ Failed to publish reading: {}", e),
+                                            Err(e) => error!("Failed to publish reading: {}", e),
                                         }
                                     }
-                                    Err(e) => println!("Failed to serialize reading: {}", e),
+                                    Err(e) => error!("Failed to serialize reading: {}", e),
                                 }
                             });
                         }
@@ -125,12 +110,10 @@ impl Actor for Hive {
 
 impl Hive {
     /// Generates a mock sensor value based on sensor type
-    fn generate_mock_value(&self, sensor_id: i32) -> String {
-        // Generate random values as before
+    fn generate_mock_value(&self) -> String {
         let mut rng = rand::thread_rng();
         let values = vec![rng.gen_range(20..30), rng.gen_range(0..100)];
 
-        // Convert to base64
         BASE64.encode(&values)
     }
 }
@@ -140,7 +123,7 @@ impl Handler<SensorReadingData> for Hive {
     type Result = ResponseActFuture<Self, Result<(), ()>>;
 
     fn handle(&mut self, msg: SensorReadingData, _ctx: &mut Context<Self>) -> Self::Result {
-        println!(
+        info!(
             "Handling SensorReadingData for sensor {} in hive {}",
             msg.reading.sensor_id, self.hive_id
         );
@@ -150,12 +133,11 @@ impl Handler<SensorReadingData> for Hive {
 
         Box::pin(
             async move {
-                println!("Preparing to publish reading to RabbitMQ...");
+                debug!("Preparing to publish reading to RabbitMQ...");
                 let payload = serde_json::to_vec(&reading).map_err(|e| {
-                    println!("Failed to serialize reading: {}", e);
-                    ()
+                    error!("Failed to serialize reading: {}", e);
                 })?;
-                println!("Acquiring channel lock...");
+                debug!("Acquiring channel lock...");
                 let channel = channel.as_ref().ok_or(())?;
 
                 // Add persistent message properties
@@ -163,7 +145,7 @@ impl Handler<SensorReadingData> for Hive {
                     .with_delivery_mode(2) // Makes the message persistent
                     .with_content_type("application/json".into());
 
-                println!("Publishing message to sensor_reading_queue...");
+                debug!("Publishing message to sensor_reading_queue...");
                 match channel
                     .basic_publish(
                         "",
@@ -177,21 +159,21 @@ impl Handler<SensorReadingData> for Hive {
                     Ok(confirm) => {
                         match confirm.await {
                             Ok(_) => {
-                                println!(
-                                    "✅ Successfully published reading for sensor {} (value: {:?}) to RabbitMQ",
+                                info!(
+                                    "Successfully published reading for sensor {} (value: {:?}) to RabbitMQ",
                                     reading.sensor_id,
                                     reading.value
                                 );
                                 Ok(())
                             }
                             Err(e) => {
-                                println!("❌ Failed to confirm publish: {}", e);
+                                error!("Failed to confirm publish: {}", e);
                                 Err(())
                             }
                         }
                     }
                     Err(e) => {
-                        println!("❌ Failed to publish reading: {}", e);
+                        error!("Failed to publish reading: {}", e);
                         Err(())
                     }
                 }
