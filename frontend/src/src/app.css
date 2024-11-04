@@ -3,5 +3,5 @@
 @import 'tailwindcss/utilities';
 
 body {
-	@apply bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen;
+	@apply bg-gradient-to-br from-blue-50 to-indigo-600 min-h-screen;
 }
