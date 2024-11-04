@@ -84,7 +84,7 @@
 			{#if !isCollapsed}
 				<h2 class="font-semibold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-yellow-600">BeesBiz</h2>
 			{:else}
-				<div class="w-5" />
+				<div class="w-5"></div>
 			{/if}
 			<button
 				on:click={() => (isCollapsed = !isCollapsed)}
@@ -135,7 +135,7 @@
 								<div
 									class="absolute left-0 w-1 h-8 bg-gradient-to-b from-amber-500 to-yellow-500 rounded-r-full"
 									transition:slide|local={{ duration: 200 }}
-								/>
+								></div>
 							{/if}
 						</a>
 					</li>
