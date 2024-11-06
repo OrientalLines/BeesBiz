@@ -11,7 +11,7 @@
 		Kanban,
 		Pickaxe,
 		PaintbrushVertical,
-			FileText,
+		FileText,
 		LogOut,
 		Sun,
 		Moon
@@ -82,7 +82,11 @@
 	<div class="p-4 border-b border-amber-100 dark:border-amber-900/30">
 		<div class="flex items-center justify-between">
 			{#if !isCollapsed}
-				<h2 class="font-semibold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-yellow-600">BeesBiz</h2>
+				<h2
+					class="font-semibold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-yellow-600"
+				>
+					BeesBiz
+				</h2>
 			{:else}
 				<div class="w-5"></div>
 			{/if}

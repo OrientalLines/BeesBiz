@@ -4,7 +4,7 @@ import type { User } from '$lib/types';
 function createAuthStore() {
 	const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
 	const initialValue = storedUser ? JSON.parse(storedUser) : null;
-	
+
 	const { subscribe, set, update } = writable<User | null>(initialValue);
 
 	return {

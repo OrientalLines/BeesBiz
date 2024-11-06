@@ -8,7 +8,11 @@ export default {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	darkMode: 'class',
 	theme: {
-		extend: {}
+		extend: {
+			fontFamily: {
+				sans: ['Lexend', 'sans-serif']
+			}
+		}
 	},
 
 	plugins: [typography, forms, containerQueries, aspectRatio]

@@ -32,16 +32,20 @@
 		<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
 			<thead class="bg-gray-50 dark:bg-gray-700">
 				<tr>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+					<th
+						class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
 						>Date</th
 					>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+					<th
+						class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
 						>Hive ID</th
 					>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+					<th
+						class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
 						>Amount (kg)</th
 					>
-					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+					<th
+						class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
 						>Quality</th
 					>
 				</tr>
@@ -52,9 +56,15 @@
 						<td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-300">
 							{new Date(harvest.date).toLocaleDateString()}
 						</td>
-						<td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-300">{harvest.hiveId}</td>
-						<td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-300">{harvest.amount}</td>
-						<td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-300">{harvest.quality}</td>
+						<td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-300"
+							>{harvest.hiveId}</td
+						>
+						<td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-300"
+							>{harvest.amount}</td
+						>
+						<td class="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-300"
+							>{harvest.quality}</td
+						>
 					</tr>
 				{/each}
 			</tbody>

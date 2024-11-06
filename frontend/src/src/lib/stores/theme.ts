@@ -13,10 +13,10 @@ function createThemeStore() {
 				const html = document.documentElement;
 				const currentTheme = html.classList.contains('dark') ? 'dark' : 'light';
 				const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-				
+
 				html.classList.remove(currentTheme);
 				html.classList.add(newTheme);
-				
+
 				localStorage.setItem('theme', newTheme);
 				set(newTheme);
 			}

@@ -5,13 +5,29 @@ export interface User {
 	email: string;
 }
 
-export interface Hive {
-	id: string;
-	name: string;
-	location: string;
-	status: 'active' | 'inactive' | 'maintenance';
-	lastInspection: Date;
+export interface Region {
+    region_id: string;
+    name: string;
+    climate_zone: 'tropical' | 'temperate' | 'continental' | 'mediterranean';
 }
+
+export interface Apiary {
+    id: string;
+    name: string;
+    regionId: string;
+    location: string;
+    hives: number;
+    honey: number;
+}
+
+export interface Hive {
+    hive_id: string;
+    apiaryId: string;
+	hive_type: string;
+	inspection_date: Date;
+	current_status: 'active' | 'inactive';
+}
+
 
 export interface HoneyHarvest {
 	id: string;

@@ -38,14 +38,14 @@
 	let isLogin = true;
 	let name = '';
 	let confirmPassword = '';
-	
+
 	async function handleRegister() {
 		try {
 			if (!name || !email || !password || !confirmPassword) {
 				error = 'All fields are required';
 				return;
 			}
-			
+
 			if (password !== confirmPassword) {
 				error = 'Passwords do not match';
 				return;
@@ -76,7 +76,9 @@
 		}));
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-blue-50 to-white relative overflow-hidden">
+<div
+	class="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-blue-50 to-white relative overflow-hidden"
+>
 	<!-- Animated background bees -->
 	{#if mounted}
 		{#each bees as bee, i}
@@ -85,21 +87,21 @@
 				style="top: {bee.baseY}%; left: {bee.baseX}%;"
 				in:fly={{ y: 100, duration: 1000, delay: i * 200 }}
 			>
-				<div class="text-4xl animate-float-{i + 1}">
-					🐝
-				</div>
+				<div class="text-4xl animate-float-{i + 1}">🐝</div>
 			</div>
 		{/each}
 	{/if}
 
 	<!-- Existing login form content -->
 	{#if mounted}
-		<div 
+		<div
 			class="max-w-md w-full space-y-8 p-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-xl"
 			in:fly={{ y: 50, duration: 1000 }}
 		>
 			<div in:fade={{ duration: 1000, delay: 300 }}>
-				<h2 class="text-center text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-yellow-600">
+				<h2
+					class="text-center text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-yellow-600"
+				>
 					{formTitle}
 				</h2>
 			</div>
@@ -145,7 +147,9 @@
 					</div>
 					{#if !isLogin}
 						<div>
-							<label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+							<label for="confirmPassword" class="block text-sm font-medium text-gray-700"
+								>Confirm Password</label
+							>
 							<input
 								id="confirmPassword"
 								type="password"
@@ -162,9 +166,9 @@
 				>
 					{isLogin ? 'Sign in' : 'Create account'}
 				</button>
-				
+
 				<div class="text-center">
-					<button 
+					<button
 						type="button"
 						class="text-amber-600 hover:text-amber-500 text-sm font-medium transition-colors"
 						on:click={() => {
@@ -182,29 +186,64 @@
 
 <style>
 	@keyframes float-1 {
-		0%, 100% { transform: translate(0, 0) rotate(0deg); }
-		50% { transform: translate(10px, -10px) rotate(5deg); }
+		0%,
+		100% {
+			transform: translate(0, 0) rotate(0deg);
+		}
+		50% {
+			transform: translate(10px, -10px) rotate(5deg);
+		}
 	}
 	@keyframes float-2 {
-		0%, 100% { transform: translate(0, 0) rotate(0deg); }
-		50% { transform: translate(-8px, -12px) rotate(-3deg); }
+		0%,
+		100% {
+			transform: translate(0, 0) rotate(0deg);
+		}
+		50% {
+			transform: translate(-8px, -12px) rotate(-3deg);
+		}
 	}
 	@keyframes float-3 {
-		0%, 100% { transform: translate(0, 0) rotate(0deg); }
-		50% { transform: translate(12px, -8px) rotate(8deg); }
+		0%,
+		100% {
+			transform: translate(0, 0) rotate(0deg);
+		}
+		50% {
+			transform: translate(12px, -8px) rotate(8deg);
+		}
 	}
 	@keyframes float-4 {
-		0%, 100% { transform: translate(0, 0) rotate(0deg); }
-		50% { transform: translate(-10px, -10px) rotate(-8deg); }
+		0%,
+		100% {
+			transform: translate(0, 0) rotate(0deg);
+		}
+		50% {
+			transform: translate(-10px, -10px) rotate(-8deg);
+		}
 	}
 	@keyframes float-5 {
-		0%, 100% { transform: translate(0, 0) rotate(0deg); }
-		50% { transform: translate(8px, -12px) rotate(3deg); }
+		0%,
+		100% {
+			transform: translate(0, 0) rotate(0deg);
+		}
+		50% {
+			transform: translate(8px, -12px) rotate(3deg);
+		}
 	}
 
-	.animate-float-1 { animation: float-1 8s infinite ease-in-out; }
-	.animate-float-2 { animation: float-2 9s infinite ease-in-out; }
-	.animate-float-3 { animation: float-3 10s infinite ease-in-out; }
-	.animate-float-4 { animation: float-4 11s infinite ease-in-out; }
-	.animate-float-5 { animation: float-5 12s infinite ease-in-out; }
+	.animate-float-1 {
+		animation: float-1 8s infinite ease-in-out;
+	}
+	.animate-float-2 {
+		animation: float-2 9s infinite ease-in-out;
+	}
+	.animate-float-3 {
+		animation: float-3 10s infinite ease-in-out;
+	}
+	.animate-float-4 {
+		animation: float-4 11s infinite ease-in-out;
+	}
+	.animate-float-5 {
+		animation: float-5 12s infinite ease-in-out;
+	}
 </style>
