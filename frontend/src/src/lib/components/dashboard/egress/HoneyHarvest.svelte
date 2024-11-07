@@ -3,6 +3,7 @@
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
 	import type { HoneyHarvest } from '$lib/types';
+	import DatePicker from '$lib/components/inputs/DatePicker.svelte';
 
 	// State management
 	let searchQuery = '';
@@ -11,8 +12,8 @@
 	let currentPage = 1;
 	const itemsPerPage = 20;
 	let dateRange = {
-		start: '',
-		end: ''
+		start: null as Date | null,
+		end: null as Date | null
 	};
 
 	// Debounced search function
@@ -41,8 +42,8 @@
 				h.qualityGrade.toLowerCase().includes(searchQuery.toLowerCase());
 			const matchesQuality = filterQuality === 'all' || h.qualityGrade === filterQuality;
 			const matchesDate =
-				(!dateRange.start || new Date(h.harvestDate) >= new Date(dateRange.start)) &&
-				(!dateRange.end || new Date(h.harvestDate) <= new Date(dateRange.end));
+				(!dateRange.start || new Date(h.harvestDate) >= dateRange.start) &&
+				(!dateRange.end || new Date(h.harvestDate) <= dateRange.end);
 			return matchesSearch && matchesQuality && matchesDate;
 		})
 		.sort((a, b) => {
@@ -70,6 +71,11 @@
 		C: 'bg-yellow-100 text-yellow-800',
 		D: 'bg-red-100 text-red-800'
 	};
+
+	function handleDateRangeChange(start: Date | null, end: Date | null) {
+		dateRange.start = start;
+		dateRange.end = end;
+	}
 </script>
 
 <div class="max-w mx-auto" in:fade>
@@ -123,23 +129,14 @@
 			/>
 		</div>
 
-		<input
-			type="date"
-			bind:value={dateRange.start}
-			class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                    placeholder-gray-500 dark:placeholder-gray-400
-                focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-		/>
-
-		<input
-			type="date"
-			bind:value={dateRange.end}
-			class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                    placeholder-gray-500 dark:placeholder-gray-400
-                focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-		/>
+		<div class="md:col-span-2">
+			<DatePicker
+				startDate={dateRange.start}
+				endDate={dateRange.end}
+				placeholder="Filter by date range"
+				onChange={handleDateRangeChange}
+			/>
+		</div>
 
 		<select
 			bind:value={filterQuality}

@@ -3,13 +3,14 @@
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
 	import type { ObservationLog } from '$lib/types';
+	import DatePicker from '$lib/components/inputs/DatePicker.svelte';
 
 	let searchQuery = '';
 	let currentPage = 1;
 	const itemsPerPage = 20;
 	let dateRange = {
-		start: '',
-		end: ''
+		start: null as Date | null,
+		end: null as Date | null
 	};
 
 	const debouncedSearch = debounce((value: string) => {
@@ -28,14 +29,19 @@
 		}
 	];
 
+	function handleDateRangeChange(start: Date | null, end: Date | null) {
+		dateRange.start = start;
+		dateRange.end = end;
+	}
+
 	$: filteredLogs = logs
 		.filter((log) => {
 			const matchesSearch =
 				log.hiveId.toString().includes(searchQuery) ||
 				log.description.toLowerCase().includes(searchQuery.toLowerCase());
 			const matchesDate =
-				(!dateRange.start || new Date(log.observationDate) >= new Date(dateRange.start)) &&
-				(!dateRange.end || new Date(log.observationDate) <= new Date(dateRange.end));
+				(!dateRange.start || new Date(log.observationDate) >= dateRange.start) &&
+				(!dateRange.end || new Date(log.observationDate) <= dateRange.end);
 			return matchesSearch && matchesDate;
 		})
 		.sort((a, b) => new Date(b.observationDate).getTime() - new Date(a.observationDate).getTime());
@@ -67,7 +73,7 @@
 	</div>
 
 	<!-- Controls -->
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 		<div class="relative">
 			<Icon
 				icon="mdi:magnify"
@@ -77,29 +83,18 @@
 				type="text"
 				placeholder="Search observations..."
 				class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                    placeholder-gray-500 dark:placeholder-gray-400
-                    focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+					bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+					placeholder-gray-500 dark:placeholder-gray-400
+					focus:ring-2 focus:ring-amber-500 focus:border-transparent"
 				on:input={(e) => debouncedSearch(e.currentTarget.value)}
 			/>
 		</div>
 
-		<input
-			type="date"
-			bind:value={dateRange.start}
-			class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                    placeholder-gray-500 dark:placeholder-gray-400
-                focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-		/>
-
-		<input
-			type="date"
-			bind:value={dateRange.end}
-			class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                    placeholder-gray-500 dark:placeholder-gray-400
-                focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+		<DatePicker
+			startDate={dateRange.start}
+			endDate={dateRange.end}
+			placeholder="Filter by observation date"
+			onChange={handleDateRangeChange}
 		/>
 	</div>
 

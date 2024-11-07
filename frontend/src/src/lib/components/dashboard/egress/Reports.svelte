@@ -3,14 +3,15 @@
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
 	import type { Report } from '$lib/types';
+	import DatePicker from '$lib/components/inputs/DatePicker.svelte';
 
 	// State management
 	let searchQuery = '';
 	let currentPage = 1;
 	const itemsPerPage = 10;
 	let dateRange = {
-		start: '',
-		end: ''
+		start: null as Date | null,
+		end: null as Date | null
 	};
 
 	// Debounced search function
@@ -31,13 +32,19 @@
 		}
 	];
 
+	// Add handler for date changes
+	function handleDateRangeChange(start: Date | null, end: Date | null) {
+		dateRange.start = start;
+		dateRange.end = end;
+	}
+
 	// Filter logic
 	$: filteredReports = reports
 		.filter((r) => {
 			const matchesSearch = r.apiaryId.toString().includes(searchQuery);
 			const matchesDate =
-				(!dateRange.start || new Date(r.startDate) >= new Date(dateRange.start)) &&
-				(!dateRange.end || new Date(r.endDate) <= new Date(dateRange.end));
+				(!dateRange.start || new Date(r.startDate) >= dateRange.start) &&
+				(!dateRange.end || new Date(r.endDate) <= dateRange.end);
 			return matchesSearch && matchesDate;
 		})
 		.sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
@@ -114,30 +121,22 @@
 				type="text"
 				placeholder="Search by apiary ID..."
 				class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                    placeholder-gray-500 dark:placeholder-gray-400
-                    focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+					bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+					placeholder-gray-500 dark:placeholder-gray-400
+					focus:ring-2 focus:ring-amber-500 focus:border-transparent"
 				on:input={(e) => debouncedSearch(e.currentTarget.value)}
 			/>
 		</div>
 
-		<input
-			type="date"
-			bind:value={dateRange.start}
-			class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                    placeholder-gray-500 dark:placeholder-gray-400
-                focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-		/>
-
-		<input
-			type="date"
-			bind:value={dateRange.end}
-			class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                    placeholder-gray-500 dark:placeholder-gray-400
-                focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-		/>
+		<!-- Replace the two date inputs with single DatePicker that spans 2 columns -->
+		<div class="md:col-span-2">
+			<DatePicker
+				startDate={dateRange.start}
+				endDate={dateRange.end}
+				placeholder="Filter by report period"
+				onChange={handleDateRangeChange}
+			/>
+		</div>
 	</div>
 
 	<!-- Reports Table -->
