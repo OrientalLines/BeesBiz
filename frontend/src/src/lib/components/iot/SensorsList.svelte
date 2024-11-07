@@ -1,16 +1,16 @@
 <script lang="ts">
-	import type { Apiary, Hive } from '$lib/types';
+	import type { Hive, Sensor } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
 	import { debounce } from 'lodash-es';
 
-	export let selectedApiary: Apiary;
+	export let selectedHive: Hive;
 	export let onBack: () => void;
-	export let onSelect: (hive: Hive) => void;
+	export let onSelect: (apiary: Sensor) => void;
 
-	// State management
+	// State management following pattern from BeeCommunityManagement.svelte
 	let searchQuery = '';
-	let sortBy: 'hiveId' | 'status' = 'hiveId';
+	let sortBy: 'sensorType' | 'lastReadingTime' = 'lastReadingTime';
 	let currentPage = 1;
 	const itemsPerPage = 12;
 
@@ -19,60 +19,53 @@
 		currentPage = 1;
 	}, 300);
 
-	// Mock data
-	const hives: Hive[] = [
+	// Mock data following pattern from HivesList.svelte
+	const sensors: Sensor[] = [
 		{
-			hiveId: 1,
-			apiaryId: selectedApiary.id,
-			hiveType: 'Langstroth',
-			currentStatus: 'active',
-			inspectionDate: new Date()
+			sensorId: 1,
+			hiveId: selectedHive.hiveId,
+			sensorType: 'temperature',
+			lastReading: new Uint8Array([25]),
+			lastReadingTime: new Date()
 		}
 	];
 
-	$: filteredHives = hives
-		.filter((h) => h.apiaryId === selectedApiary.id)
-		.filter(
-			(h) =>
-				h.hiveId.toString().includes(searchQuery.toLowerCase()) ||
-				h.currentStatus.toLowerCase().includes(searchQuery.toLowerCase())
-		)
+	$: filteredSensors = sensors
+		.filter((s) => s.hiveId === selectedHive.hiveId)
+		.filter((s) => s.sensorType.toLowerCase().includes(searchQuery.toLowerCase()))
 		.sort((a, b) => {
-			// FIXME
-			// if (sortBy === 'currentStatus') {
-			// 	return a.currentStatus.localeCompare(b.currentStatus);
-			// }
-			if (sortBy === 'hiveId') {
-				return a.hiveId - b.hiveId;
+			if (sortBy === 'lastReadingTime') {
+				return new Date(b.lastReadingTime).getTime() - new Date(a.lastReadingTime).getTime();
 			}
-			return 0;
+			return a.sensorType.localeCompare(b.sensorType);
 		});
 
-	$: paginatedHives = filteredHives.slice(
+	$: paginatedSensors = filteredSensors.slice(
 		(currentPage - 1) * itemsPerPage,
 		currentPage * itemsPerPage
 	);
 
-	$: totalPages = Math.ceil(filteredHives.length / itemsPerPage);
+	$: totalPages = Math.ceil(filteredSensors.length / itemsPerPage);
 </script>
 
+<!-- Layout pattern following ApiarySelect.svelte -->
 <div class="max-w mx-auto" in:fade>
 	<button
 		class="mb-6 flex items-center gap-2 text-amber-600 hover:text-amber-700 transition-colors"
 		on:click={onBack}
 	>
 		<Icon icon="mdi:arrow-left" class="w-5 h-5" />
-		<span class="font-medium">Back to Apiary</span>
+		<span class="font-medium">Back to Hive</span>
 	</button>
 
 	<div class="flex justify-between items-center mb-8">
 		<div>
 			<h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-				<Icon icon="mdi:beehive-outline" class="w-8 h-8 text-amber-500" />
-				Hives
+				<Icon icon="mdi:chip" class="w-8 h-8 text-amber-500" />
+				Hive Sensors
 			</h1>
 			<p class="mt-2 text-gray-600 dark:text-gray-400">
-				Manage hives in {selectedApiary.name}
+				Monitor IoT sensors for {selectedHive.hiveType} Hive
 			</p>
 		</div>
 
@@ -82,40 +75,37 @@
             flex items-center gap-2"
 		>
 			<Icon icon="mdi:plus" class="w-5 h-5" />
-			Add Hive
+			Add Sensor
 		</button>
 	</div>
 
-	<!-- Grid layout -->
+	<!-- Grid layout following ApiarySelect.svelte -->
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-		{#each paginatedHives as hive}
+		{#each paginatedSensors as sensor}
 			<button
 				class="group relative p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg
                 hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
                 hover:border-amber-400 overflow-hidden"
-				on:click={() => onSelect(hive)}
+				on:click={() => onSelect(sensor)}
 			>
 				<div class="relative">
 					<div class="flex items-center gap-3 mb-3">
-						<Icon icon="mdi:beehive-outline" class="w-6 h-6 text-amber-500" />
+						<Icon
+							icon={sensor.sensorType === 'temperature' ? 'mdi:thermometer' : 'mdi:gauge'}
+							class="w-6 h-6 text-amber-500"
+						/>
 						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-							Hive #{hive.hiveId}
+							{sensor.sensorType.charAt(0).toUpperCase() + sensor.sensorType.slice(1)}
 						</h2>
 					</div>
 
 					<div class="mt-4 space-y-2">
 						<div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
 							<Icon icon="mdi:clock-outline" class="w-5 h-5" />
-							<span>Last inspection: {new Date(hive.inspectionDate).toLocaleDateString()}</span>
+							<span>Last updated: {new Date(sensor.lastReadingTime).toLocaleString()}</span>
 						</div>
-						<div class="flex items-center gap-2">
-							<Icon
-								icon={hive.currentStatus === 'active' ? 'mdi:check-circle' : 'mdi:alert-circle'}
-								class="w-5 h-5 {hive.currentStatus === 'active'
-									? 'text-green-500'
-									: 'text-amber-500'}"
-							/>
-							<span class="capitalize">{hive.currentStatus}</span>
+						<div class="text-2xl font-bold text-amber-600">
+							{new TextDecoder().decode(sensor.lastReading)}°C
 						</div>
 					</div>
 				</div>
@@ -123,7 +113,7 @@
 		{/each}
 	</div>
 
-	<!-- Pagination controls -->
+	<!-- Pagination controls following ApiarySelect.svelte -->
 	{#if totalPages > 1}
 		<div class="mt-8 flex justify-center gap-2">
 			<button
