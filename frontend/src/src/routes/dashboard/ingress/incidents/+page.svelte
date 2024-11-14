@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
+	import Icon from '@iconify/svelte';
 	import type { Incident } from '$lib/types';
+	import IncidentEditModal from '$lib/components/modals/IncidentEditModal.svelte';
 
 	let incidents: Incident[] = [
 		{
@@ -10,21 +13,39 @@
 			description: 'Varroa mites detected',
 			status: 'open'
 		}
-		// Add more mock data as needed
 	];
 
-	function addIncident() {
-		// Implementation
+	let showAddModal = false;
+	let editingIncident: Incident | null = null;
+
+	function handleSaveIncident(incident: Incident) {
+		if (editingIncident) {
+			const index = incidents.findIndex((i) => i.id === incident.id);
+			if (index !== -1) {
+				incidents[index] = incident;
+			}
+		} else {
+			incident.id = (Math.max(...incidents.map((i) => Number(i.id))) + 1).toString();
+			incidents = [...incidents, incident];
+		}
+		editingIncident = null;
+		showAddModal = false;
 	}
 </script>
 
 <div class="space-y-6">
 	<div class="flex justify-between items-center">
-		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Incident Reports</h1>
+		<h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+			<Icon icon="mdi:alert" class="w-8 h-8 text-amber-500" />
+			Incident Reports
+		</h1>
 		<button
-			class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-			on:click={addIncident}
+			class="bg-amber-500 text-white px-6 py-3 rounded-full
+            hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl
+            flex items-center gap-2"
+			on:click={() => (showAddModal = true)}
 		>
+			<Icon icon="mdi:plus" class="w-5 h-5" />
 			Report Incident
 		</button>
 	</div>
@@ -83,4 +104,21 @@
 			</tbody>
 		</table>
 	</div>
+	{#if showAddModal}
+		<IncidentEditModal
+			isOpen={true}
+			incident={null}
+			onClose={() => (showAddModal = false)}
+			onSave={handleSaveIncident}
+		/>
+	{/if}
+
+	{#if editingIncident}
+		<IncidentEditModal
+			isOpen={true}
+			incident={editingIncident}
+			onClose={() => (editingIncident = null)}
+			onSave={handleSaveIncident}
+		/>
+	{/if}
 </div>

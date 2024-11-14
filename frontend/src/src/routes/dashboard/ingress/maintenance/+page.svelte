@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
+	import Icon from '@iconify/svelte';
 	import type { MaintenanceTask } from '$lib/types';
+	import MaintenanceTaskModal from '$lib/components/modals/MaintenanceTaskModal.svelte';
 
 	let tasks: MaintenanceTask[] = [
 		{
@@ -10,9 +13,24 @@
 			status: 'Pending',
 			priority: 'High'
 		}
-		// Add more mock data as needed
 	];
 
+	let showAddModal = false;
+	let editingTask: MaintenanceTask | null = null;
+
+	function handleSaveTask(task: MaintenanceTask) {
+		if (editingTask) {
+			const index = tasks.findIndex((t) => t.id === task.id);
+			if (index !== -1) {
+				tasks[index] = task;
+			}
+		} else {
+			task.id = (Math.max(...tasks.map((t) => Number(t.id))) + 1).toString();
+			tasks = [...tasks, task];
+		}
+		editingTask = null;
+		showAddModal = false;
+	}
 	function addTask() {
 		// Implementation
 	}
@@ -22,9 +40,12 @@
 	<div class="flex justify-between items-center">
 		<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Maintenance Schedule</h1>
 		<button
-			class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-			on:click={addTask}
+			class="bg-amber-500 text-white px-6 py-3 rounded-full
+            hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl
+            flex items-center gap-2"
+			on:click={() => (showAddModal = true)}
 		>
+			<Icon icon="mdi:plus" class="w-5 h-5" />
 			Add Task
 		</button>
 	</div>
@@ -92,4 +113,21 @@
 			</tbody>
 		</table>
 	</div>
+	{#if showAddModal}
+		<MaintenanceTaskModal
+			isOpen={true}
+			task={null}
+			onClose={() => (showAddModal = false)}
+			onSave={handleSaveTask}
+		/>
+	{/if}
+
+	{#if editingTask}
+		<MaintenanceTaskModal
+			isOpen={true}
+			task={editingTask}
+			onClose={() => (editingTask = null)}
+			onSave={handleSaveTask}
+		/>
+	{/if}
 </div>

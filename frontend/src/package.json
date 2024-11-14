@@ -39,6 +39,9 @@
 	"dependencies": {
 		"@iconify/svelte": "^4.0.2",
 		"@inlang/paraglide-sveltekit": "^0.11.1",
+		"@skeletonlabs/skeleton": "^2.10.3",
+		"@skeletonlabs/tw-plugin": "^0.4.0",
+		"@inlang/paraglide-vite": "^1.2.76",
 		"drizzle-orm": "^0.33.0",
 		"lodash-es": "^4.17.21",
 		"lucide-svelte": "^0.454.0",

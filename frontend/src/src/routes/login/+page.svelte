@@ -23,7 +23,7 @@
 				auth.login({
 					id: '1',
 					name: 'John Beekeeper',
-					role: 'beekeeper',
+					role: 'admin',
 					email
 				});
 				goto('/dashboard/hives');

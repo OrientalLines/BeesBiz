@@ -9,6 +9,7 @@
 	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
 	import { navigating } from '$app/stores';
+	import { initializeStores } from '@skeletonlabs/skeleton';
 
 	// Page title mapping
 	const getTitleFromPath = (path: string) => {
@@ -69,6 +70,7 @@
 		// Set page as loaded
 		pageLoaded = true;
 	});
+	initializeStores();
 </script>
 
 <Toast />

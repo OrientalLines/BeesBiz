@@ -5,6 +5,24 @@ export interface User {
 	email: string;
 }
 
+export interface Role {
+	id: string;
+	name: 'beekeeper' | 'manager' | 'admin';
+	description: string;
+	permissions: string[];
+	userCount: number;
+}
+
+export interface AuditLog {
+	id: string;
+	userId: string;
+	userName: string;
+	action: string;
+	resource: string;
+	timestamp: Date;
+	details: string;
+}
+
 export interface Region {
 	region_id: number;
 	name: string;

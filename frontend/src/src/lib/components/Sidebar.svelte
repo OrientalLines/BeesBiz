@@ -88,16 +88,48 @@
 			]
 		},
 		{
-			path: '/dashboard/users',
 			label: 'User Management',
+			icon: Users,
 			roles: ['manager', 'admin'],
-			icon: Users
+			items: [
+				{
+					path: '/dashboard/users',
+					label: 'Users Overview',
+					roles: ['manager', 'admin']
+				},
+				{
+					path: '/dashboard/users/roles',
+					label: 'Role Management',
+					roles: ['admin']
+				},
+				{
+					path: '/dashboard/users/audit',
+					label: 'Audit Log',
+					roles: ['admin']
+				}
+			]
 		},
 		{
-			path: '/dashboard/settings',
 			label: 'Settings',
+			icon: Settings,
 			roles: ['admin'],
-			icon: Settings
+			items: [
+				{
+					path: '/dashboard/settings',
+					label: 'General Settings',
+					roles: ['admin']
+				}
+				// {
+				// 	path: '/dashboard/settings/notifications',
+				// 	label: 'Notifications',
+				// 	roles: ['admin']
+				// },
+				// {
+				// 	path: '/dashboard/settings/system',
+				// 	label: 'System',
+				// 	roles: ['admin']
+				// }
+			]
 		}
 	];
 
