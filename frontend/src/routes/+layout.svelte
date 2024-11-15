@@ -10,15 +10,13 @@
 	import { page } from '$app/stores';
 	import { navigating } from '$app/stores';
 	import { initializeStores } from '@skeletonlabs/skeleton';
+	import { requireAuth } from '$lib/guards/auth';
 
-	// Page title mapping
 	const getTitleFromPath = (path: string) => {
-		// Special cases first
 		if (path === '/') return 'Welcome';
 		if (path === '/login') return 'Login';
 		if (path === '/404') return 'Page Not Found';
 
-		// Dashboard routes
 		const dashboardRoutes: Record<string, string> = {
 			'/dashboard/hives': 'Hive Management',
 			'/dashboard/harvest': 'Honey Harvest',
@@ -32,7 +30,6 @@
 		return dashboardRoutes[path] || 'Dashboard';
 	};
 
-	// Update title when route changes
 	$: {
 		if (browser) {
 			const pageTitle = getTitleFromPath($page.url.pathname);
@@ -40,7 +37,6 @@
 		}
 	}
 
-	// Subscribe to theme changes and update localStorage and HTML class
 	$: if (browser && $theme) {
 		localStorage.setItem('theme', $theme);
 		document.documentElement.classList.remove('light', 'dark');
@@ -50,27 +46,32 @@
 	let pageLoaded = false;
 
 	onMount(() => {
-		// Initialize theme from localStorage if available
+		if (browser) {
+			requireAuth($page.url.pathname);
+		}
+
 		const savedTheme = localStorage.getItem('theme');
 		if (savedTheme) {
 			theme.set(savedTheme as 'light' | 'dark');
 		} else {
-			// Set default theme based on system preference
 			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 			theme.set(prefersDark ? 'dark' : 'light');
 		}
 
-		// Listen for system theme changes
-		window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-			if (!localStorage.getItem('theme')) {
-				theme.set(e.matches ? 'dark' : 'light');
-			}
-		});
-
-		// Set page as loaded
 		pageLoaded = true;
 	});
+
+	$: if (browser && $navigating) {
+		requireAuth($navigating.to?.url.pathname || '');
+	}
+
 	initializeStores();
+
+	function isDashboardRoute(path: string): boolean {
+		return path.startsWith('/dashboard');
+	}
+
+	$: currentPath = $page.url.pathname;
 </script>
 
 <Toast />
@@ -90,7 +91,7 @@
 				Buzzing into action...
 			</p>
 		</div>
-	{:else if $auth}
+	{:else if $auth?.user && isDashboardRoute(currentPath)}
 		<div class="flex" in:fade={{ duration: 200 }}>
 			<Sidebar />
 			<main class="flex-1 p-8 dark:text-gray-100 relative">

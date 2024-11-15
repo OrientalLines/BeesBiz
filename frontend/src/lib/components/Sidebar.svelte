@@ -182,7 +182,7 @@
 	<nav class="p-4">
 		<ul class="space-y-2">
 			{#each menuItems as item}
-				{#if item.roles.includes($auth?.role || '')}
+				{#if item.roles.includes($auth?.user?.role || '')}
 					<li class="relative">
 						{#if item.items}
 							<!-- Section with subitems -->
@@ -216,7 +216,7 @@
 										transition:slide|local={{ duration: 200 }}
 									>
 										{#each item.items as subItem}
-											{#if subItem.roles.includes($auth?.role || '')}
+											{#if subItem.roles.includes($auth?.user?.role || '')}
 												<li>
 													<a
 														href={subItem.path}
@@ -243,7 +243,7 @@
 	</nav>
 
 	<!-- User Profile Section -->
-	{#if $auth}
+	{#if $auth?.user}
 		<div
 			class="absolute bottom-0 left-0 right-0 p-4 border-t border-amber-100 dark:border-amber-900/30 bg-white dark:bg-gray-800"
 		>
@@ -251,14 +251,14 @@
 				<div
 					class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center"
 				>
-					<span class="text-white font-medium">{$auth.name[0].toUpperCase()}</span>
+					<span class="text-white font-medium">{$auth.user.name[0].toUpperCase()}</span>
 				</div>
 				{#if !isCollapsed}
 					<div class="flex-1 min-w-0" transition:slide|local={{ duration: 200 }}>
 						<p class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
-							{$auth.name}
+							{$auth.user.name}
 						</p>
-						<p class="text-xs text-amber-600 dark:text-amber-400 capitalize">{$auth.role}</p>
+						<p class="text-xs text-amber-600 dark:text-amber-400 capitalize">{$auth.user.role}</p>
 					</div>
 					<div class="flex items-center gap-2">
 						<button

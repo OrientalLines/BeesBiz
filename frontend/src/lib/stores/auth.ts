@@ -1,29 +1,35 @@
 import { writable } from 'svelte/store';
 import type { User } from '$lib/types';
 
-function createAuthStore() {
-	const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-	const initialValue = storedUser ? JSON.parse(storedUser) : null;
+interface AuthState {
+	user: User | null;
+	token: string | null;
+}
 
-	const { subscribe, set, update } = writable<User | null>(initialValue);
+function createAuthStore() {
+	const storedAuth = typeof window !== 'undefined' ? localStorage.getItem('auth') : null;
+	const initialValue: AuthState = storedAuth ? JSON.parse(storedAuth) : { user: null, token: null };
+
+	const { subscribe, set, update } = writable<AuthState>(initialValue);
 
 	return {
 		subscribe,
-		login: (user: User) => {
-			localStorage.setItem('user', JSON.stringify(user));
-			set(user);
+		login: (user: User, token: string) => {
+			const authState = { user, token };
+			localStorage.setItem('auth', JSON.stringify(authState));
+			set(authState);
 		},
 		logout: () => {
-			localStorage.removeItem('user');
-			set(null);
+			localStorage.removeItem('auth');
+			set({ user: null, token: null });
 		},
 		updateUser: (userData: Partial<User>) =>
-			update((user) => {
-				const updatedUser = user ? { ...user, ...userData } : null;
-				if (updatedUser) {
-					localStorage.setItem('user', JSON.stringify(updatedUser));
-				}
-				return updatedUser;
+			update((state) => {
+				if (!state.user) return state;
+				const updatedUser = { ...state.user, ...userData };
+				const newState = { ...state, user: updatedUser };
+				localStorage.setItem('auth', JSON.stringify(newState));
+				return newState;
 			})
 	};
 }

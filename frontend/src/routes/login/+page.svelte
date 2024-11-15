@@ -3,71 +3,37 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { fly, fade } from 'svelte/transition';
+	import { login } from '$lib/services/api';
 
 	let email = '';
 	let password = '';
 	let error = '';
+	const formTitle = 'Sign in to your account';
 
 	let mounted = false;
 	onMount(() => {
 		mounted = true;
-		if ($auth) {
+		if ($auth?.user) {
 			goto('/dashboard/hives');
 		}
 	});
 
 	async function handleLogin() {
 		try {
-			// Mock login - replace with actual API call
-			if (email && password) {
-				auth.login({
-					id: '1',
-					name: 'John Beekeeper',
-					role: 'admin',
-					email
-				});
-				goto('/dashboard/hives');
-			} else {
-				error = 'Invalid credentials';
-			}
-		} catch (err) {
-			error = 'Login failed';
-		}
-	}
-
-	let isLogin = true;
-	let name = '';
-	let confirmPassword = '';
-
-	async function handleRegister() {
-		try {
-			if (!name || !email || !password || !confirmPassword) {
-				error = 'All fields are required';
+			error = '';
+			if (!email || !password) {
+				error = 'Please fill in all fields';
 				return;
 			}
 
-			if (password !== confirmPassword) {
-				error = 'Passwords do not match';
-				return;
-			}
-
-			// Mock registration - replace with actual API call
-			auth.login({
-				id: '1',
-				name,
-				role: 'beekeeper',
-				email
-			});
+			const response = await login(email, password);
+			auth.login(response.user, response.token);
 			goto('/dashboard/hives');
 		} catch (err) {
-			error = 'Registration failed';
+			error = 'Invalid credentials';
 		}
 	}
 
-	$: formTitle = isLogin ? 'Sign in to your account' : 'Create your account';
-	$: handleSubmit = isLogin ? handleLogin : handleRegister;
-
-	// Generate initial random positions for bees
 	const bees = Array(5)
 		.fill(null)
 		.map(() => ({
@@ -106,25 +72,13 @@
 				</h2>
 			</div>
 
-			<form class="mt-8 space-y-6" on:submit|preventDefault={handleSubmit}>
+			<form class="mt-8 space-y-6" on:submit|preventDefault={handleLogin}>
 				{#if error}
 					<div class="bg-red-100/80 backdrop-blur-sm text-red-700 p-3 rounded-lg">
 						{error}
 					</div>
 				{/if}
 				<div class="space-y-4">
-					{#if !isLogin}
-						<div>
-							<label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-							<input
-								id="name"
-								type="text"
-								bind:value={name}
-								class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
-								required
-							/>
-						</div>
-					{/if}
 					<div>
 						<label for="email" class="block text-sm font-medium text-gray-700">Email</label>
 						<input
@@ -145,40 +99,13 @@
 							required
 						/>
 					</div>
-					{#if !isLogin}
-						<div>
-							<label for="confirmPassword" class="block text-sm font-medium text-gray-700"
-								>Confirm Password</label
-							>
-							<input
-								id="confirmPassword"
-								type="password"
-								bind:value={confirmPassword}
-								class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
-								required
-							/>
-						</div>
-					{/if}
 				</div>
 				<button
 					type="submit"
 					class="w-full flex justify-center py-3 px-4 rounded-full text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:scale-105 transition-all duration-300 hover:shadow-lg"
 				>
-					{isLogin ? 'Sign in' : 'Create account'}
+					Sign in
 				</button>
-
-				<div class="text-center">
-					<button
-						type="button"
-						class="text-amber-600 hover:text-amber-500 text-sm font-medium transition-colors"
-						on:click={() => {
-							isLogin = !isLogin;
-							error = '';
-						}}
-					>
-						{isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-					</button>
-				</div>
 			</form>
 		</div>
 	{/if}
