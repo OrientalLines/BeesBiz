@@ -75,7 +75,7 @@
                         focus:ring-2 focus:ring-amber-500 focus:border-transparent
                         appearance-none transition-all duration-300"
 				>
-					{#each ['beekeeper', 'manager', 'admin'] as role}
+					{#each ['worker', 'manager', 'admin'] as role}
 						<option value={role}>
 							{role.charAt(0).toUpperCase() + role.slice(1)}
 						</option>

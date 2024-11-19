@@ -3,12 +3,14 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { fly, fade } from 'svelte/transition';
-	import { login } from '$lib/services/api';
+	import { login, register } from '$lib/services/api';
 
+	let activeTab: 'login' | 'register' = 'login';
 	let email = '';
 	let password = '';
+	let username = '';
+	let fullName = '';
 	let error = '';
-	const formTitle = 'Sign in to your account';
 
 	let mounted = false;
 	onMount(() => {
@@ -27,10 +29,31 @@
 			}
 
 			const response = await login(email, password);
+			// @ts-ignore fuck typescript
 			auth.login(response.user, response.token);
 			goto('/dashboard/hives');
 		} catch (err) {
 			error = 'Invalid credentials';
+		}
+	}
+
+	async function handleRegister() {
+		try {
+			error = '';
+			if (!email || !password || !username || !fullName) {
+				error = 'Please fill in all fields';
+				return;
+			}
+
+			await register({ email, password, username, fullName });
+			// Switch to login tab after successful registration
+			activeTab = 'login';
+			error = '';
+			// Clear form
+			email = '';
+			password = '';
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Registration failed';
 		}
 	}
 
@@ -58,55 +81,125 @@
 		{/each}
 	{/if}
 
-	<!-- Existing login form content -->
+	<!-- Updated form content -->
 	{#if mounted}
 		<div
 			class="max-w-md w-full space-y-8 p-8 bg-white/80 backdrop-blur-sm rounded-xl shadow-xl"
 			in:fly={{ y: 50, duration: 1000 }}
 		>
 			<div in:fade={{ duration: 1000, delay: 300 }}>
-				<h2
-					class="text-center text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-yellow-600"
-				>
-					{formTitle}
-				</h2>
+				<div class="flex space-x-4 mb-8">
+					<button
+						class="flex-1 py-2 border-b-2 transition-all duration-300 {activeTab === 'login'
+							? 'border-amber-500 text-amber-600'
+							: 'border-transparent text-gray-500 hover:text-amber-600'}"
+						on:click={() => (activeTab = 'login')}
+					>
+						Sign In
+					</button>
+					<button
+						class="flex-1 py-2 border-b-2 transition-all duration-300 {activeTab === 'register'
+							? 'border-amber-500 text-amber-600'
+							: 'border-transparent text-gray-500 hover:text-amber-600'}"
+						on:click={() => (activeTab = 'register')}
+					>
+						Register
+					</button>
+				</div>
 			</div>
 
-			<form class="mt-8 space-y-6" on:submit|preventDefault={handleLogin}>
-				{#if error}
-					<div class="bg-red-100/80 backdrop-blur-sm text-red-700 p-3 rounded-lg">
-						{error}
-					</div>
-				{/if}
-				<div class="space-y-4">
-					<div>
-						<label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-						<input
-							id="email"
-							type="email"
-							bind:value={email}
-							class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
-							required
-						/>
-					</div>
-					<div>
-						<label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-						<input
-							id="password"
-							type="password"
-							bind:value={password}
-							class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
-							required
-						/>
-					</div>
+			{#if error}
+				<div class="bg-red-100/80 backdrop-blur-sm text-red-700 p-3 rounded-lg">
+					{error}
 				</div>
-				<button
-					type="submit"
-					class="w-full flex justify-center py-3 px-4 rounded-full text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:scale-105 transition-all duration-300 hover:shadow-lg"
-				>
-					Sign in
-				</button>
-			</form>
+			{/if}
+
+			{#if activeTab === 'login'}
+				<form class="space-y-6" on:submit|preventDefault={handleLogin}>
+					<div class="space-y-4">
+						<div>
+							<label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+							<input
+								id="email"
+								type="email"
+								bind:value={email}
+								class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
+								required
+							/>
+						</div>
+						<div>
+							<label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+							<input
+								id="password"
+								type="password"
+								bind:value={password}
+								class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
+								required
+							/>
+						</div>
+					</div>
+					<button
+						type="submit"
+						class="w-full flex justify-center py-3 px-4 rounded-full text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:scale-105 transition-all duration-300 hover:shadow-lg"
+					>
+						Sign in
+					</button>
+				</form>
+			{:else}
+				<form class="space-y-6" on:submit|preventDefault={handleRegister}>
+					<div class="space-y-4">
+						<div>
+							<label for="reg-email" class="block text-sm font-medium text-gray-700">Email</label>
+							<input
+								id="reg-email"
+								type="email"
+								bind:value={email}
+								class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
+								required
+							/>
+						</div>
+						<div>
+							<label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+							<input
+								id="username"
+								type="text"
+								bind:value={username}
+								class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
+								required
+							/>
+						</div>
+						<div>
+							<label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label
+							>
+							<input
+								id="fullName"
+								type="text"
+								bind:value={fullName}
+								class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
+								required
+							/>
+						</div>
+						<div>
+							<label for="reg-password" class="block text-sm font-medium text-gray-700"
+								>Password</label
+							>
+							<input
+								id="reg-password"
+								type="password"
+								bind:value={password}
+								class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
+								required
+							/>
+						</div>
+					</div>
+					<button
+						type="submit"
+						class="w-full flex justify-center py-3 px-4 rounded-full text-white bg-gradient-to-r from-amber-500 to-yellow-500 hover:scale-105 transition-all duration-300 hover:shadow-lg"
+					>
+						Register
+					</button>
+				</form>
+			{/if}
 		</div>
 	{/if}
 </div>

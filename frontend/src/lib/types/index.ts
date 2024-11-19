@@ -1,115 +1,140 @@
+export type Time = string | Date;
+
+export type Role = 'ADMIN' | 'WORKER' | 'MANAGER';
+
 export interface User {
-	id: string;
-	name: string;
-	role: 'beekeeper' | 'manager' | 'admin';
+	user_id: number;
+	username: string;
+	full_name: string;
+	role: Role;
 	email: string;
-}
-
-export interface Role {
-	id: string;
-	name: 'beekeeper' | 'manager' | 'admin';
-	description: string;
-	permissions: string[];
-	userCount: number;
-}
-
-export interface AuditLog {
-	id: string;
-	userId: string;
-	userName: string;
-	action: string;
-	resource: string;
-	timestamp: Date;
-	details: string;
+	last_login: Time | null;
 }
 
 export interface Region {
 	region_id: number;
 	name: string;
-	climate_zone: 'tropical' | 'temperate' | 'continental' | 'mediterranean';
+	climate_zone: string;
+}
+
+export interface RegionApiary {
+	id: number;
+	apiary_id: number;
+	region_id: number;
+	region: Region;
+	apiary: Apiary;
+}
+
+export interface AllowedRegion {
+	id: number;
+	user_id: number;
+	region_id: number;
+	region: Region;
+	user: User;
 }
 
 export interface Apiary {
-	id: number;
-	name: string;
-	regionId: number;
+	apiary_id: number;
 	location: string;
-	hives: number;
-	honey: number;
+	manager_id: number;
+	establishment_date: Time | null;
 }
 
 export interface Hive {
-	hiveId: number;
-	apiaryId: number;
-	hiveType: string;
-	inspectionDate: Date;
-	currentStatus: 'active' | 'inactive';
+	hive_id: number;
+	apiary_id: number;
+	hive_type: string;
+	installation_date: Time | null;
+	current_status: string;
+}
+
+export interface BeeCommunity {
+	community_id: number;
+	hive_id: number;
+	queen_age: number;
+	population_estimate: number;
+	health_status: string;
 }
 
 export interface HoneyHarvest {
-	harvestId: number;
-	hiveId: number;
-	harvestDate: Date;
+	harvest_id: number;
+	hive_id: number;
+	harvest_date: Time | null;
 	quantity: number;
-	qualityGrade: 'A' | 'B' | 'C' | 'D';
+	quality_grade: string;
+}
+
+export interface ObservationLog {
+	log_id: number;
+	hive_id: number;
+	observation_date: Time | null;
+	description: string;
+	recommendations: string;
+}
+
+export interface MaintenancePlan {
+	plan_id: number;
+	apiary_id: number;
+	planned_date: Time | null;
+	work_type: string;
+	assigned_to: number;
 }
 
 export interface Incident {
-	id: string;
-	hiveId: string;
-	date: Date;
-	type: string;
+	incident_id: number;
+	hive_id: number;
+	incident_date: Time | null;
 	description: string;
-	status: 'open' | 'resolved';
+	severity: string;
+	actions_taken: string;
 }
 
-export interface MaintenanceTask {
-	id: string;
-	hiveId: string;
-	task: string;
-	dueDate: Date;
-	status: string;
-	priority: string;
+export interface ProductionReport {
+	report_id: number;
+	apiary_id: number;
+	start_date: Time | null;
+	end_date: Time | null;
+	total_honey: number;
+	total_expenses: number;
 }
 
-export type BeeCommunity = {
-	communityId: number;
-	hiveId: number;
-	queenAge: number;
-	populationEstimate: number;
-	healthStatus: 'healthy' | 'weak' | 'critical';
-};
+export interface VeterinaryPassport {
+	passport_id: number;
+	bee_community_id: number;
+	issue_date: Time | null;
+	health_status: string;
+	last_inspection_date: Time | null;
+}
 
-
-export type Report = {
-	reportId: number;
-	apiaryId: number;
-	startDate: Date;
-	endDate: Date;
-	totalHoney: number;
-	totalExpenses: number;
-};
-
-export type ObservationLog = {
-	logId: number;
-	hiveId: number;
-	observationDate: Date;
+export interface VeterinaryRecord {
+	record_id: number;
+	passport_id: number;
+	record_date: Time | null;
 	description: string;
-	recommendations: string;
-};
+	treatment: string;
+}
 
-export type Sensor = {
-	sensorId: number;
-	hiveId: number;
-	sensorType: string;
-	lastReading: Uint8Array;
-	lastReadingTime: Date;
-};
+export interface WeatherData {
+	weather_id: number;
+	region_id: number;
+	date: Time | null;
+	temperature: number;
+	humidity: number;
+	wind_speed: number;
+	precipitation: number;
+}
 
-export type SensorReading = {
-	readingId: number;
-	sensorId: number;
+export interface Sensor {
+	sensor_id: number;
+	hive_id: number;
+	sensor_type: string;
+	last_reading: Uint8Array;
+	last_reading_time: Time | null;
+}
+
+export interface SensorReading {
+	reading_id: number;
+	sensor_id: number;
 	value: Uint8Array;
-	timestamp: Date;
-	sensorType: string;
-};
+	timestamp: Time | null;
+}

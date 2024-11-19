@@ -29,105 +29,105 @@
 		{
 			label: 'Hive Management',
 			icon: Kanban,
-			roles: ['beekeeper', 'admin'],
+			roles: ['WORKER', 'ADMIN'],
 			items: [
 				{
 					path: '/dashboard/hives',
 					label: 'Hives Overview',
-					roles: ['beekeeper', 'admin']
+					roles: ['WORKER', 'ADMIN']
 				},
 				{
 					path: '/dashboard/communities',
 					label: 'Bee Communities',
-					roles: ['beekeeper', 'admin']
+					roles: ['WORKER', 'ADMIN']
 				},
 				{
 					path: '/dashboard/iot',
 					label: 'IoT Monitoring',
-					roles: ['beekeeper', 'admin']
+					roles: ['WORKER', 'ADMIN']
 				}
 			]
 		},
 		{
 			label: 'Data Input',
 			icon: ClipboardList,
-			roles: ['beekeeper', 'admin'],
+			roles: ['WORKER', 'ADMIN'],
 			items: [
 				{
 					path: '/dashboard/ingress/observations',
 					label: 'Observations',
-					roles: ['beekeeper', 'admin']
+					roles: ['WORKER', 'ADMIN']
 				},
 				{
 					path: '/dashboard/ingress/maintenance',
 					label: 'Maintenance Plans',
-					roles: ['beekeeper', 'admin']
+					roles: ['WORKER', 'ADMIN']
 				},
 				{
 					path: '/dashboard/ingress/incidents',
 					label: 'Incidents',
-					roles: ['beekeeper', 'admin']
+					roles: ['WORKER', 'ADMIN']
 				}
 			]
 		},
 		{
 			label: 'Data Output',
 			icon: FileText,
-			roles: ['beekeeper', 'admin'],
+			roles: ['WORKER', 'ADMIN'],
 			items: [
 				{
 					path: '/dashboard/egress/harvests',
 					label: 'Honey Harvest',
-					roles: ['beekeeper', 'admin']
+					roles: ['WORKER', 'ADMIN']
 				},
 				{
 					path: '/dashboard/egress/reports',
 					label: 'Reports',
-					roles: ['beekeeper', 'manager', 'admin']
+					roles: ['WORKER', 'manager', 'ADMIN']
 				}
 			]
 		},
 		{
 			label: 'User Management',
 			icon: Users,
-			roles: ['manager', 'admin'],
+			roles: ['manager', 'ADMIN'],
 			items: [
 				{
 					path: '/dashboard/users',
 					label: 'Users Overview',
-					roles: ['manager', 'admin']
+					roles: ['manager', 'ADMIN']
 				},
 				{
 					path: '/dashboard/users/roles',
 					label: 'Role Management',
-					roles: ['admin']
+					roles: ['ADMIN']
 				},
 				{
 					path: '/dashboard/users/audit',
 					label: 'Audit Log',
-					roles: ['admin']
+					roles: ['ADMIN']
 				}
 			]
 		},
 		{
 			label: 'Settings',
 			icon: Settings,
-			roles: ['admin'],
+			roles: ['ADMIN'],
 			items: [
 				{
 					path: '/dashboard/settings',
 					label: 'General Settings',
-					roles: ['admin']
+					roles: ['ADMIN']
 				}
 				// {
 				// 	path: '/dashboard/settings/notifications',
 				// 	label: 'Notifications',
-				// 	roles: ['admin']
+				// 	roles: ['ADMIN']
 				// },
 				// {
 				// 	path: '/dashboard/settings/system',
 				// 	label: 'System',
-				// 	roles: ['admin']
+				// 	roles: ['ADMIN']
 				// }
 			]
 		}
@@ -251,14 +251,18 @@
 				<div
 					class="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center"
 				>
-					<span class="text-white font-medium">{$auth.user.name[0].toUpperCase()}</span>
+					<span class="text-white font-medium">
+						{$auth.user.full_name ? $auth.user.full_name[0].toUpperCase() : '?'}
+					</span>
 				</div>
 				{#if !isCollapsed}
 					<div class="flex-1 min-w-0" transition:slide|local={{ duration: 200 }}>
 						<p class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">
-							{$auth.user.name}
+							{$auth.user.full_name || 'User'}
 						</p>
-						<p class="text-xs text-amber-600 dark:text-amber-400 capitalize">{$auth.user.role}</p>
+						<p class="text-xs text-amber-600 dark:text-amber-400 capitalize">
+							{$auth.user.role || 'Guest'}
+						</p>
 					</div>
 					<div class="flex items-center gap-2">
 						<button

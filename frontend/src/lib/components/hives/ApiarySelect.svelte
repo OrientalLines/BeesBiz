@@ -3,14 +3,28 @@
 	import { fade } from 'svelte/transition';
 	import Icon from '@iconify/svelte';
 	import { debounce } from 'lodash-es';
+	import { onMount } from 'svelte';
+	import { getApiaries, createApiary } from '$lib/services/api';
+	import Modal from '$lib/components/modals/Modal.svelte';
+	import { getToastStore } from '@skeletonlabs/skeleton';
 
 	export let selectedRegion: Region;
 	export let onSelect: (apiary: Apiary) => void;
 	export let onBack: () => void;
 
+	const toastStore = getToastStore();
+	let showModal = false;
+
+	// Form data matching the Apiary type exactly
+	let formData: Omit<Apiary, 'apiary_id'> = {
+		location: '',
+		manager_id: 0,
+		establishment_date: null
+	};
+
 	// State management
 	let searchQuery = '';
-	let sortBy: 'name' | 'hives' | 'honey' = 'name';
+	let sortBy: keyof Apiary = 'location';
 	let currentPage = 1;
 	const itemsPerPage = 12;
 
@@ -20,15 +34,33 @@
 		currentPage = 1;
 	}, 300);
 
+	let apiaries: Apiary[] = [];
+	let loading = true;
+	let error = '';
+
+	onMount(async () => {
+		await loadApiaries();
+	});
+
+	async function loadApiaries() {
+		try {
+			loading = true;
+			apiaries = await getApiaries();
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to load apiaries';
+		} finally {
+			loading = false;
+		}
+	}
+
 	// Filter and sort logic
 	$: filteredApiaries = apiaries
-		.filter((a) => a.regionId === selectedRegion.region_id)
-		.filter(
-			(a) =>
-				a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				a.location.toLowerCase().includes(searchQuery.toLowerCase())
-		)
-		.sort((a, b) => (a[sortBy] > b[sortBy] ? 1 : -1));
+		.filter((a) => a.location.toLowerCase().includes(searchQuery.toLowerCase()))
+		.sort((a, b) => {
+			const aValue = a[sortBy] ?? '';
+			const bValue = b[sortBy] ?? '';
+			return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+		});
 
 	// Pagination logic
 	$: paginatedApiaries = filteredApiaries.slice(
@@ -38,41 +70,22 @@
 
 	$: totalPages = Math.ceil(filteredApiaries.length / itemsPerPage);
 
-	// Add dummy data
-	const apiaries: Apiary[] = [
-		{
-			id: 1,
-			name: 'Sunny Meadow Apiary',
-			regionId: 1,
-			location: 'East Field',
-			hives: 12,
-			honey: 127
-		},
-		{
-			id: 2,
-			name: 'Forest Edge Hives',
-			regionId: 1,
-			location: 'Western Woods',
-			hives: 8,
-			honey: 95
-		},
-		{
-			id: 3,
-			name: 'Valley View Apiary',
-			regionId: 1,
-			location: 'South Valley',
-			hives: 15,
-			honey: 180
-		},
-		{
-			id: 4,
-			name: 'Mountain Peak Bees',
-			regionId: 2,
-			location: 'North Ridge',
-			hives: 10,
-			honey: 145
+	async function handleCreateApiary() {
+		try {
+			await createApiary(formData);
+			showModal = false;
+			await loadApiaries();
+			toastStore.trigger({
+				message: '✨ Apiary created successfully!',
+				background: 'variant-filled-success'
+			});
+		} catch (e) {
+			toastStore.trigger({
+				message: '❌ Failed to create apiary',
+				background: 'variant-filled-error'
+			});
 		}
-	];
+	}
 </script>
 
 <div class="max-w mx-auto" in:fade>
@@ -126,12 +139,11 @@
 			bind:value={sortBy}
 			class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
                     bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                    placeholder-gray-500 dark:placeholder-gray-400
-            focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    focus:ring-2 focus:ring-amber-500 focus:border-transparent"
 		>
-			<option value="name">Sort by Name</option>
-			<option value="hives">Sort by Hives</option>
-			<option value="honey">Sort by Honey</option>
+			<option value="location">Sort by Location</option>
+			<option value="manager_id">Sort by Manager</option>
+			<option value="establishment_date">Sort by Date</option>
 		</select>
 	</div>
 
@@ -152,7 +164,9 @@
 				<div class="relative">
 					<div class="flex items-center gap-3 mb-3">
 						<Icon icon="mdi:beehive-outline" class="w-6 h-6 text-amber-500" />
-						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">{apiary.name}</h2>
+						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+							{apiary.apiary_id}
+						</h2>
 					</div>
 
 					<div class="flex items-center gap-2 text-gray-500 dark:text-gray-400">

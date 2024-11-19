@@ -7,7 +7,7 @@ DO $$ BEGIN IF NOT EXISTS (
 	WHERE
 		nsp.nspname = current_schema()
 		AND typ.typname = 'role'
-) THEN CREATE TYPE role AS ENUM ('ADMIN', 'WORKER');
+) THEN CREATE TYPE role AS ENUM ('ADMIN', 'WORKER', 'MANAGER');
 
 END IF;
 

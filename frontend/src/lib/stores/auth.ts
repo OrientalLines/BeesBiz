@@ -7,30 +7,48 @@ interface AuthState {
 }
 
 function createAuthStore() {
-	const storedAuth = typeof window !== 'undefined' ? localStorage.getItem('auth') : null;
-	const initialValue: AuthState = storedAuth ? JSON.parse(storedAuth) : { user: null, token: null };
+	const { subscribe, set } = writable<AuthState>({
+		user: null,
+		token: null
+	});
 
-	const { subscribe, set, update } = writable<AuthState>(initialValue);
+	// Initialize the store with stored data
+	if (typeof window !== 'undefined') {
+		const stored = localStorage.getItem('auth');
+		if (stored) {
+			try {
+				const auth = JSON.parse(stored);
+				set(auth);
+			} catch (e) {
+				console.error('Failed to parse stored auth', e);
+			}
+		}
+	}
 
 	return {
 		subscribe,
 		login: (user: User, token: string) => {
 			const authState = { user, token };
-			localStorage.setItem('auth', JSON.stringify(authState));
 			set(authState);
+			localStorage.setItem('auth', JSON.stringify(authState));
 		},
 		logout: () => {
-			localStorage.removeItem('auth');
 			set({ user: null, token: null });
+			localStorage.removeItem('auth');
 		},
-		updateUser: (userData: Partial<User>) =>
-			update((state) => {
-				if (!state.user) return state;
-				const updatedUser = { ...state.user, ...userData };
-				const newState = { ...state, user: updatedUser };
-				localStorage.setItem('auth', JSON.stringify(newState));
-				return newState;
-			})
+		initialize: () => {
+			const stored = localStorage.getItem('auth');
+			if (stored) {
+				try {
+					const auth = JSON.parse(stored);
+					set(auth);
+				} catch (e) {
+					console.error('Failed to parse stored auth', e);
+					localStorage.removeItem('auth');
+					set({ user: null, token: null });
+				}
+			}
+		}
 	};
 }
 

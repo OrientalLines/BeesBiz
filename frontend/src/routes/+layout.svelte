@@ -11,6 +11,7 @@
 	import { navigating } from '$app/stores';
 	import { initializeStores } from '@skeletonlabs/skeleton';
 	import { requireAuth } from '$lib/guards/auth';
+	import { goto } from '$app/navigation';
 
 	const getTitleFromPath = (path: string) => {
 		if (path === '/') return 'Welcome';
@@ -47,17 +48,15 @@
 
 	onMount(() => {
 		if (browser) {
-			requireAuth($page.url.pathname);
+			auth.initialize();
+			const savedTheme = localStorage.getItem('theme');
+			if (savedTheme) {
+				theme.set(savedTheme as 'light' | 'dark');
+			} else {
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				theme.set(prefersDark ? 'dark' : 'light');
+			}
 		}
-
-		const savedTheme = localStorage.getItem('theme');
-		if (savedTheme) {
-			theme.set(savedTheme as 'light' | 'dark');
-		} else {
-			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-			theme.set(prefersDark ? 'dark' : 'light');
-		}
-
 		pageLoaded = true;
 	});
 
@@ -91,25 +90,29 @@
 				Buzzing into action...
 			</p>
 		</div>
-	{:else if $auth?.user && isDashboardRoute(currentPath)}
-		<div class="flex" in:fade={{ duration: 200 }}>
-			<Sidebar />
-			<main class="flex-1 p-8 dark:text-gray-100 relative">
-				{#if $navigating}
-					<div
-						class="absolute inset-0 bg-gray-50/50 dark:bg-gray-900/50 flex flex-col items-center justify-center gap-4 z-50"
-					>
-						<div class="relative">
-							<div class="text-4xl bee-flight">🐝</div>
-							<div
-								class="absolute -bottom-6 left-1/2 -translate-x-1/2 w-6 h-1.5 bg-black/20 dark:bg-white/20 rounded-full bee-shadow"
-							></div>
+	{:else if isDashboardRoute(currentPath)}
+		{#if $auth?.user}
+			<div class="flex" in:fade={{ duration: 200 }}>
+				<Sidebar />
+				<main class="flex-1 p-8 dark:text-gray-100 relative">
+					{#if $navigating}
+						<div
+							class="absolute inset-0 bg-gray-50/50 dark:bg-gray-900/50 flex flex-col items-center justify-center gap-4 z-50"
+						>
+							<div class="relative">
+								<div class="text-4xl bee-flight">🐝</div>
+								<div
+									class="absolute -bottom-6 left-1/2 -translate-x-1/2 w-6 h-1.5 bg-black/20 dark:bg-white/20 rounded-full bee-shadow"
+								></div>
+							</div>
 						</div>
-					</div>
-				{/if}
-				<slot />
-			</main>
-		</div>
+					{/if}
+					<slot />
+				</main>
+			</div>
+		{:else if browser}
+			{goto('/login')}
+		{/if}
 	{:else}
 		<slot />
 	{/if}

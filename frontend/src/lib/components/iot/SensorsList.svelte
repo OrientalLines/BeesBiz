@@ -3,6 +3,8 @@
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
 	import { debounce } from 'lodash-es';
+	import { onMount } from 'svelte';
+	import { getSensorsByHive, createSensor } from '$lib/services/api';
 
 	export let selectedHive: Hive;
 	export let onBack: () => void;
@@ -20,15 +22,23 @@
 	}, 300);
 
 	// Mock data following pattern from HivesList.svelte
-	const sensors: Sensor[] = [
-		{
-			sensorId: 1,
-			hiveId: selectedHive.hiveId,
-			sensorType: 'temperature',
-			lastReading: new Uint8Array([25]),
-			lastReadingTime: new Date()
+	let sensors: Sensor[] = [];
+	let loading = true;
+	let error = '';
+
+	onMount(async () => {
+		try {
+			sensors = await getSensorsByHive(selectedHive.hiveId);
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to load sensors';
+		} finally {
+			loading = false;
 		}
-	];
+	});
+
+	async function handleCreateSensor() {
+		// Implement create sensor modal/form
+	}
 
 	$: filteredSensors = sensors
 		.filter((s) => s.hiveId === selectedHive.hiveId)
