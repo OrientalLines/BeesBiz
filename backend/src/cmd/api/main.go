@@ -43,7 +43,7 @@ func main() {
 	defer db.Close()
 
 	// Initialize the database schema
-	if err := db.InitSchema("migrations", []string{"definition.sql", "ddl.sql", "indexes.sql", "functions.sql", "trigger.sql"}); err != nil {
+	if err := db.InitSchema(); err != nil {
 		zap.S().Fatal("Failed to initialize database schema: ", err)
 	}
 

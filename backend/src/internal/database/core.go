@@ -1,14 +1,25 @@
 package database
 
 import (
+	"embed"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq" // PostgreSQL driver
+	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 )
+
+//go:embed migrations/*.sql
+var migrations embed.FS
+
+// MigrationFiles defines the order of SQL migration files to be executed
+var migrationOrder = []string{
+	"definition.sql", // Create tables and basic structure
+	"ddl.sql",        // Add constraints
+	"indexes.sql",    // Create indexes for performance
+	"functions.sql",  // Create functions and procedures
+	"trigger.sql",    // Create triggers
+}
 
 // DB is a wrapper around sqlx.DB
 type DB struct {
@@ -40,38 +51,29 @@ func (db *DB) Close() error {
 	return nil
 }
 
-func (db *DB) InitSchema(pathToScripts string, sqlFiles []string) error {
-	for _, file := range sqlFiles {
-		filePath := filepath.Join(pathToScripts, file)
-		zap.L().Info("Loading SQL file", zap.String("file", file))
-		if err := db.executeSQLFile(filePath); err != nil {
-			zap.L().Error("Failed to execute SQL file", zap.String("file", file), zap.Error(err))
-			return fmt.Errorf("error executing SQL file %s: %w", file, err)
+// InitSchema initializes the database schema using embedded SQL files
+func (db *DB) InitSchema() error {
+	for _, filename := range migrationOrder {
+		zap.L().Info("Executing migration", zap.String("file", filename))
+
+		// Read the SQL file from embedded FS
+		content, err := migrations.ReadFile("migrations/" + filename)
+		if err != nil {
+			return fmt.Errorf("error reading migration file %s: %w", filename, err)
 		}
-		zap.L().Info("Successfully executed SQL file", zap.String("file", file))
+
+		// Execute the SQL
+		if _, err := db.Exec(string(content)); err != nil {
+			zap.L().Error("Failed to execute migration",
+				zap.String("file", filename),
+				zap.Error(err))
+			return fmt.Errorf("error executing migration %s: %w", filename, err)
+		}
+
+		zap.L().Info("Successfully executed migration", zap.String("file", filename))
 	}
 
-	zap.L().Info("All SQL files executed successfully")
+	zap.L().Info("All migrations completed successfully")
 	return nil
 }
 
-func (db *DB) executeSQLFile(filePath string) error {
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("error reading SQL file: %w", err)
-	}
-
-	_, err = db.Exec(string(content))
-	if err != nil {
-		return fmt.Errorf("error executing SQL: %w", err)
-	}
-	return nil
-}
-
-func (db *DB) ExecuteSQL(sql string) error {
-	_, err := db.Exec(sql)
-	if err != nil {
-		return fmt.Errorf("error executing SQL: %w", err)
-	}
-	return nil
-}
