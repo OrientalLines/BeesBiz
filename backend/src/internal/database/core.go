@@ -3,7 +3,6 @@ package database
 import (
 	"embed"
 	"fmt"
-	"strings"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -16,8 +15,8 @@ var migrations embed.FS
 // MigrationFiles defines the order of SQL migration files to be executed
 var migrationOrder = []string{
 	"definition.sql", // Create tables and basic structure
-	"indexes.sql",    // Create indexes for performance
 	"ddl.sql",        // Add constraints
+	"indexes.sql",    // Create indexes for performance
 	"functions.sql",  // Create functions and procedures
 	"trigger.sql",    // Create triggers
 }
@@ -64,7 +63,7 @@ func (db *DB) InitSchema() error {
 		}
 
 		// Execute the SQL
-		if err := db.ExecuteSQL(string(content)); err != nil {
+		if _, err := db.Exec(string(content)); err != nil {
 			zap.L().Error("Failed to execute migration",
 				zap.String("file", filename),
 				zap.Error(err))
@@ -78,21 +77,3 @@ func (db *DB) InitSchema() error {
 	return nil
 }
 
-// ExecuteSQL executes a SQL string
-func (db *DB) ExecuteSQL(sql string) error {
-	// Split the SQL into individual statements (if multiple are present)
-	statements := strings.Split(sql, ";")
-
-	for _, stmt := range statements {
-		stmt = strings.TrimSpace(stmt)
-		if stmt == "" {
-			continue
-		}
-
-		if _, err := db.Exec(stmt); err != nil {
-			return fmt.Errorf("error executing SQL statement: %w", err)
-		}
-	}
-
-	return nil
-}
