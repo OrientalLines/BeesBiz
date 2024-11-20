@@ -57,6 +57,8 @@ func Login(db *database.DB, jwtKey []byte) fiber.Handler {
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"user_id": user.UserID,
 			"role":    user.Role,
+			"email":   user.Email,
+			"name":    user.FullName,
 			"exp":     time.Now().Add(time.Hour * 24).Unix(),
 		})
 
@@ -65,7 +67,15 @@ func Login(db *database.DB, jwtKey []byte) fiber.Handler {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not generate token"})
 		}
 
-		return c.JSON(fiber.Map{"token": tokenString})
+		return c.JSON(fiber.Map{
+			"token": tokenString,
+			"user": fiber.Map{
+				"id":       user.UserID,
+				"email":    user.Email,
+				"role":     user.Role,
+				"fullName": user.FullName,
+			},
+		})
 	}
 }
 

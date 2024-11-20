@@ -46,7 +46,7 @@ impl Actor for Hive {
                 info!("Hive {} initialized RabbitMQ channel", hive_id);
 
                 // Set up sensor reading interval after channel is initialized
-                ctx.run_interval(Duration::from_secs(10), move |act, _ctx| {
+                ctx.run_interval(Duration::from_secs(20), move |act, _ctx| {
                     if let Some(channel) = &act.channel {
                         info!("Generating sensor readings for hive {}:", act.hive_id);
                         for sensor_id in &act.sensors {

@@ -1,0 +1,24 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+
+	"hive_management": "Bzzzz Hivezz",
+	"hives_overview": "Bzzzz Overviewzz",
+	"bee_communities": "Bzzzz Communitiezz",
+	"iot_monitoring": "Bzzzz IoTzz",
+	"data_input": "Bzzzz Inputzz",
+	"observations": "Bzzzz Observationzz",
+	"maintenance_plans": "Bzzzz Maintenancezz",
+	"incidents": "Bzzzz Incidentzz",
+	"data_output": "Bzzzz Outputzz",
+	"honey_harvest": "Bzzzz Harvestzz",
+	"reports": "Bzzzz Reportzz",
+	"user_management": "Bzzzz Userzzz",
+	"settings": "Bzzzz Settingzz",
+
+	"back": "Bzzzz Backzz",
+	"search": "Bzzzz Searchzz",
+	"logout": "Bzzzz Outzz",
+
+	"theme_light": "Bzzzz Lightzz",
+	"theme_dark": "Bzzzz Darkzz"
+}

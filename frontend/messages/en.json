@@ -1,0 +1,14 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"hello_world": "Hello, {name}!",
+	"hive_management": "Hive Management",
+	"hives_overview": "Hives Overview",
+	"bee_communities": "Bee Communities",
+	"iot_monitoring": "IoT Monitoring",
+	"data_input": "Data Input",
+	"data_output": "Data Output",
+	"settings": "Settings",
+	"back": "Back",
+	"add_new": "Add New",
+	"search": "Search..."
+}
