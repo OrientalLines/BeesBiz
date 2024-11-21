@@ -1,8 +1,12 @@
 <script lang="ts">
-	import type { Apiary, Hive } from '$lib/types';
+	import { onMount } from 'svelte';
+	import { getHivesByApiaryId, createHive } from '$lib/services/api';
+	import { getToastStore } from '@skeletonlabs/skeleton';
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
 	import { debounce } from 'lodash-es';
+	import Modal from '../modals/Modal.svelte';
+	import type { Apiary, Hive } from '$lib/types';
 
 	export let selectedApiary: Apiary;
 	export let onBack: () => void;
@@ -19,23 +23,69 @@
 		currentPage = 1;
 	}, 300);
 
-	// Mock data
-	const hives: Hive[] = [
-		{
-			hiveId: 1,
-			apiaryId: selectedApiary.id,
-			hiveType: 'Langstroth',
-			currentStatus: 'active',
-			inspectionDate: new Date()
+	const toastStore = getToastStore();
+	let showModal = false;
+	let loading = true;
+	let error = '';
+
+	// Form data for new hive
+	let formData: Omit<Hive, 'hive_id'> = {
+		apiary_id: selectedApiary.apiary_id,
+		hive_type: '',
+		current_status: 'active',
+		installation_date: new Date().toISOString()
+	};
+
+	let hives: Hive[] = [];
+
+	onMount(async () => {
+		await loadHives();
+	});
+
+	async function loadHives() {
+		try {
+			loading = true;
+			hives = await getHivesByApiaryId(selectedApiary.apiary_id);
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to load hives';
+			toastStore.trigger({
+				message: '❌ Failed to load hives',
+				background: 'variant-filled-error'
+			});
+		} finally {
+			loading = false;
 		}
-	];
+	}
+
+	async function handleCreateHive() {
+		try {
+			const payload = {
+				...formData,
+				installation_date: formData.installation_date
+					? new Date(formData.installation_date).toISOString()
+					: null
+			};
+			await createHive(payload);
+			showModal = false;
+			await loadHives();
+			toastStore.trigger({
+				message: '✨ Hive created successfully!',
+				background: 'variant-filled-success'
+			});
+		} catch (e) {
+			toastStore.trigger({
+				message: '❌ Failed to create hive',
+				background: 'variant-filled-error'
+			});
+		}
+	}
 
 	$: filteredHives = hives
-		.filter((h) => h.apiaryId === selectedApiary.id)
+		.filter((h) => h.apiary_id === selectedApiary.apiary_id)
 		.filter(
 			(h) =>
-				h.hiveId.toString().includes(searchQuery.toLowerCase()) ||
-				h.currentStatus.toLowerCase().includes(searchQuery.toLowerCase())
+				h.hive_id.toString().includes(searchQuery.toLowerCase()) ||
+				h.current_status.toLowerCase().includes(searchQuery.toLowerCase())
 		)
 		.sort((a, b) => {
 			// FIXME
@@ -43,7 +93,7 @@
 			// 	return a.currentStatus.localeCompare(b.currentStatus);
 			// }
 			if (sortBy === 'hiveId') {
-				return a.hiveId - b.hiveId;
+				return a.hive_id - b.hive_id;
 			}
 			return 0;
 		});
@@ -72,7 +122,7 @@
 				Hives
 			</h1>
 			<p class="mt-2 text-gray-600 dark:text-gray-400">
-				Manage hives in {selectedApiary.name}
+				Manage hives in {selectedApiary.location}
 			</p>
 		</div>
 
@@ -80,6 +130,7 @@
 			class="bg-amber-500 text-white px-6 py-3 rounded-full
             hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl
             flex items-center gap-2"
+			on:click={() => (showModal = true)}
 		>
 			<Icon icon="mdi:plus" class="w-5 h-5" />
 			Add Hive
@@ -88,39 +139,53 @@
 
 	<!-- Grid layout -->
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-		{#each paginatedHives as hive}
-			<button
-				class="group relative p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg
-                hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
-                hover:border-amber-400 overflow-hidden"
-				on:click={() => onSelect(hive)}
-			>
-				<div class="relative">
-					<div class="flex items-center gap-3 mb-3">
-						<Icon icon="mdi:beehive-outline" class="w-6 h-6 text-amber-500" />
-						<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-							Hive #{hive.hiveId}
-						</h2>
-					</div>
+		{#if loading}
+			<div class="flex justify-center items-center h-64">
+				<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500" />
+			</div>
+		{:else if error}
+			<div class="text-center text-red-500 p-4">
+				{error}
+			</div>
+		{:else}
+			{#each paginatedHives as hive}
+				<button
+					class="group relative p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg
+                    hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
+                    hover:border-amber-400 overflow-hidden"
+					on:click={() => onSelect(hive)}
+				>
+					<div class="relative">
+						<div class="flex items-center gap-3 mb-3">
+							<Icon icon="mdi:beehive-outline" class="w-6 h-6 text-amber-500" />
+							<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+								Hive #{hive.hive_id}
+							</h2>
+						</div>
 
-					<div class="mt-4 space-y-2">
-						<div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-							<Icon icon="mdi:clock-outline" class="w-5 h-5" />
-							<span>Last inspection: {new Date(hive.inspectionDate).toLocaleDateString()}</span>
-						</div>
-						<div class="flex items-center gap-2">
-							<Icon
-								icon={hive.currentStatus === 'active' ? 'mdi:check-circle' : 'mdi:alert-circle'}
-								class="w-5 h-5 {hive.currentStatus === 'active'
-									? 'text-green-500'
-									: 'text-amber-500'}"
-							/>
-							<span class="capitalize">{hive.currentStatus}</span>
+						<div class="mt-4 space-y-2">
+							<div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+								<Icon icon="mdi:clock-outline" class="w-5 h-5" />
+								<span
+									>Last inspection: {hive.installation_date
+										? new Date(hive.installation_date).toLocaleDateString()
+										: 'Never'}</span
+								>
+							</div>
+							<div class="flex items-center gap-2">
+								<Icon
+									icon={hive.current_status === 'active' ? 'mdi:check-circle' : 'mdi:alert-circle'}
+									class="w-5 h-5 {hive.current_status === 'active'
+										? 'text-green-500'
+										: 'text-amber-500'}"
+								/>
+								<span class="capitalize">{hive.current_status}</span>
+							</div>
 						</div>
 					</div>
-				</div>
-			</button>
-		{/each}
+				</button>
+			{/each}
+		{/if}
 	</div>
 
 	<!-- Pagination controls -->
@@ -149,4 +214,51 @@
 			</button>
 		</div>
 	{/if}
+
+	<!-- Add Modal for creating new hive -->
+	<Modal isOpen={showModal} title="Create New Hive" onClose={() => (showModal = false)}>
+		<form on:submit|preventDefault={handleCreateHive} class="space-y-4">
+			<div>
+				<label for="hive_type" class="block text-sm font-medium mb-1">Hive Type</label>
+				<select
+					id="hive_type"
+					bind:value={formData.hive_type}
+					class="w-full px-4 py-2 rounded-lg border"
+					required
+				>
+					<option value="Langstroth">Langstroth</option>
+					<option value="Top Bar">Top Bar</option>
+					<option value="Warre">Warre</option>
+				</select>
+			</div>
+			<div>
+				<label for="current_status" class="block text-sm font-medium mb-1">Status</label>
+				<select
+					id="current_status"
+					bind:value={formData.current_status}
+					class="w-full px-4 py-2 rounded-lg border"
+					required
+				>
+					<option value="active">Active</option>
+					<option value="inactive">Inactive</option>
+					<option value="maintenance">Maintenance</option>
+				</select>
+			</div>
+			<div class="flex justify-end gap-2">
+				<button
+					type="button"
+					class="px-4 py-2 rounded-lg border"
+					on:click={() => (showModal = false)}
+				>
+					Cancel
+				</button>
+				<button
+					type="submit"
+					class="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600"
+				>
+					Create
+				</button>
+			</div>
+		</form>
+	</Modal>
 </div>

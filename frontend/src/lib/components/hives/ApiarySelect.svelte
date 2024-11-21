@@ -19,7 +19,7 @@
 	let formData: Omit<Apiary, 'apiary_id'> = {
 		location: '',
 		manager_id: 0,
-		establishment_date: null
+		establishment_date: new Date().toISOString()
 	};
 
 	// State management
@@ -72,7 +72,14 @@
 
 	async function handleCreateApiary() {
 		try {
-			await createApiary(formData);
+			// Ensure the date is in ISO format before sending
+			const payload = {
+				...formData,
+				establishment_date: formData.establishment_date
+					? new Date(formData.establishment_date).toISOString()
+					: null
+			};
+			await createApiary(payload);
 			showModal = false;
 			await loadApiaries();
 			toastStore.trigger({
@@ -109,6 +116,7 @@
 		</div>
 
 		<button
+			on:click={() => (showModal = true)}
 			class="bg-amber-500 text-white px-6 py-3 rounded-full
             hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl
             flex items-center gap-2"
@@ -179,12 +187,19 @@
 						class="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-gray-100 dark:border-gray-700"
 					>
 						<div class="flex items-center gap-2">
-							<Icon icon="mdi:bee" class="w-5 h-5 text-amber-500" />
-							<span class="text-sm">12 Hives</span>
+							<Icon icon="mdi:calendar" class="w-5 h-5 text-amber-500" />
+							<span class="text-sm">
+								Established on{' '}
+								{apiary.establishment_date
+									? new Date(apiary.establishment_date).toLocaleDateString()
+									: 'not set'}
+							</span>
 						</div>
 						<div class="flex items-center gap-2">
-							<Icon icon="mdi:jar" class="w-5 h-5 text-amber-500" />
-							<span class="text-sm">127 kg Honey</span>
+							<Icon icon="mdi:account" class="w-5 h-5 text-amber-500" />
+							<span class="text-sm"
+								>Manager {apiary.manager_id ? `#${apiary.manager_id}` : 'not set'}
+							</span>
 						</div>
 					</div>
 				</div>
@@ -218,4 +233,47 @@
 			</button>
 		</div>
 	{/if}
+
+	<!-- Add the Modal component for creating new apiary -->
+	<Modal isOpen={showModal} title="Create New Apiary" onClose={() => (showModal = false)}>
+		<form on:submit|preventDefault={handleCreateApiary} class="space-y-4">
+			<div>
+				<label for="location" class="block text-sm font-medium mb-1">Location</label>
+				<input
+					type="text"
+					id="location"
+					bind:value={formData.location}
+					class="w-full px-4 py-2 rounded-lg border"
+					required
+				/>
+			</div>
+			<div>
+				<label for="establishment_date" class="block text-sm font-medium mb-1"
+					>Establishment Date</label
+				>
+				<input
+					type="datetime-local"
+					id="establishment_date"
+					bind:value={formData.establishment_date}
+					class="w-full px-4 py-2 rounded-lg border"
+					required
+				/>
+			</div>
+			<div class="flex justify-end gap-2">
+				<button
+					type="button"
+					class="px-4 py-2 rounded-lg border"
+					on:click={() => (showModal = false)}
+				>
+					Cancel
+				</button>
+				<button
+					type="submit"
+					class="px-4 py-2 rounded-lg bg-amber-500 text-white hover:bg-amber-600"
+				>
+					Create
+				</button>
+			</div>
+		</form>
+	</Modal>
 </div>
