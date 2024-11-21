@@ -77,7 +77,7 @@
 				...formData,
 				establishment_date: formData.establishment_date
 					? new Date(formData.establishment_date).toISOString()
-					: null
+					: new Date().toISOString()
 			};
 			await createApiary(payload);
 			showModal = false;

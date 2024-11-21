@@ -3,42 +3,64 @@
 	import Icon from '@iconify/svelte';
 	import { debounce } from 'lodash-es';
 	import type { Sensor, SensorReading } from '$lib/types';
+	import { onMount } from 'svelte';
+	import { getSensors, getSensorReadings } from '$lib/services/api';
+	import { getToastStore } from '@skeletonlabs/skeleton';
 
 	let searchQuery = '';
 	let selectedTimeRange = '24h';
 
-	// Mock data - replace with API calls
-	const sensors: Sensor[] = [
-		{
-			sensorId: 1,
-			hiveId: 1,
-			sensorType: 'temperature',
-			lastReading: new Uint8Array([25]),
-			lastReadingTime: new Date()
-		}
-	];
+	const toastStore = getToastStore();
+	let loading = true;
+	let error = '';
+	let sensors: Sensor[] = [];
+	let recentReadings: SensorReading[] = [];
 
-	const recentReadings: SensorReading[] = [
-		{
-			readingId: 1,
-			sensorId: 1,
-			value: new Uint8Array([25]),
-			timestamp: new Date(),
-			sensorType: 'temperature'
+	onMount(async () => {
+		try {
+			loading = true;
+			[sensors, recentReadings] = await Promise.all([getSensors(), getSensorReadings()]);
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to load data';
+			toastStore.trigger({
+				message: '❌ Failed to load dashboard data',
+				background: 'variant-filled-error'
+			});
+		} finally {
+			loading = false;
 		}
-	];
+	});
+
+	function decodeSensorReading(reading: string | null): string {
+		if (!reading) return '--';
+		try {
+			// Decode Base64 to bytes
+			const binaryString = atob(reading);
+			// Convert binary string to number
+			const value = new TextDecoder().decode(
+				new Uint8Array(binaryString.split('').map((c) => c.charCodeAt(0)))
+			);
+			return value;
+		} catch (e) {
+			console.error('Failed to decode sensor reading:', e);
+			return '--';
+		}
+	}
 
 	const debouncedSearch = debounce((value: string) => {
 		searchQuery = value;
 	}, 300);
 
 	$: filteredSensors = sensors.filter((s) =>
-		s.sensorType.toLowerCase().includes(searchQuery.toLowerCase())
+		s.sensor_type.toLowerCase().includes(searchQuery.toLowerCase())
 	);
-
 	$: filteredReadings = recentReadings
-		.filter((r) => r.sensorType.toLowerCase().includes(searchQuery.toLowerCase()))
-		.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+		.filter((r) => r.value.toString().toLowerCase().includes(searchQuery.toLowerCase()))
+		.sort((a, b) => {
+			const bTime = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+			const aTime = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+			return bTime - aTime;
+		});
 </script>
 
 <div class="max-w mx-auto space-y-8" in:fade>
@@ -107,7 +129,11 @@
 			</div>
 			<p class="text-xl font-medium text-amber-600">
 				{new Date(
-					Math.max(...sensors.map((s) => new Date(s.lastReadingTime).getTime()))
+					Math.max(
+						...sensors
+							.filter((s) => s.last_reading_time !== null)
+							.map((s) => (s.last_reading_time ? new Date(s.last_reading_time).getTime() : 0))
+					) || Date.now()
 				).toLocaleString()}
 			</p>
 		</div>
@@ -128,27 +154,31 @@
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			{#each filteredSensors.slice(0, 6) as sensor}
 				<a
-					href="/dashboard/iot/sensors/{sensor.sensorId}"
+					href="/dashboard/iot/sensors/{sensor.sensor_id}"
 					class="group relative p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg
                     hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
                     hover:border-amber-400"
 				>
 					<div class="flex items-center gap-3 mb-3">
 						<Icon
-							icon={sensor.sensorType === 'temperature' ? 'mdi:thermometer' : 'mdi:gauge'}
+							icon={sensor.sensor_type === 'temperature' ? 'mdi:thermometer' : 'mdi:gauge'}
 							class="w-6 h-6 text-amber-500"
 						/>
 						<h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-							{sensor.sensorType.charAt(0).toUpperCase() + sensor.sensorType.slice(1)}
+							{sensor.sensor_type.charAt(0).toUpperCase() + sensor.sensor_type.slice(1)}
 						</h3>
 					</div>
 					<div class="text-gray-600 dark:text-gray-400">
 						<div class="flex items-center gap-2">
 							<Icon icon="mdi:clock-outline" class="w-5 h-5" />
-							<span>Last updated: {new Date(sensor.lastReadingTime).toLocaleString()}</span>
+							<span>
+								Last updated: {sensor.last_reading_time
+									? new Date(sensor.last_reading_time).toLocaleString()
+									: 'Never'}
+							</span>
 						</div>
 						<div class="mt-2 text-2xl font-bold text-amber-600">
-							{new TextDecoder().decode(sensor.lastReading)}°C
+							{decodeSensorReading(sensor.last_reading)}°C
 						</div>
 					</div>
 				</a>
@@ -198,18 +228,18 @@
 					{#each filteredReadings.slice(0, 5) as reading}
 						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-								{new Date(reading.timestamp).toLocaleString()}
+								{reading.timestamp ? new Date(reading.timestamp).toLocaleString() : 'Never'}
 							</td>
 							<td
 								class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white capitalize"
 							>
-								{reading.sensorType}
+								{reading.value ? decodeSensorReading(reading.value) : '--'}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-								{new TextDecoder().decode(reading.value)}°C
+								{reading.value ? decodeSensorReading(reading.value) : '--'}°C
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-								{reading.sensorId}
+								{reading.sensor_id}
 							</td>
 						</tr>
 					{/each}

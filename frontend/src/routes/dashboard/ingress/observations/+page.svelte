@@ -5,7 +5,19 @@
 	import type { ObservationLog } from '$lib/types';
 	import DatePicker from '$lib/components/inputs/DatePicker.svelte';
 	import ObservationEditModal from '$lib/components/modals/ObservationEditModal.svelte';
+	import {
+		getObservationLogs,
+		createObservationLog,
+		updateObservationLog,
+		deleteObservationLog
+	} from '$lib/services/api';
+	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { onMount } from 'svelte';
 
+	const toastStore = getToastStore();
+	let loading = true;
+	let error = '';
+	let logs: ObservationLog[] = [];
 	let editingObservation: ObservationLog | null = null;
 	let showAddModal = false;
 	let searchQuery = '';
@@ -16,57 +28,99 @@
 		end: null as Date | null
 	};
 
+	onMount(async () => {
+		await loadData();
+	});
+
+	async function loadData() {
+		try {
+			loading = true;
+			logs = await getObservationLogs();
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to load observation logs';
+			toastStore.trigger({
+				message: '❌ Failed to load observation logs',
+				background: 'variant-filled-error'
+			});
+		} finally {
+			loading = false;
+		}
+	}
+
 	const debouncedSearch = debounce((value: string) => {
 		searchQuery = value;
 		currentPage = 1;
 	}, 300);
 
-	// Mock data - replace with API call
-	const logs: ObservationLog[] = [
-		{
-			logId: 1,
-			hiveId: 101,
-			observationDate: new Date(),
-			description: 'Healthy brood pattern observed',
-			recommendations: 'Continue regular monitoring'
-		}
-	];
-
 	function handleDateRangeChange(start: Date | null, end: Date | null) {
 		dateRange.start = start;
 		dateRange.end = end;
+		currentPage = 1;
 	}
 
 	function handleEdit(observation: ObservationLog) {
 		editingObservation = { ...observation };
 	}
 
-	function handleSaveObservation(updatedObservation: ObservationLog) {
-		if (editingObservation) {
-			const index = logs.findIndex((l) => l.logId === updatedObservation.logId);
-			if (index !== -1) {
-				logs[index] = updatedObservation;
+	async function handleSaveObservation(updatedObservation: ObservationLog) {
+		try {
+			if (editingObservation) {
+				await updateObservationLog(updatedObservation);
+				toastStore.trigger({
+					message: '✨ Observation updated successfully!',
+					background: 'variant-filled-success'
+				});
+			} else {
+				await createObservationLog(updatedObservation);
+				toastStore.trigger({
+					message: '✨ Observation created successfully!',
+					background: 'variant-filled-success'
+				});
 			}
-		} else {
-			// Add new observation
-			updatedObservation.logId = Math.max(...logs.map((l) => l.logId)) + 1;
-			logs.push(updatedObservation);
+			await loadData();
+			editingObservation = null;
+			showAddModal = false;
+		} catch (e) {
+			toastStore.trigger({
+				message: '❌ Failed to save observation',
+				background: 'variant-filled-error'
+			});
 		}
-		editingObservation = null;
-		showAddModal = false;
+	}
+
+	async function handleDelete(logId: number) {
+		if (confirm('Are you sure you want to delete this observation?')) {
+			try {
+				await deleteObservationLog(logId);
+				await loadData();
+				toastStore.trigger({
+					message: '✨ Observation deleted successfully!',
+					background: 'variant-filled-success'
+				});
+			} catch (e) {
+				toastStore.trigger({
+					message: '❌ Failed to delete observation',
+					background: 'variant-filled-error'
+				});
+			}
+		}
 	}
 
 	$: filteredLogs = logs
 		.filter((log) => {
 			const matchesSearch =
-				log.hiveId.toString().includes(searchQuery) ||
+				log.hive_id.toString().includes(searchQuery) ||
 				log.description.toLowerCase().includes(searchQuery.toLowerCase());
 			const matchesDate =
-				(!dateRange.start || new Date(log.observationDate) >= dateRange.start) &&
-				(!dateRange.end || new Date(log.observationDate) <= dateRange.end);
+				(!dateRange.start || new Date(log.observation_date) >= dateRange.start) &&
+				(!dateRange.end || new Date(log.observation_date) <= dateRange.end);
 			return matchesSearch && matchesDate;
 		})
-		.sort((a, b) => new Date(b.observationDate).getTime() - new Date(a.observationDate).getTime());
+		.sort((a, b) => {
+			const dateA = a.observation_date ? new Date(a.observation_date).getTime() : 0;
+			const dateB = b.observation_date ? new Date(b.observation_date).getTime() : 0;
+			return dateB - dateA;
+		});
 
 	$: paginatedLogs = filteredLogs.slice(
 		(currentPage - 1) * itemsPerPage,
@@ -158,10 +212,10 @@
 					{#each paginatedLogs as log}
 						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{new Date(log.observationDate).toLocaleDateString()}
+								{log.observation_date ? new Date(log.observation_date).toLocaleDateString() : 'N/A'}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{log.hiveId}
+								{log.hive_id}
 							</td>
 							<td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-300">
 								{log.description}
@@ -174,7 +228,13 @@
 									class="text-amber-600 hover:text-amber-700"
 									on:click={() => handleEdit(log)}
 								>
-									Edit
+									<Icon icon="mdi:pencil" class="w-5 h-5" />
+								</button>
+								<button
+									class="text-red-600 hover:text-red-700"
+									on:click={() => handleDelete(log.log_id)}
+								>
+									<Icon icon="mdi:delete" class="w-5 h-5" />
 								</button>
 							</td>
 						</tr>

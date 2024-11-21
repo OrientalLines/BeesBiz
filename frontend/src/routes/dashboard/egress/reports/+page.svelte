@@ -2,19 +2,23 @@
 	import { debounce } from 'lodash-es';
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
-	import type { Report } from '$lib/types';
+	import type { ProductionReport } from '$lib/types';
 	import DatePicker from '$lib/components/inputs/DatePicker.svelte';
 	import ReportEditModal from '$lib/components/modals/ReportEditModal.svelte';
 	import ReportDetailsModal from '$lib/components/modals/ReportDetailsModal.svelte';
+	import { getToastStore } from '@skeletonlabs/skeleton';
 
 	let showAddModal = false;
-	let editingReport: Report | null = null;
-	let viewingReport: Report | null = null;
+	let editingReport: ProductionReport | null = null;
+	let viewingReport: ProductionReport | null = null;
 
 	// State management
 	let searchQuery = '';
 	let currentPage = 1;
+
 	const itemsPerPage = 10;
+	const toastStore = getToastStore();
+
 	let dateRange = {
 		start: null as Date | null,
 		end: null as Date | null
@@ -27,47 +31,70 @@
 	}, 300);
 
 	// Mock data - replace with API call
-	let reports: Report[] = [
+	let reports: ProductionReport[] = [
 		{
-			reportId: 1,
-			apiaryId: 101,
-			startDate: new Date('2024-01-01'),
-			endDate: new Date('2024-03-31'),
-			totalHoney: 450,
-			totalExpenses: 2500
+			report_id: 1,
+			apiary_id: 101,
+			start_date: new Date('2024-01-01'),
+			end_date: new Date('2024-03-31'),
+			total_honey: 450,
+			total_expenses: 2500
 		}
 	];
 
 	// Add handler for date changes
 	function handleDateRangeChange(start: Date | null, end: Date | null) {
-		dateRange.start = start;
-		dateRange.end = end;
+		dateRange = {
+			start,
+			end
+		};
+		currentPage = 1; // Reset to first page when filter changes
 	}
 
-	function handleSaveReport(report: Report) {
-		if (editingReport) {
-			const index = reports.findIndex((r) => r.reportId === report.reportId);
-			if (index !== -1) {
-				reports[index] = report;
+	async function handleSaveReport(report: ProductionReport) {
+		try {
+			// Check for reportId to determine if we're editing or creating
+			if (report.report_id) {
+				// Update existing report
+				const index = reports.findIndex((r) => r.report_id === report.report_id);
+				if (index !== -1) {
+					reports[index] = report;
+					reports = [...reports]; // Trigger reactivity
+				}
+			} else {
+				// Create new report
+				const newReport = {
+					...report,
+					report_id: Math.max(...reports.map((r) => r.report_id), 0) + 1
+				};
+				reports = [...reports, newReport];
 			}
-		} else {
-			report.reportId = Math.max(...reports.map((r) => r.reportId)) + 1;
-			reports = [...reports, report];
+
+			showAddModal = false;
+			editingReport = null;
+			toastStore.trigger({
+				message: '✨ Report saved successfully!',
+				background: 'variant-filled-success'
+			});
+		} catch (e) {
+			console.error('Save error:', e);
+			toastStore.trigger({
+				message: '❌ Failed to save report',
+				background: 'variant-filled-error'
+			});
 		}
-		editingReport = null;
-		showAddModal = false;
 	}
 
 	// Filter logic
 	$: filteredReports = reports
 		.filter((r) => {
-			const matchesSearch = r.apiaryId.toString().includes(searchQuery);
+			const matchesSearch = r.apiary_id.toString().includes(searchQuery);
 			const matchesDate =
-				(!dateRange.start || new Date(r.startDate) >= dateRange.start) &&
-				(!dateRange.end || new Date(r.endDate) <= dateRange.end);
+				(!dateRange.start || new Date(r.start_date) >= dateRange.start) &&
+				(!dateRange.end || new Date(r.end_date) <= dateRange.end);
 			return matchesSearch && matchesDate;
 		})
-		.sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
+		.sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime());
 
 	$: paginatedReports = filteredReports.slice(
 		(currentPage - 1) * itemsPerPage,
@@ -77,8 +104,8 @@
 	$: totalPages = Math.ceil(filteredReports.length / itemsPerPage);
 
 	// Calculate totals for summary cards
-	$: totalHoneyProduction = filteredReports.reduce((sum, r) => sum + r.totalHoney, 0);
-	$: totalExpenses = filteredReports.reduce((sum, r) => sum + r.totalExpenses, 0);
+	$: totalHoneyProduction = filteredReports.reduce((sum, r) => sum + r.total_honey, 0);
+	$: totalExpenses = filteredReports.reduce((sum, r) => sum + r.total_expenses, 0);
 	$: averageProduction = totalHoneyProduction / filteredReports.length || 0;
 </script>
 
@@ -197,17 +224,17 @@
 					{#each paginatedReports as report}
 						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{new Date(report.startDate).toLocaleDateString()} -
-								{new Date(report.endDate).toLocaleDateString()}
+								{new Date(report.start_date).toLocaleDateString()} -
+								{new Date(report.end_date).toLocaleDateString()}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{report.apiaryId}
+								{report.apiary_id}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{report.totalHoney} kg
+								{report.total_honey} kg
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								${report.totalExpenses}
+								${report.total_expenses}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
 								<button
@@ -258,7 +285,9 @@
 		<ReportEditModal
 			isOpen={true}
 			report={null}
-			onClose={() => (showAddModal = false)}
+			onClose={() => {
+				showAddModal = false;
+			}}
 			onSave={handleSaveReport}
 		/>
 	{/if}
@@ -267,7 +296,9 @@
 		<ReportEditModal
 			isOpen={true}
 			report={editingReport}
-			onClose={() => (editingReport = null)}
+			onClose={() => {
+				editingReport = null;
+			}}
 			onSave={handleSaveReport}
 		/>
 	{/if}

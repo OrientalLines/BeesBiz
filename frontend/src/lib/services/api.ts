@@ -1,5 +1,5 @@
 import { auth } from '$lib/stores/auth';
-import type { Region, Apiary, Hive, BeeCommunity, HoneyHarvest, ProductionReport, Sensor, SensorReading, WeatherData } from '$lib/types';
+import type { Region, Apiary, Hive, BeeCommunity, HoneyHarvest, ProductionReport, Sensor, SensorReading, WeatherData, ObservationLog } from '$lib/types';
 import { get } from 'svelte/store';
 import type { User } from 'lucide-svelte';
 
@@ -110,8 +110,13 @@ export async function getBeeCommunities(): Promise<BeeCommunity[]> {
 	return getResource<BeeCommunity[]>('bee-community');
 }
 
-export async function getBeeCommunitiesByHiveId(hiveId: number): Promise<BeeCommunity[]> {
-	return getResource<BeeCommunity[]>(`bee-community/${hiveId}/bee-communities`);
+export async function getBeeCommunityById(id: number): Promise<BeeCommunity> {
+	const communities = await getResource<BeeCommunity[]>('bee-community');
+	const community = communities.find(c => c.community_id === id);
+	if (!community) {
+		throw new Error('Bee community not found');
+	}
+	return community;
 }
 
 export async function createBeeCommunity(data: Omit<BeeCommunity, 'community_id'>): Promise<BeeCommunity> {
@@ -177,8 +182,22 @@ export async function getSensorById(id: number): Promise<Sensor> {
 	return getResource<Sensor>(`sensor/${id}`);
 }
 
-export async function createSensor(data: Omit<Sensor, 'sensor_id'>): Promise<Sensor> {
-	return createResource<Sensor>('sensor', data);
+export async function createSensor(data: {
+	hive_id: number;
+	sensor_type: string;
+	last_reading: Uint8Array;
+	last_reading_time: string;
+}): Promise<Sensor> {
+	const response = await fetch(`${API_BASE_URL}/api/sensor`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({
+			...data,
+			last_reading: Array.from(data.last_reading) // Convert Uint8Array to regular array for JSON
+		})
+	});
+	handleResponse(response);
+	return response.json();
 }
 
 export async function updateSensor(data: Sensor): Promise<Sensor> {
@@ -191,23 +210,80 @@ export async function deleteSensor(id: number): Promise<void> {
 
 // SensorReading Operations
 export async function getSensorReadings(): Promise<SensorReading[]> {
-	return getResource<SensorReading[]>('sensor-reading');
+	const response = await fetch(`${API_BASE_URL}/api/sensor-reading`, {
+		headers: getAuthHeaders()
+	});
+	handleResponse(response);
+	return response.json();
 }
 
-export async function getSensorReadingById(id: number): Promise<SensorReading> {
-	return getResource<SensorReading>(`sensor-reading/${id}`);
+export async function getSensorReadingById(readingId: number): Promise<SensorReading | null> {
+	if (!readingId || isNaN(readingId)) {
+		throw new Error('Invalid reading ID');
+	}
+
+	try {
+		const response = await fetch(`${API_BASE_URL}/api/sensor-reading/${readingId}`, {
+			headers: getAuthHeaders()
+		});
+
+		if (!response.ok) {
+			if (response.status === 404) {
+				return null;
+			}
+			throw new Error(`Failed to fetch reading: ${response.statusText}`);
+		}
+
+		return response.json();
+	} catch (error) {
+		console.error('Error fetching sensor reading:', error);
+		throw error;
+	}
 }
 
-export async function createSensorReading(data: Omit<SensorReading, 'reading_id'>): Promise<SensorReading> {
-	return createResource<SensorReading>('sensor-reading', data);
+export async function createSensorReading(data: {
+	sensor_id: number;
+	value: string; // Base64 encoded string
+	timestamp: string;
+}): Promise<SensorReading> {
+	const response = await fetch(`${API_BASE_URL}/api/sensor-reading`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify(data)
+	});
+	handleResponse(response);
+	return response.json();
 }
 
-export async function updateSensorReading(data: SensorReading): Promise<SensorReading> {
-	return updateResource<SensorReading>('sensor-reading', data);
+export async function updateSensorReading(data: {
+	reading_id: number;
+	sensor_id: number;
+	value: string;
+	timestamp: string;
+}): Promise<SensorReading> {
+	if (!data.reading_id || isNaN(data.reading_id)) {
+		throw new Error('Invalid reading ID');
+	}
+
+	const response = await fetch(`${API_BASE_URL}/api/sensor-reading/${data.reading_id}`, {
+		method: 'PUT',
+		headers: getAuthHeaders(),
+		body: JSON.stringify(data)
+	});
+	handleResponse(response);
+	return response.json();
 }
 
-export async function deleteSensorReading(id: number): Promise<void> {
-	return deleteResource('sensor-reading', id);
+export async function deleteSensorReading(readingId: number): Promise<void> {
+	if (!readingId || isNaN(readingId)) {
+		throw new Error('Invalid reading ID');
+	}
+
+	const response = await fetch(`${API_BASE_URL}/api/sensor-reading/${readingId}`, {
+		method: 'DELETE',
+		headers: getAuthHeaders()
+	});
+	handleResponse(response);
 }
 
 // WeatherData Operations
@@ -229,6 +305,42 @@ export async function updateWeatherData(data: WeatherData): Promise<WeatherData>
 
 export async function deleteWeatherData(id: number): Promise<void> {
 	return deleteResource('weather-data', id);
+}
+
+// ObservationLog Operations (using Incident endpoints)
+export async function getObservationLogs(): Promise<ObservationLog[]> {
+	return getResource<ObservationLog[]>('incident');
+}
+
+export async function getObservationLogById(id: number): Promise<ObservationLog> {
+	return getResource<ObservationLog>(`incident/${id}`);
+}
+
+export async function createObservationLog(data: Omit<ObservationLog, 'log_id'>): Promise<ObservationLog> {
+	const payload = {
+		hive_id: data.hive_id,
+		incident_date: data.observation_date,
+		description: data.description,
+		severity: 'observation', // To mark it as an observation
+		actions_taken: data.recommendations || ''
+	};
+	return createResource<ObservationLog>('incident', payload);
+}
+
+export async function updateObservationLog(data: ObservationLog): Promise<ObservationLog> {
+	const payload = {
+		incident_id: data.log_id,
+		hive_id: data.hive_id,
+		incident_date: data.observation_date,
+		description: data.description,
+		severity: 'observation',
+		actions_taken: data.recommendations || ''
+	};
+	return updateResource<ObservationLog>('incident', payload);
+}
+
+export async function deleteObservationLog(id: number): Promise<void> {
+	return deleteResource('incident', id);
 }
 
 // Generic CRUD functions
