@@ -9,7 +9,7 @@
 	let email = '';
 	let password = '';
 	let username = '';
-	let fullName = '';
+	let full_name = '';
 	let error = '';
 
 	let mounted = false;
@@ -40,12 +40,12 @@
 	async function handleRegister() {
 		try {
 			error = '';
-			if (!email || !password || !username || !fullName) {
+			if (!email || !password || !username || !full_name) {
 				error = 'Please fill in all fields';
 				return;
 			}
 
-			await register({ email, password, username, fullName });
+			await register({ email, password, username, full_name });
 			// Switch to login tab after successful registration
 			activeTab = 'login';
 			error = '';
@@ -174,7 +174,7 @@
 							<input
 								id="fullName"
 								type="text"
-								bind:value={fullName}
+								bind:value={full_name}
 								class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white/70 backdrop-blur-sm"
 								required
 							/>

@@ -18,7 +18,7 @@ interface LoginResponse {
 interface RegisterInput {
 	email: string;
 	password: string;
-	fullName: string;
+	full_name: string;
 	username: string;
 }
 
