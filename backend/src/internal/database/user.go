@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -20,7 +21,7 @@ func (db *DB) GetUser(id int) (types.User, error) {
 
 func (db *DB) CreateUser(user types.User) (types.User, error) {
 	var createdUser types.User
-	err := db.Get(&createdUser, "INSERT INTO \"user\" (username, full_name, role, email, password, last_login) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", user.Username, user.FullName, user.Role, user.Email, user.Password, user.LastLogin)
+	err := db.Get(&createdUser, "INSERT INTO \"user\" (username, full_name, role, email, password, last_login) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *", user.Username, user.FullName, strings.ToUpper(string(user.Role)), user.Email, user.Password, user.LastLogin)
 	if err != nil {
 		zap.S().Error("Error creating user: ", err)
 		return types.User{}, fmt.Errorf("error creating user: %w", err)

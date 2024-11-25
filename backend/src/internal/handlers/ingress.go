@@ -235,3 +235,48 @@ func GetAllIncidents(db *database.DB) fiber.Handler {
 		return c.JSON(incidents)
 	}
 }
+
+// Add this new handler
+// UpdateIncidentStatus updates an incident's status
+func UpdateIncidentStatus(db *database.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Get incident ID from params
+		id, err := c.ParamsInt("id")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": fmt.Sprintf("Invalid incident ID: %v", err),
+			})
+		}
+
+		// Parse request body
+		var updateData struct {
+			Severity string `json:"severity"`
+		}
+		if err := c.BodyParser(&updateData); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": fmt.Sprintf("Invalid request data: %v", err),
+			})
+		}
+
+		// Get existing incident
+		incident, err := db.GetIncident(id)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": fmt.Sprintf("Failed to get incident: %v", err),
+			})
+		}
+
+		// Update severity
+		incident.Severity = updateData.Severity
+
+		// Save updated incident
+		updatedIncident, err := db.UpdateIncident(incident)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": fmt.Sprintf("Failed to update incident status: %v", err),
+			})
+		}
+
+		return c.JSON(updatedIncident)
+	}
+}

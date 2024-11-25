@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { debounce } from 'lodash-es';
 	import Icon from '@iconify/svelte';
-	import { fade } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import type { ObservationLog } from '$lib/types';
 	import DatePicker from '$lib/components/inputs/DatePicker.svelte';
 	import ObservationEditModal from '$lib/components/modals/ObservationEditModal.svelte';
@@ -12,6 +12,7 @@
 		deleteObservationLog
 	} from '$lib/services/api';
 	import { getToastStore } from '@skeletonlabs/skeleton';
+	import Modal from '$lib/components/modals/Modal.svelte';
 	import { onMount } from 'svelte';
 
 	const toastStore = getToastStore();
@@ -27,6 +28,7 @@
 		start: null as Date | null,
 		end: null as Date | null
 	};
+	let deletingObservation: ObservationLog | null = null;
 
 	onMount(async () => {
 		await loadData();
@@ -66,18 +68,19 @@
 		try {
 			if (editingObservation) {
 				await updateObservationLog(updatedObservation);
-				toastStore.trigger({
-					message: '✨ Observation updated successfully!',
-					background: 'variant-filled-success'
-				});
 			} else {
-				await createObservationLog(updatedObservation);
-				toastStore.trigger({
-					message: '✨ Observation created successfully!',
-					background: 'variant-filled-success'
+				await createObservationLog({
+					hive_id: updatedObservation.hive_id,
+					observation_date: updatedObservation.observation_date,
+					description: updatedObservation.description,
+					recommendations: updatedObservation.recommendations
 				});
 			}
 			await loadData();
+			toastStore.trigger({
+				message: `✨ Observation ${editingObservation ? 'updated' : 'created'} successfully!`,
+				background: 'variant-filled-success'
+			});
 			editingObservation = null;
 			showAddModal = false;
 		} catch (e) {
@@ -89,20 +92,18 @@
 	}
 
 	async function handleDelete(logId: number) {
-		if (confirm('Are you sure you want to delete this observation?')) {
-			try {
-				await deleteObservationLog(logId);
-				await loadData();
-				toastStore.trigger({
-					message: '✨ Observation deleted successfully!',
-					background: 'variant-filled-success'
-				});
-			} catch (e) {
-				toastStore.trigger({
-					message: '❌ Failed to delete observation',
-					background: 'variant-filled-error'
-				});
-			}
+		try {
+			await deleteObservationLog(logId);
+			await loadData();
+			toastStore.trigger({
+				message: '✨ Observation deleted successfully!',
+				background: 'variant-filled-success'
+			});
+		} catch (e) {
+			toastStore.trigger({
+				message: '❌ Failed to delete observation',
+				background: 'variant-filled-error'
+			});
 		}
 	}
 
@@ -111,15 +112,14 @@
 			const matchesSearch =
 				log.hive_id.toString().includes(searchQuery) ||
 				log.description.toLowerCase().includes(searchQuery.toLowerCase());
+			const logDate = new Date(log.observation_date);
 			const matchesDate =
-				(!dateRange.start || new Date(log.observation_date) >= dateRange.start) &&
-				(!dateRange.end || new Date(log.observation_date) <= dateRange.end);
+				(!dateRange.start || logDate >= dateRange.start) &&
+				(!dateRange.end || logDate <= dateRange.end);
 			return matchesSearch && matchesDate;
 		})
 		.sort((a, b) => {
-			const dateA = a.observation_date ? new Date(a.observation_date).getTime() : 0;
-			const dateB = b.observation_date ? new Date(b.observation_date).getTime() : 0;
-			return dateB - dateA;
+			return new Date(b.observation_date).getTime() - new Date(a.observation_date).getTime();
 		});
 
 	$: paginatedLogs = filteredLogs.slice(
@@ -212,7 +212,7 @@
 					{#each paginatedLogs as log}
 						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{log.observation_date ? new Date(log.observation_date).toLocaleDateString() : 'N/A'}
+								{new Date(log.observation_date).toLocaleDateString()}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
 								{log.hive_id}
@@ -232,7 +232,7 @@
 								</button>
 								<button
 									class="text-red-600 hover:text-red-700"
-									on:click={() => handleDelete(log.log_id)}
+									on:click={() => (deletingObservation = log)}
 								>
 									<Icon icon="mdi:delete" class="w-5 h-5" />
 								</button>
@@ -291,4 +291,55 @@
 		onClose={() => (showAddModal = false)}
 		onSave={handleSaveObservation}
 	/>
+{/if}
+
+{#if deletingObservation}
+	<Modal isOpen={true} title="Delete Observation" onClose={() => (deletingObservation = null)}>
+		<div class="space-y-4" in:fly={{ y: 20, duration: 300 }}>
+			<div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-start gap-3">
+				<div class="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+					<Icon icon="mdi:alert" class="w-6 h-6 text-red-600 dark:text-red-400" />
+				</div>
+				<div>
+					<h3 class="text-lg font-semibold text-red-800 dark:text-red-200">Confirm Deletion</h3>
+					<p class="mt-1 text-red-700 dark:text-red-300">
+						Are you sure you want to delete this observation? This action cannot be undone.
+					</p>
+					<div class="mt-2 text-sm text-red-600 dark:text-red-400">
+						<p>Observation details:</p>
+						<ul class="list-disc list-inside mt-1">
+							<li>Date: {new Date(deletingObservation.observation_date).toLocaleDateString()}</li>
+							<li>Hive: #{deletingObservation.hive_id}</li>
+							<li>Description: {deletingObservation.description}</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div class="flex justify-end gap-3">
+				<button
+					type="button"
+					class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100
+						dark:hover:bg-gray-700 rounded-lg transition-colors"
+					on:click={() => (deletingObservation = null)}
+				>
+					Cancel
+				</button>
+				<button
+					type="button"
+					class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg
+						transition-colors flex items-center gap-2"
+					on:click={async () => {
+						if (deletingObservation) {
+							await handleDelete(deletingObservation.log_id);
+							deletingObservation = null;
+						}
+					}}
+				>
+					<Icon icon="mdi:delete" class="w-5 h-5" />
+					Delete Observation
+				</button>
+			</div>
+		</div>
+	</Modal>
 {/if}

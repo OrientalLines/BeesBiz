@@ -144,3 +144,12 @@ func (db *DB) GetAllRegionApiaries() ([]types.RegionApiary, error) {
 	}
 	return regionApiaries, nil
 }
+
+func (db *DB) DeleteAllowedRegionsForUser(userID int) error {
+	_, err := db.Exec("DELETE FROM allowed_region WHERE user_id = $1", userID)
+	if err != nil {
+		zap.S().Error("Error deleting allowed regions for user: ", err)
+		return fmt.Errorf("error deleting allowed regions for user: %w", err)
+	}
+	return nil
+}

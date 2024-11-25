@@ -37,12 +37,19 @@
 		"vite": "^5.0.3"
 	},
 	"dependencies": {
+		"@grpc/grpc-js": "^1.12.2",
+		"@grpc/proto-loader": "^0.7.13",
 		"@iconify/svelte": "^4.0.2",
+		"@improbable-eng/grpc-web": "^0.15.0",
 		"@inlang/paraglide-sveltekit": "^0.11.1",
+		"@inlang/paraglide-vite": "^1.2.76",
 		"@skeletonlabs/skeleton": "^2.10.3",
 		"@skeletonlabs/tw-plugin": "^0.4.0",
-		"@inlang/paraglide-vite": "^1.2.76",
+		"@types/google-protobuf": "^3.15.12",
 		"drizzle-orm": "^0.33.0",
+		"fuse.js": "^7.0.0",
+		"google-protobuf": "^3.21.4",
+		"grpc-web": "^1.5.0",
 		"lodash-es": "^4.17.21",
 		"lucide-svelte": "^0.454.0",
 		"postgres": "^3.4.4"

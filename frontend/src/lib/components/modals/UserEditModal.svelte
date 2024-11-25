@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
 	import type { User } from '$lib/types';
+	import type { Role } from '$lib/services/api';
 	import { fade, fly } from 'svelte/transition';
 	import { Avatar } from '@skeletonlabs/skeleton';
 	import { Toast, getToastStore } from '@skeletonlabs/skeleton';
@@ -16,12 +17,18 @@
 	let avatarPreview: string | null = null;
 
 	$: if (user) {
-		formData = { ...user };
+		formData = {
+			user_id: user.user_id,
+			username: user.username,
+			full_name: user.full_name,
+			email: user.email,
+			role: user.role
+		};
 		avatarPreview = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`;
 	}
 
 	async function handleSubmit() {
-		if (!formData || !formData.id) return;
+		if (!formData || !formData.username) return;
 
 		isLoading = true;
 		try {
@@ -46,50 +53,27 @@
 	<div in:fly={{ y: 50, duration: 400 }} out:fade>
 		<form class="space-y-6" on:submit|preventDefault={handleSubmit}>
 			<!-- Form Fields with Modern Styling -->
-			{#each ['name', 'email'] as field}
-				<div class="relative" in:fly={{ y: 20, duration: 300, delay: 200 }}>
-					<input
-						type={field === 'email' ? 'email' : 'text'}
-						bind:value={formData[field as keyof User]}
-						placeholder=" "
-						class="peer w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700
-                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
-                            transition-all duration-300"
-					/>
-					<label
-						class="absolute left-2 -top-2.5 bg-white dark:bg-gray-800 px-2 text-sm text-amber-500
-                        transition-all duration-300 capitalize"
-					>
-						{field}
-					</label>
+			<div class="space-y-4">
+				<div class="relative">
+					<input type="text" bind:value={formData.username} placeholder="Username" class="input" />
 				</div>
-			{/each}
-
-			<!-- Role Selector with Custom Styling -->
-			<div class="relative" in:fly={{ y: 20, duration: 300, delay: 400 }}>
-				<select
-					bind:value={formData.role}
-					class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700
-                        bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                        focus:ring-2 focus:ring-amber-500 focus:border-transparent
-                        appearance-none transition-all duration-300"
-				>
-					{#each ['worker', 'manager', 'admin'] as role}
-						<option value={role}>
-							{role.charAt(0).toUpperCase() + role.slice(1)}
-						</option>
-					{/each}
-				</select>
-				<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-					<svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M19 9l-7 7-7-7"
-						/>
-					</svg>
+				<div class="relative">
+					<input
+						type="text"
+						bind:value={formData.full_name}
+						placeholder="Full Name"
+						class="input"
+					/>
+				</div>
+				<div class="relative">
+					<input type="email" bind:value={formData.email} placeholder="Email" class="input" />
+				</div>
+				<div class="relative">
+					<select bind:value={formData.role} class="select">
+						<option value="ADMIN">Admin</option>
+						<option value="MANAGER">Manager</option>
+						<option value="WORKER">Worker</option>
+					</select>
 				</div>
 			</div>
 

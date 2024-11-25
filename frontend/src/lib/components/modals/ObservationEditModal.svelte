@@ -1,109 +1,101 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
 	import type { ObservationLog, Hive } from '$lib/types';
+	import { fade, fly } from 'svelte/transition';
+	import { getToastStore } from '@skeletonlabs/skeleton';
 	import DatePicker from '$lib/components/inputs/DatePicker.svelte';
-	import { ClipboardList, MessageSquare } from 'lucide-svelte';
-	import { fly } from 'svelte/transition';
 	import { getHives } from '$lib/services/api';
 	import { onMount } from 'svelte';
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { Home, ClipboardList, MessageSquare, Icon } from 'lucide-svelte';
 
 	export let isOpen = false;
 	export let observation: ObservationLog | null = null;
 	export let onClose = () => {};
-	export let onSave = (updatedObservation: ObservationLog) => {};
+	export let onSave = (observation: ObservationLog) => {};
 
 	const toastStore = getToastStore();
 	let hives: Hive[] = [];
-	let loading = false;
-	let searchQuery = '';
+	let filteredHives: Hive[] = [];
+	let showHiveSuggestions = false;
+	let hiveSearchTerm = '';
+	let selectedDate: Date = new Date();
 
 	let formData: Partial<ObservationLog> = {
-		observation_date: new Date(),
 		hive_id: 0,
 		description: '',
-		recommendations: ''
+		recommendations: '',
+		observation_date: new Date().toISOString()
 	};
 
 	onMount(async () => {
-		await loadHives();
-	});
-
-	async function loadHives() {
 		try {
-			loading = true;
 			hives = await getHives();
-		} catch (e) {
+			if (observation) {
+				formData = {
+					...observation
+				};
+				selectedDate = new Date(observation.observation_date);
+				const selectedHive = hives.find((h) => h.hive_id === observation.hive_id);
+				if (selectedHive) {
+					hiveSearchTerm = `#${selectedHive.hive_id} (${selectedHive.hive_type})`;
+				}
+			}
+		} catch (error) {
 			toastStore.trigger({
 				message: '❌ Failed to load hives',
 				background: 'variant-filled-error'
 			});
-		} finally {
-			loading = false;
 		}
-	}
-
-	$: if (observation) {
-		formData = {
-			...observation,
-			description: observation.description || '',
-			recommendations: observation.recommendations || '',
-			observation_date: observation.observation_date
-				? new Date(observation.observation_date)
-				: new Date()
-		};
-	}
+	});
 
 	$: filteredHives = hives.filter(
 		(hive) =>
-			hive.hive_id.toString().includes(searchQuery) ||
-			hive.hive_type.toLowerCase().includes(searchQuery.toLowerCase())
+			hive.hive_id.toString().includes(hiveSearchTerm) ||
+			hive.hive_type.toLowerCase().includes(hiveSearchTerm.toLowerCase())
 	);
 
 	function handleSubmit() {
 		if (formData) {
-			const submissionData = {
+			onSave({
 				...formData,
-				log_id: observation?.log_id,
-				observation_date:
-					formData.observation_date instanceof Date
-						? formData.observation_date.toISOString()
-						: formData.observation_date
-							? new Date(formData.observation_date).toISOString()
-							: new Date().toISOString(),
+				log_id: observation?.log_id || 0,
+				hive_id: formData.hive_id || 0,
+				observation_date: selectedDate.toISOString(),
 				description: formData.description || '',
 				recommendations: formData.recommendations || ''
-			};
-			onSave(submissionData as ObservationLog);
-			onClose();
+			} as ObservationLog);
 		}
 	}
 
 	function handleDateChange(date: Date | null) {
+		console.log('Date changed:', date);
 		if (date) {
-			formData.observation_date = date;
+			selectedDate = date;
+			formData.observation_date = date.toISOString();
 		}
 	}
 
 	function handleHiveInput(event: Event) {
 		const input = event.target as HTMLInputElement;
 		const value = input.value;
-		searchQuery = value;
+		hiveSearchTerm = value;
 		formData.hive_id = parseInt(value) || 0;
 	}
 </script>
 
 <Modal {isOpen} title={observation ? 'Edit Observation' : 'New Observation'} {onClose}>
 	<form class="space-y-4" on:submit|preventDefault={handleSubmit}>
-		<div>
-			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-				Observation Date
-			</label>
-
-			<DatePicker
-				startDate={new Date(formData.observation_date ?? '')}
-				onChange={handleDateChange}
-			/>
+		<div class="space-y-2">
+			<div class="flex items-center gap-2">
+				<Icon icon="mdi:calendar" class="w-4 h-4 text-amber-500" />
+				<label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+					Observation Date
+				</label>
+			</div>
+			<DatePicker startDate={selectedDate} onChange={(date) => handleDateChange(date)} />
+			<div class="text-xs text-gray-500">
+				Selected date: {selectedDate.toLocaleString()}
+			</div>
 		</div>
 
 		<div class="space-y-2">
@@ -111,7 +103,7 @@
 			<div class="relative">
 				<input
 					type="text"
-					value={searchQuery}
+					value={hiveSearchTerm}
 					on:input={handleHiveInput}
 					class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
 						bg-white dark:bg-gray-800 text-gray-900 dark:text-white
@@ -119,7 +111,7 @@
 					placeholder="Search by hive ID or type..."
 					required
 				/>
-				{#if searchQuery && filteredHives.length > 0}
+				{#if hiveSearchTerm && filteredHives.length > 0}
 					<div
 						class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200
 							dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto"
@@ -131,7 +123,7 @@
 									text-gray-900 dark:text-white"
 								on:click={() => {
 									formData.hive_id = hive.hive_id;
-									searchQuery = `Hive #${hive.hive_id} (${hive.hive_type})`;
+									hiveSearchTerm = `Hive #${hive.hive_id} (${hive.hive_type})`;
 								}}
 							>
 								Hive #{hive.hive_id} ({hive.hive_type}) - {hive.current_status}

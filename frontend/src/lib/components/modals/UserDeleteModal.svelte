@@ -7,15 +7,17 @@
 	export let isOpen = false;
 	export let user: User | null = null;
 	export let onClose = () => {};
-	export let onConfirm = () => {};
+	export let onConfirm = (userId: number) => {};
 
 	const toastStore = getToastStore();
 	let isLoading = false;
 
 	async function handleDelete() {
+		if (!user) return;
+
 		isLoading = true;
 		try {
-			await onConfirm();
+			await onConfirm(user.user_id);
 			toastStore.trigger({
 				message: '✨ User deleted successfully!',
 				background: 'variant-filled-success'
@@ -55,7 +57,7 @@
 			<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Delete User Account</h3>
 			<p class="text-gray-600 dark:text-gray-400">
 				Are you sure you want to delete the user
-				<span class="font-semibold text-red-500">{user?.name}</span>?
+				<span class="font-semibold text-red-500">{user?.full_name}</span>?
 			</p>
 			<p
 				class="text-sm text-gray-500 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg"

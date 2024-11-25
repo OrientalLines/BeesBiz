@@ -12,6 +12,8 @@
 	import { initializeStores } from '@skeletonlabs/skeleton';
 	import { requireAuth } from '$lib/guards/auth';
 	import { goto } from '$app/navigation';
+	import EventEmitter from 'events';
+	import process from 'process';
 
 	const getTitleFromPath = (path: string) => {
 		if (path === '/') return 'Welcome';
@@ -25,10 +27,14 @@
 			'/dashboard/incidents': 'Incidents',
 			'/dashboard/reports': 'Reports',
 			'/dashboard/users': 'User Management',
+			'/dashboard/users/roles': 'Role Management',
+			'/dashboard/users/audit': 'Audit Log',
 			'/dashboard/settings': 'Settings'
 		};
 
-		return dashboardRoutes[path] || 'Dashboard';
+		const matchingRoute = Object.entries(dashboardRoutes).find(([route]) => path.startsWith(route));
+
+		return matchingRoute ? matchingRoute[1] : 'Dashboard';
 	};
 
 	$: {
@@ -56,18 +62,54 @@
 				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 				theme.set(prefersDark ? 'dark' : 'light');
 			}
+			// Check for stored token
+			const storedAuth = localStorage.getItem('auth');
+			if (storedAuth) {
+				try {
+					const authData = JSON.parse(storedAuth);
+					auth.login(authData.user, authData.token);
+				} catch (error) {
+					console.error('Failed to parse stored auth data:', error);
+					localStorage.removeItem('auth');
+				}
+			}
 		}
 		pageLoaded = true;
 	});
 
 	$: if (browser && $navigating) {
-		requireAuth($navigating.to?.url.pathname || '');
+		const targetPath = $navigating.to?.url.pathname || '';
+		if (isDashboardRoute(targetPath) && !hasRouteAccess(targetPath)) {
+			goto('/dashboard/hives');
+		}
 	}
 
 	initializeStores();
 
 	function isDashboardRoute(path: string): boolean {
 		return path.startsWith('/dashboard');
+	}
+
+	function hasRouteAccess(path: string): boolean {
+		if (!$auth?.user) return false;
+
+		const userRole = $auth.user.role.toUpperCase();
+
+		const routeAccess: Record<string, string[]> = {
+			'/dashboard/users': ['MANAGER', 'ADMIN'],
+			'/dashboard/users/roles': ['ADMIN'],
+			'/dashboard/users/audit': ['ADMIN'],
+			'/dashboard/settings': ['ADMIN']
+		};
+
+		const matchingRoute = Object.entries(routeAccess).find(([route]) => path.startsWith(route));
+
+		if (!matchingRoute) return true;
+		return matchingRoute[1].includes(userRole);
+	}
+
+	if (browser) {
+		window.process = process;
 	}
 
 	$: currentPath = $page.url.pathname;

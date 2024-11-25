@@ -90,22 +90,12 @@
 		{
 			label: 'User Management',
 			icon: Users,
-			roles: ['manager', 'ADMIN'],
+			roles: ['MANAGER', 'ADMIN'],
 			items: [
 				{
 					path: '/dashboard/users',
 					label: 'Users Overview',
-					roles: ['manager', 'ADMIN']
-				},
-				{
-					path: '/dashboard/users/roles',
-					label: 'Role Management',
-					roles: ['ADMIN']
-				},
-				{
-					path: '/dashboard/users/audit',
-					label: 'Audit Log',
-					roles: ['ADMIN']
+					roles: ['MANAGER', 'ADMIN']
 				}
 			]
 		},
@@ -146,6 +136,11 @@
 		await auth.logout();
 		await goto('/');
 	}
+
+	function hasAccess(allowedRoles: string[]): boolean {
+		const userRole = $auth?.user?.role || '';
+		return allowedRoles.includes(userRole.toUpperCase());
+	}
 </script>
 
 <aside
@@ -182,7 +177,7 @@
 	<nav class="p-4">
 		<ul class="space-y-2">
 			{#each menuItems as item}
-				{#if item.roles.includes($auth?.user?.role || '')}
+				{#if hasAccess(item.roles)}
 					<li class="relative">
 						{#if item.items}
 							<!-- Section with subitems -->
@@ -216,7 +211,7 @@
 										transition:slide|local={{ duration: 200 }}
 									>
 										{#each item.items as subItem}
-											{#if subItem.roles.includes($auth?.user?.role || '')}
+											{#if hasAccess(subItem.roles)}
 												<li>
 													<a
 														href={subItem.path}

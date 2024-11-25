@@ -12,6 +12,7 @@ import (
 	"github.com/orientallines/beesbiz/internal/config"
 	"github.com/orientallines/beesbiz/internal/database"
 	"github.com/orientallines/beesbiz/internal/handlers"
+	"github.com/orientallines/beesbiz/internal/rabbitmq"
 	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
@@ -19,14 +20,16 @@ import (
 type Server struct {
 	app    *fiber.App
 	db     *database.DB
+	rmq    *rabbitmq.RabbitMQ
 	jwtKey []byte
 }
 
 // NewServer creates a new Server
-func NewServer(db *database.DB) *Server {
+func NewServer(db *database.DB, rmq *rabbitmq.RabbitMQ) *Server {
 	return &Server{
 		app:    fiber.New(),
 		db:     db,
+		rmq:    rmq,
 		jwtKey: []byte(config.GlobalConfig.JwtSecret),
 	}
 }
@@ -133,6 +136,9 @@ func (s *Server) SetupRoutes() {
 	user.Put("/", handlers.UpdateUser(s.db))
 	user.Delete("/:id", handlers.DeleteUser(s.db))
 	user.Get("/", handlers.GetAllUsers(s.db))
+	user.Get("/:id/allowed-regions", handlers.GetUserAllowedRegions(s.db))
+	user.Put("/role", handlers.ModifyUserRole(s.db))
+	user.Put("/allowed-regions", handlers.ModifyUserAllowedRegions(s.db))
 
 	// ProductionReport routes
 	productionReport := api.Group("/production-report", roleMiddleware(types.Manager, types.Worker, types.Admin))
@@ -169,6 +175,25 @@ func (s *Server) SetupRoutes() {
 	weatherData.Put("/", handlers.UpdateWeatherData(s.db))
 	weatherData.Delete("/:id", handlers.DeleteWeatherData(s.db))
 	weatherData.Get("/", handlers.GetAllWeatherData(s.db))
+
+	// Incident routes
+	incident := api.Group("/incident", roleMiddleware(types.Worker, types.Manager, types.Admin))
+
+	incident.Get("/:id", handlers.GetIncident(s.db))
+	incident.Post("/", handlers.CreateIncident(s.db, s.rmq))
+	incident.Put("/", handlers.UpdateIncident(s.db))
+	incident.Delete("/:id", handlers.DeleteIncident(s.db))
+	incident.Get("/", handlers.GetAllIncidents(s.db))
+	incident.Put("/:id/status", handlers.UpdateIncidentStatus(s.db))
+
+	// Observation routes
+	observation := api.Group("/observation", roleMiddleware(types.Worker, types.Manager, types.Admin))
+
+	observation.Get("/:id", handlers.GetObservationLog(s.db))
+	observation.Post("/", handlers.CreateObservationLog(s.db))
+	observation.Put("/", handlers.UpdateObservationLog(s.db))
+	observation.Delete("/:id", handlers.DeleteObservationLog(s.db))
+	observation.Get("/", handlers.GetAllObservationLogs(s.db))
 
 }
 

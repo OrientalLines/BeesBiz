@@ -1,13 +1,14 @@
 import { auth } from '$lib/stores/auth';
-import type { Region, Apiary, Hive, BeeCommunity, HoneyHarvest, ProductionReport, Sensor, SensorReading, WeatherData, ObservationLog } from '$lib/types';
+import type { Region, Apiary, Hive, BeeCommunity, HoneyHarvest, ProductionReport, Sensor, SensorReading, WeatherData, ObservationLog, User, Incident } from '$lib/types';
 import { get } from 'svelte/store';
-import type { User } from 'lucide-svelte';
 
 // Types
 export type Role = 'ADMIN' | 'WORKER' | 'MANAGER';
 
 // API Base URL
 const API_BASE_URL = 'http://localhost:4040';
+
+const PROXY_API_BASE_URL = 'http://localhost:4041';
 
 // Auth Types & Functions
 interface LoginResponse {
@@ -20,6 +21,40 @@ interface RegisterInput {
 	password: string;
 	full_name: string;
 	username: string;
+}
+
+// Add new types for region access management
+interface RegionAccessUpdate {
+	user_id: number;
+	region_ids: number[];
+}
+
+interface RoleUpdate {
+	user_id: number;
+	role: Role;
+}
+
+// Helper functions
+function getAuthHeaders(): HeadersInit {
+	const authState = get(auth);
+	if (!authState?.token) {
+		console.warn('No auth token available');
+		throw new Error('Authentication required');
+	}
+
+	return {
+		'Content-Type': 'application/json',
+		'Authorization': `Bearer ${authState.token}`
+	};
+}
+
+function handleResponse(response: Response) {
+	if (!response.ok) {
+		if (response.status === 401) {
+			throw new Error('Unauthorized. Please log in again.');
+		}
+		throw new Error(`Request failed with status ${response.status}`);
+	}
 }
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
@@ -161,9 +196,6 @@ export async function getProductionReportById(id: number): Promise<ProductionRep
 	return getResource<ProductionReport>(`production-report/${id}`);
 }
 
-export async function createProductionReport(data: Omit<ProductionReport, 'report_id'>): Promise<ProductionReport> {
-	return createResource<ProductionReport>('production-report', data);
-}
 
 export async function updateProductionReport(data: ProductionReport): Promise<ProductionReport> {
 	return updateResource<ProductionReport>('production-report', data);
@@ -307,49 +339,18 @@ export async function deleteWeatherData(id: number): Promise<void> {
 	return deleteResource('weather-data', id);
 }
 
-// ObservationLog Operations (using Incident endpoints)
-export async function getObservationLogs(): Promise<ObservationLog[]> {
-	return getResource<ObservationLog[]>('incident');
-}
-
-export async function getObservationLogById(id: number): Promise<ObservationLog> {
-	return getResource<ObservationLog>(`incident/${id}`);
-}
-
-export async function createObservationLog(data: Omit<ObservationLog, 'log_id'>): Promise<ObservationLog> {
-	const payload = {
-		hive_id: data.hive_id,
-		incident_date: data.observation_date,
-		description: data.description,
-		severity: 'observation', // To mark it as an observation
-		actions_taken: data.recommendations || ''
-	};
-	return createResource<ObservationLog>('incident', payload);
-}
-
-export async function updateObservationLog(data: ObservationLog): Promise<ObservationLog> {
-	const payload = {
-		incident_id: data.log_id,
-		hive_id: data.hive_id,
-		incident_date: data.observation_date,
-		description: data.description,
-		severity: 'observation',
-		actions_taken: data.recommendations || ''
-	};
-	return updateResource<ObservationLog>('incident', payload);
-}
-
-export async function deleteObservationLog(id: number): Promise<void> {
-	return deleteResource('incident', id);
-}
-
 // Generic CRUD functions
 async function getResource<T>(endpoint: string): Promise<T> {
-	const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
-		headers: getAuthHeaders()
-	});
-	handleResponse(response);
-	return response.json();
+	try {
+		const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
+			headers: getAuthHeaders()
+		});
+		handleResponse(response);
+		return response.json();
+	} catch (error) {
+		console.error(`Error fetching ${endpoint}:`, error);
+		throw error;
+	}
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -382,20 +383,355 @@ async function deleteResource(endpoint: string, id: number): Promise<void> {
 	handleResponse(response);
 }
 
-// Helper functions
-function getAuthHeaders(): HeadersInit {
-	const authState = get(auth);
-	return {
-		'Content-Type': 'application/json',
-		'Authorization': `Bearer ${authState?.token || ''}`
-	};
+// User Management
+export async function getUsers(): Promise<User[]> {
+	return getResource<User[]>('user');
 }
 
-function handleResponse(response: Response) {
-	if (!response.ok) {
-		if (response.status === 401) {
-			throw new Error('Unauthorized. Please log in again.');
-		}
-		throw new Error(`Request failed with status ${response.status}`);
+export async function getUserById(id: number): Promise<User> {
+	return getResource<User>(`user/${id}`);
+}
+
+export async function createUser(data: Omit<User, 'user_id'>): Promise<User> {
+	const response = await fetch(`${API_BASE_URL}/api/user`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify(data)
+	});
+	handleResponse(response);
+	return response.json();
+}
+
+export async function updateUser(data: User): Promise<User> {
+	return updateResource<User>('user', data);
+}
+
+export async function deleteUser(id: number): Promise<void> {
+	return deleteResource('user', id);
+}
+
+// User Role Management
+export async function updateUserRole(userId: number, role: Role): Promise<User> {
+	const response = await fetch(`${API_BASE_URL}/api/user/role`, {
+		method: 'PUT',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({ user_id: userId, role })
+	});
+	handleResponse(response);
+	return response.json();
+}
+
+// Region Access Management
+export async function getUserAllowedRegions(userId: number): Promise<Region[]> {
+	return getResource<Region[]>(`user/${userId}/allowed-regions`);
+}
+
+export async function updateUserAllowedRegions(userId: number, regionIds: number[]): Promise<void> {
+	// First, get current allowed regions to determine which ones to remove
+	const currentRegions = await getUserAllowedRegions(userId);
+	const currentRegionIds = currentRegions.map(r => r.region_id);
+
+	// Remove regions that are no longer selected
+	const regionsToRemove = currentRegionIds.filter(id => !regionIds.includes(id));
+	for (const regionId of regionsToRemove) {
+		const response = await fetch(`${API_BASE_URL}/api/allowed-region/${regionId}`, {
+			method: 'DELETE',
+			headers: getAuthHeaders()
+		});
+		handleResponse(response);
 	}
+
+	// Add new regions
+	const regionsToAdd = regionIds.filter(id => !currentRegionIds.includes(id));
+	for (const regionId of regionsToAdd) {
+		const payload = {
+			user_id: userId,
+			region_id: regionId
+		};
+
+		const response = await fetch(`${API_BASE_URL}/api/allowed-region`, {
+			method: 'POST',
+			headers: getAuthHeaders(),
+			body: JSON.stringify(payload)
+		});
+		handleResponse(response);
+	}
+}
+
+// Replace the old updateRegionAccess function
+export async function updateRegionAccess(userId: number, regionIds: number[]): Promise<void> {
+	return updateUserAllowedRegions(userId, regionIds);
+}
+
+// Add a function to check if a user has access to a specific region
+export async function checkRegionAccess(userId: number, regionId: number): Promise<boolean> {
+	try {
+		const allowedRegions = await getUserAllowedRegions(userId);
+		return allowedRegions.some(region => region.region_id === regionId);
+	} catch (error) {
+		console.error('Error checking region access:', error);
+		return false;
+	}
+}
+
+// Add gRPC-specific functions
+export async function getTotalHoneyHarvested(hiveId: number, startDate: string, endDate: string): Promise<number> {
+	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/getTotalHoneyHarvested`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({
+			hive_id: hiveId,
+			start_date: startDate,
+			end_date: endDate
+		})
+	});
+	handleResponse(response);
+	const data = await response.json();
+	return data.total_honey;
+}
+
+export async function addObservation(
+	hiveId: number,
+	observationDate: string,
+	description: string,
+	recommendations: string
+): Promise<void> {
+	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/addObservation`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({
+			hive_id: hiveId,
+			observation_date: observationDate,
+			description,
+			recommendations
+		})
+	});
+	handleResponse(response);
+}
+
+export async function getCommunityHealthStatus(communityId: number): Promise<string> {
+	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/getCommunityHealthStatus`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({
+			community_id: communityId
+		})
+	});
+	handleResponse(response);
+	const data = await response.json();
+	return data.health_status;
+}
+
+export async function updateHiveStatus(hiveId: number, newStatus: string): Promise<void> {
+	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/updateHiveStatus`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({
+			hive_id: hiveId,
+			new_status: newStatus
+		})
+	});
+	handleResponse(response);
+}
+
+export async function getAverageTemperature(regionId: number, days: number): Promise<number> {
+	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/getAverageTemperature`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({
+			region_id: regionId,
+			days
+		})
+	});
+	handleResponse(response);
+	const data = await response.json();
+	return data.avg_temperature;
+}
+
+export async function assignMaintenancePlan(planId: number, userId: number): Promise<void> {
+	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/assignMaintenancePlan`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({
+			plan_id: planId,
+			user_id: userId
+		})
+	});
+	handleResponse(response);
+}
+
+export async function registerIncident(
+	hiveId: number,
+	incidentDate: string,
+	description: string,
+	severity: string
+): Promise<void> {
+	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/registerIncident`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({
+			hive_id: hiveId,
+			incident_date: incidentDate,
+			description,
+			severity
+		})
+	});
+	handleResponse(response);
+}
+
+export async function getLatestSensorReading(hiveId: number, sensorType: string): Promise<any> {
+	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/getLatestSensorReading`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({
+			hive_id: hiveId,
+			sensor_type: sensorType
+		})
+	});
+	handleResponse(response);
+	return response.json();
+}
+
+export async function createProductionReport(
+	apiaryId: number,
+	startDate: string,
+	endDate: string
+): Promise<any> {
+	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/createProductionReport`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({
+			apiary_id: apiaryId,
+			start_date: startDate,
+			end_date: endDate
+		})
+	});
+	handleResponse(response);
+	return response.json();
+}
+
+export async function searchHives(query: string): Promise<Hive[]> {
+	const hives = await getHives();
+	const searchTerm = query.toLowerCase();
+
+	return hives.filter(hive =>
+		hive.hive_id.toString().includes(searchTerm) ||
+		hive.hive_type.toLowerCase().includes(searchTerm) ||
+		hive.current_status.toLowerCase().includes(searchTerm)
+	);
+}
+
+// Add these types
+export interface Incident {
+	incident_id: number;
+	hive_id: number;
+	incident_date: string | Date;
+	description: string;
+	severity: string;
+	actions_taken?: string;
+}
+
+export interface CreateIncidentInput {
+	hive_id: number;
+	incident_date: string;
+	description: string;
+	severity: string;
+	actions_taken?: string;
+}
+
+// Update the incident functions
+export async function getIncidents(): Promise<Incident[]> {
+	return getResource<Incident[]>('incident');
+}
+
+export async function createIncident(data: CreateIncidentInput): Promise<Incident> {
+	const response = await fetch(`${API_BASE_URL}/api/incident`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify(data)
+	});
+	handleResponse(response);
+	return response.json();
+}
+
+export async function updateIncidentStatus(incidentId: string, status: string): Promise<void> {
+	const response = await fetch(`${API_BASE_URL}/api/incident/${incidentId}/status`, {
+		method: 'PUT',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({ severity: status })
+	});
+	handleResponse(response);
+}
+
+export async function updateIncident(data: Incident): Promise<Incident> {
+	const response = await fetch(`${API_BASE_URL}/api/incident`, {
+		method: 'PUT',
+		headers: getAuthHeaders(),
+		body: JSON.stringify(data)
+	});
+	handleResponse(response);
+	return response.json();
+}
+
+export async function deleteIncident(id: number): Promise<void> {
+	const response = await fetch(`${API_BASE_URL}/api/incident/${id}`, {
+		method: 'DELETE',
+		headers: getAuthHeaders()
+	});
+	handleResponse(response);
+}
+
+// Remove the old observation functions that use incident endpoints
+// Add these new functions:
+
+export interface ObservationLog {
+	log_id: number;
+	hive_id: number;
+	observation_date: string | Date;
+	description: string;
+	recommendations?: string;
+}
+
+export interface CreateObservationInput {
+	hive_id: number;
+	observation_date: string;
+	description: string;
+	recommendations?: string;
+}
+
+// ObservationLog Operations
+export async function getObservationLogs(): Promise<ObservationLog[]> {
+	return getResource<ObservationLog[]>('observation');
+}
+
+export async function getObservationLogById(id: number): Promise<ObservationLog> {
+	return getResource<ObservationLog>(`observation/${id}`);
+}
+
+export async function createObservationLog(data: CreateObservationInput): Promise<ObservationLog> {
+	const response = await fetch(`${API_BASE_URL}/api/observation`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify(data)
+	});
+	handleResponse(response);
+	return response.json();
+}
+
+export async function updateObservationLog(data: ObservationLog): Promise<ObservationLog> {
+	const response = await fetch(`${API_BASE_URL}/api/observation`, {
+		method: 'PUT',
+		headers: getAuthHeaders(),
+		body: JSON.stringify(data)
+	});
+	handleResponse(response);
+	return response.json();
+}
+
+export async function deleteObservationLog(id: number): Promise<void> {
+	const response = await fetch(`${API_BASE_URL}/api/observation/${id}`, {
+		method: 'DELETE',
+		headers: getAuthHeaders()
+	});
+	handleResponse(response);
 }

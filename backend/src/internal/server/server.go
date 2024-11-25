@@ -29,7 +29,7 @@ func NewServer(db *database.DB, rmq *rabbitmq.RabbitMQ) (*Server, error) {
 
 	return &Server{
 		grpcServer:   grpc.NewServer(db),
-		restServer:   rest.NewServer(db),
+		restServer:   rest.NewServer(db, rmq),
 		rabbitServer: rabbitServer,
 		// tikvServer:   tikvServer,
 	}, nil

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
-	import type { Incident } from '$lib/types';
+	import type { Incident, Hive } from '$lib/types';
 	import { fade, fly } from 'svelte/transition';
 	import { Toast, getToastStore } from '@skeletonlabs/skeleton';
 	import DatePicker from '$lib/components/inputs/DatePicker.svelte';
+	import { getHives } from '$lib/services/api';
+	import { onMount } from 'svelte';
 	import {
 		AlertTriangle,
 		Home,
@@ -23,6 +25,46 @@
 
 	const toastStore = getToastStore();
 	let isLoading = false;
+
+	// Add state for hives
+	let hives: Hive[] = [];
+	let filteredHives: Hive[] = [];
+	let showHiveSuggestions = false;
+	let hiveSearchTerm = '';
+
+	onMount(async () => {
+		try {
+			hives = await getHives();
+		} catch (error) {
+			toastStore.trigger({
+				message: '❌ Failed to load hives',
+				background: 'variant-filled-error'
+			});
+		}
+	});
+
+	// Update hive search when term changes
+	$: {
+		if (hiveSearchTerm) {
+			filteredHives = hives
+				.filter(
+					(hive) =>
+						hive.hive_id.toString().includes(hiveSearchTerm) ||
+						hive.hive_type.toLowerCase().includes(hiveSearchTerm.toLowerCase())
+				)
+				.slice(0, 5); // Limit to 5 suggestions
+			showHiveSuggestions = true;
+		} else {
+			filteredHives = [];
+			showHiveSuggestions = false;
+		}
+	}
+
+	function selectHive(hive: Hive) {
+		formData.hive_id = hive.hive_id;
+		hiveSearchTerm = `#${hive.hive_id} (${hive.hive_type})`;
+		showHiveSuggestions = false;
+	}
 
 	const incidentTypes = [
 		{ value: 'Disease', icon: Bug, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/10' },
@@ -48,11 +90,12 @@
 	];
 
 	let formData: Partial<Incident> = {
-		date: new Date(),
-		hiveId: '',
-		type: 'Disease',
-		description: '',
-		status: 'open'
+		incident_id: incident?.incident_id || 0,
+		hive_id: incident?.hive_id || 0,
+		incident_date: incident?.incident_date || new Date(),
+		description: incident?.description || '',
+		severity: incident?.severity || 'low',
+		actions_taken: incident?.actions_taken || ''
 	};
 
 	$: if (incident) {
@@ -82,13 +125,29 @@
 
 	function handleDateChange(date: Date | null) {
 		if (date) {
-			formData.date = date;
+			formData.incident_date = date;
+		}
+	}
+
+	// Add this helper function for status colors
+	function getStatusClass(status: string): string {
+		switch (status.toLowerCase()) {
+			case 'active':
+				return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+			case 'inactive':
+				return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+			default:
+				return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
 		}
 	}
 </script>
 
 <Modal {isOpen} title={incident ? 'Edit Incident' : 'Report Incident'} {onClose}>
-	<div in:fly={{ y: 50, duration: 400 }} out:fade>
+	<div
+		in:fly={{ y: 50, duration: 400 }}
+		out:fade
+		class="max-h-[calc(100vh-10rem)] overflow-y-auto px-6 py-4"
+	>
 		<form class="space-y-6" on:submit|preventDefault={handleSubmit}>
 			<!-- Alert Header -->
 			<div
@@ -113,7 +172,14 @@
 						Incident Date
 					</label>
 				</div>
-				<DatePicker startDate={formData.date} onChange={handleDateChange} />
+				<DatePicker
+					startDate={formData.incident_date
+						? formData.incident_date instanceof Date
+							? formData.incident_date
+							: new Date(formData.incident_date)
+						: new Date()}
+					onChange={handleDateChange}
+				/>
 			</div>
 
 			<!-- Hive ID -->
@@ -122,23 +188,67 @@
 					<Home class="w-4 h-4 text-amber-500" />
 					<label class="text-sm font-medium text-gray-700 dark:text-gray-300"> Hive ID </label>
 				</div>
-				<input
-					type="text"
-					bind:value={formData.hiveId}
-					class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700
-                        bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                        focus:ring-2 focus:ring-amber-500 focus:border-transparent
-                        transition-all duration-300"
-					required
-				/>
+				<div class="relative hive-search">
+					<input
+						type="text"
+						bind:value={hiveSearchTerm}
+						placeholder="Search by hive ID or type..."
+						class="w-full px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700
+								bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+								focus:ring-2 focus:ring-amber-500 focus:border-transparent
+								transition-all duration-300"
+						on:focus={() => {
+							if (hiveSearchTerm) showHiveSuggestions = true;
+						}}
+					/>
+
+					{#if showHiveSuggestions && filteredHives.length > 0}
+						<div
+							class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200
+								dark:border-gray-700 rounded-lg shadow-lg overflow-hidden"
+							transition:fade
+						>
+							{#each filteredHives as hive}
+								<button
+									type="button"
+									class="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700
+										flex items-center justify-between gap-2 transition-colors duration-200"
+									on:click={() => selectHive(hive)}
+								>
+									<div>
+										<span class="font-medium text-gray-900 dark:text-white">
+											Hive #{hive.hive_id}
+										</span>
+										<span class="text-sm text-gray-500 dark:text-gray-400 ml-2">
+											({hive.hive_type})
+										</span>
+									</div>
+									<span
+										class="text-xs px-2 py-1 rounded-full
+										{getStatusClass(hive.current_status)}"
+									>
+										{hive.current_status}
+									</span>
+								</button>
+							{/each}
+						</div>
+					{/if}
+
+					{#if hiveSearchTerm && !showHiveSuggestions && formData.hive_id}
+						<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+							Selected: Hive #{formData.hive_id} ({hives.find((h) => h.hive_id === formData.hive_id)
+								?.hive_type})
+						</div>
+					{/if}
+				</div>
 			</div>
 
-			<!-- Incident Type -->
+			<!-- Incident Type (Severity) -->
 			<div class="space-y-2" in:fly={{ y: 20, duration: 300, delay: 400 }}>
 				<div class="flex items-center gap-2">
 					<AlertTriangle class="w-4 h-4 text-amber-500" />
 					<label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-						Incident Type
+						Severity Level
 					</label>
 				</div>
 				<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -146,10 +256,10 @@
 						<button
 							type="button"
 							class="flex items-center gap-2 p-3 border-2 rounded-lg transition-all duration-300
-                                {formData.type === type.value
+                                {formData.severity === type.value
 								? `border-${type.color} ${type.bg}`
 								: 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}"
-							on:click={() => (formData.type = type.value)}
+							on:click={() => (formData.severity = type.value)}
 						>
 							<svelte:component this={type.icon} class="w-4 h-4 {type.color}" />
 							<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -160,7 +270,7 @@
 				</div>
 			</div>
 
-			<!-- Description -->
+			<!-- Description and Actions Taken -->
 			<div class="space-y-2" in:fly={{ y: 20, duration: 300, delay: 500 }}>
 				<div class="flex items-center gap-2">
 					<FileText class="w-4 h-4 text-amber-500" />
@@ -177,27 +287,22 @@
 				/>
 			</div>
 
-			<!-- Status -->
+			<!-- Actions Taken -->
 			<div class="space-y-2" in:fly={{ y: 20, duration: 300, delay: 600 }}>
 				<div class="flex items-center gap-2">
 					<CheckCircle2 class="w-4 h-4 text-amber-500" />
-					<label class="text-sm font-medium text-gray-700 dark:text-gray-300"> Status </label>
+					<label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+						Actions Taken
+					</label>
 				</div>
-				<div class="flex gap-4">
-					{#each ['open', 'resolved'] as status}
-						<label class="flex items-center gap-2 cursor-pointer">
-							<input
-								type="radio"
-								bind:group={formData.status}
-								value={status}
-								class="w-4 h-4 text-amber-500 focus:ring-amber-500 border-gray-300"
-							/>
-							<span class="text-sm text-gray-700 dark:text-gray-300 capitalize">
-								{status}
-							</span>
-						</label>
-					{/each}
-				</div>
+				<textarea
+					bind:value={formData.actions_taken}
+					rows="3"
+					class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700
+                        bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                        focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                        transition-all duration-300 resize-none"
+				/>
 			</div>
 
 			<!-- Action Buttons -->
@@ -268,5 +373,10 @@
 	* {
 		scrollbar-width: thin;
 		scrollbar-color: theme(colors.amber.500) theme(colors.gray.100);
+	}
+
+	/* Add styles for the suggestions dropdown */
+	.hive-search {
+		position: relative;
 	}
 </style>
