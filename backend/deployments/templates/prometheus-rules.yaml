@@ -1,0 +1,44 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rabbitmq-alerts
+  namespace: {{ .Values.monitoring.namespace }}
+spec:
+  groups:
+    - name: rabbitmq
+      rules:
+        - alert: RabbitmqNodeDown
+          expr: rabbitmq_up == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "RabbitMQ node down"
+            description: "RabbitMQ node has been down for more than 5 minutes"
+        - alert: RabbitmqHighMemory
+          expr: rabbitmq_process_resident_memory_bytes / 1024 / 1024 > 1024
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "RabbitMQ high memory usage"
+            description: "RabbitMQ is using more than 1GB of memory"
+
+    - name: postgresql
+      rules:
+        - alert: PostgresqlDown
+          expr: pg_up == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "PostgreSQL instance down"
+            description: "PostgreSQL instance has been down for more than 5 minutes"
+        - alert: PostgresqlHighCPU
+          expr: rate(pg_cpu_user_seconds_total[5m]) > 0.8
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "PostgreSQL high CPU usage"
+            description: "PostgreSQL instance is using more than 80% CPU" 

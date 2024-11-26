@@ -1,0 +1,33 @@
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDashboard
+metadata:
+  name: rabbitmq-overview
+  namespace: {{ .Values.monitoring.namespace }}
+  labels:
+    app: grafana
+spec:
+  json: |
+    {
+      "title": "RabbitMQ Overview",
+      "uid": "rabbitmq-overview",
+      "datasource": "Prometheus",
+      "panels": [
+      ]
+    }
+---
+apiVersion: integreatly.org/v1alpha1
+kind: GrafanaDashboard
+metadata:
+  name: postgresql-overview
+  namespace: {{ .Values.monitoring.namespace }}
+  labels:
+    app: grafana
+spec:
+  json: |
+    {
+      "title": "PostgreSQL Overview",
+      "uid": "postgresql-overview",
+      "datasource": "Prometheus",
+      "panels": [
+      ]
+    }

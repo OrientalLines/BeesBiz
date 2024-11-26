@@ -1,0 +1,110 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  namespace: {{ .Values.monitoring.namespace }}
+spec:
+  replicas: {{ .Values.monitoring.prometheus.replicas }}
+  retention: {{ .Values.monitoring.prometheus.retention }}
+  storage:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: {{ .Values.monitoring.prometheus.storage.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.monitoring.prometheus.storage.size }}
+  resources:
+    requests:
+      cpu: {{ .Values.monitoring.prometheus.resources.requests.cpu }}
+      memory: {{ .Values.monitoring.prometheus.resources.requests.memory }}
+    limits:
+      cpu: {{ .Values.monitoring.prometheus.resources.limits.cpu }}
+      memory: {{ .Values.monitoring.prometheus.resources.limits.memory }}
+  serviceMonitorSelector: {}
+  serviceMonitorNamespaceSelector: {}
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rabbitmq-monitor
+  namespace: {{ .Values.monitoring.namespace }}
+spec:
+  endpoints:
+  - interval: 30s
+    port: prometheus
+    path: /metrics
+  selector:
+    matchLabels:
+      app: rabbitmq
+  namespaceSelector:
+    matchNames:
+    - {{ .Values.rabbitmq.namespace }}
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgresql-monitor
+  namespace: {{ .Values.monitoring.namespace }}
+spec:
+  endpoints:
+  - interval: 30s
+    port: metrics
+  selector:
+    matchLabels:
+      postgresql: {{ .Values.cloudnativepg.name }}
+  namespaceSelector:
+    matchNames:
+    - {{ .Values.cloudnativepg.namespace }}
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cnpg-monitor
+  namespace: {{ .Values.monitoring.namespace }}
+spec:
+  endpoints:
+  - interval: 30s
+    port: metrics
+  selector:
+    matchLabels:
+      postgresql: {{ .Values.cloudnativepg.name }}
+  namespaceSelector:
+    matchNames:
+    - {{ .Values.cloudnativepg.namespace }}
+
+---
+apiVersion: integreatly.org/v1alpha1
+kind: Grafana
+metadata:
+  name: grafana
+  namespace: {{ .Values.monitoring.namespace }}
+spec:
+  deployment:
+    replicas: {{ .Values.monitoring.grafana.replicas }}
+    resources:
+      requests:
+        cpu: {{ .Values.monitoring.grafana.resources.requests.cpu }}
+        memory: {{ .Values.monitoring.grafana.resources.requests.memory }}
+      limits:
+        cpu: {{ .Values.monitoring.grafana.resources.limits.cpu }}
+        memory: {{ .Values.monitoring.grafana.resources.limits.memory }}
+  config:
+    security:
+      admin_user: admin
+      admin_password: {{ .Values.monitoring.grafana.adminPassword }}
+    auth:
+      disable_login_form: false
+  dashboardLabelSelector:
+    - matchExpressions:
+        - key: app
+          operator: In
+          values:
+            - grafana
+  dataSource:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-operated:9090
+      isDefault: true

@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 
+	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
@@ -50,6 +51,12 @@ func (s *Server) SetupRoutes() {
 		},
 		ReadinessEndpoint: "/readyz",
 	}))
+
+	prometheus := fiberprometheus.New("beesbiz")
+	prometheus.RegisterAt(s.app, "/metrics")
+	prometheus.SetSkipPaths([]string{"/ping", "/livez", "/readyz"})
+
+	s.app.Use(prometheus.Middleware)
 
 	s.app.Use(cors.New(cors.Config{
 		AllowOrigins:     "*", // Your frontend URL

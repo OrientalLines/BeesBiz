@@ -13,7 +13,7 @@ KUBECTL := kubectl
 HELM := helm
 MINIKUBE := minikube
 
-.PHONY: start uninstall template lint package upgrade list get_all port-forward stop-port-forward recreate pause resume dapr-init dapr-components dapr-status dapr-dashboard dapr-install pubsub postgresql dapr-install uninstall uninstall-all upgrade upgrade-all recreate recreate-all install-tikv install-monitoring install-postgresql install-rabbitmq uninstall-tikv uninstall-monitoring uninstall-postgresql uninstall-rabbitmq docker-build
+.PHONY: start uninstall template lint package upgrade list get_all port-forward stop-port-forward recreate pause resume pubsub postgresql uninstall uninstall-all upgrade upgrade-all recreate recreate-all install-tikv install-monitoring install-postgresql install-rabbitmq uninstall-tikv uninstall-monitoring uninstall-postgresql uninstall-rabbitmq docker-build update-deps setup-monitoring setup-servicemonitors patch-postgresql-monitoring verify-monitoring monitoring-dashboard prometheus-dashboard
 
 uninstall:
 	$(HELM) uninstall $(RELEASE_NAME) --namespace $(NAMESPACE)
@@ -32,15 +32,8 @@ template:
 
 recreate: package upgrade
 
-dapr-status:
-	dapr status -k
-
-dapr-dashboard:
-	dapr dashboard -k -p 8080
-
 pubsub:
 	$(KUBECTL) apply -f ./components/pubsub.yaml -n $(NAMESPACE);
-	$(KUBECTL) rollout restart deployment -n dapr-system
 
 docker-build:
 	docker build -t $(TIKV_RUNTIME):latest .
@@ -68,17 +61,62 @@ start:
 	$(KUBECTL) create secret generic postgresql-superuser -n $(NAMESPACE) \
      --from-literal=username=postgres \
      --from-literal=password=postgres
-
-dapr-install:
-	$(HELM) repo add dapr https://dapr.github.io/helm-charts/
-	$(HELM) repo update
-	$(HELM) install dapr dapr/dapr --namespace dapr-system --create-namespace
-
-dapr-init:
-	dapr init -k
+	$(MAKE) install-monitoring
+	$(MAKE) setup-servicemonitors
+	$(MAKE) patch-postgresql-monitoring
 
 pause:
 	$(MINIKUBE) pause
 
 resume:
 	$(MINIKUBE) start
+
+install-monitoring:
+	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	$(HELM) repo add grafana https://grafana.github.io/helm-charts
+	$(HELM) repo update
+	$(HELM) dependency update
+	$(HELM) upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+		--namespace $(MONITORING_NAMESPACE) \
+		--create-namespace \
+		-f ./values.yaml
+	@echo "Waiting for Prometheus operator to be ready..."
+	sleep 30
+	$(MAKE) setup-servicemonitors
+	$(MAKE) patch-postgresql-monitoring
+
+uninstall-monitoring:
+	$(HELM) uninstall monitoring --namespace $(MONITORING_NAMESPACE)
+
+update-deps:
+	$(HELM) repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	$(HELM) repo add grafana https://grafana.github.io/helm-charts
+	$(HELM) repo add cnpg https://cloudnative-pg.github.io/charts
+	$(HELM) repo add pingcap https://charts.pingcap.org/
+	$(HELM) repo update
+	$(HELM) dependency update
+
+setup-monitoring: install-monitoring setup-servicemonitors
+
+setup-servicemonitors:
+	@echo "Applying monitoring configurations..."
+	$(HELM) upgrade --install $(RELEASE_NAME) ./$(CHART_FILE) --namespace $(NAMESPACE)
+
+patch-postgresql-monitoring:
+	kubectl patch cluster postgresql -n $(CLOUDNATIVEPG_NAMESPACE) --type merge -p '{"spec":{"monitoring":{"enablePodMonitor":true,"customQueriesConfigMap":[{"name":"postgres-metrics-config","key":"queries.yaml"}]}}}'
+
+verify-monitoring:
+	@echo "Verifying ServiceMonitors..."
+	$(KUBECTL) get servicemonitor -n $(MONITORING_NAMESPACE)
+	@echo "\nVerifying PostgreSQL metrics..."
+	$(KUBECTL) port-forward -n $(CLOUDNATIVEPG_NAMESPACE) postgresql-1 9187:9187 & \
+	sleep 5 && curl http://localhost:9187/metrics && kill %%
+	@echo "\nVerifying RabbitMQ metrics..."
+	$(KUBECTL) port-forward svc/rabbitmq-cluster -n $(RABBITMQ_NAMESPACE) 15692:15692 & \
+	sleep 5 && curl http://localhost:15692/metrics && kill %%
+
+monitoring-dashboard:
+	$(KUBECTL) port-forward svc/monitoring-grafana -n $(MONITORING_NAMESPACE) 3000:80
+
+prometheus-dashboard:
+	$(KUBECTL) port-forward svc/monitoring-kube-prometheus-prometheus -n $(MONITORING_NAMESPACE) 9090:9090

@@ -54,6 +54,24 @@ cloudnativepg:
     initdb:
       database: postgres
       owner: postgres
+  monitoring:
+    enablePodMonitor: true
+    customQueriesConfigMap:
+      - name: postgres-metrics-config
+        key: queries.yaml
+    customMetrics:
+      - name: pg_database_size
+        query: "SELECT pg_database_size(current_database()) as size"
+        metrics:
+          - size:
+              usage: "GAUGE"
+              description: "Database size in bytes"
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+      prometheusRule:
+        enabled: true
 
 rabbitmq:
   namespace: beesbiz-rabbitmq
@@ -76,3 +94,52 @@ rabbitmq:
   auth:
     username: "beesbiz"
     password: "beesbiz"
+  plugins:
+    - rabbitmq_prometheus
+  extraConfig: |
+    management.load_definitions = /etc/rabbitmq/definitions.json
+    prometheus.return_per_object_metrics = true
+  service:
+    type: ClusterIP
+    ports:
+      - name: prometheus
+        port: 15692
+        targetPort: 15692
+  containers:
+    ports:
+      - name: epmd
+        containerPort: 4369
+      - name: amqp
+        containerPort: 5672
+      - name: management
+        containerPort: 15672
+      - name: prometheus
+        containerPort: 15692
+
+monitoring:
+  namespace: beesbiz-monitoring
+  prometheus:
+    replicas: 1
+    retention: 15d
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+    storage:
+      size: 10Gi
+      storageClass: "standard"
+  grafana:
+    replicas: 1
+    resources:
+      requests:
+        cpu: "200m"
+        memory: "512Mi"
+      limits:
+        cpu: "500m"
+        memory: "1Gi"
+    adminPassword: "admin"
+# Replace pod name with your actual grafana pod name from 'kubectl get pods -n beesbiz-monitoring'
+#kubectl exec -it -n beesbiz-monitoring monitoring-grafana-7c7c4d899d-jpbzb -- grafana-cli admin reset-admin-password newpassword

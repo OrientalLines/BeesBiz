@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgresql-monitor
+  namespace: beesbiz-monitoring
+  labels:
+    release: monitoring
+spec:
+  endpoints:
+  - interval: 30s
+    port: metrics
+  selector:
+    matchLabels:
+      cnpg.io/cluster: cloudnative-pg  # Adjust this to match your PostgreSQL service labels
+  namespaceSelector:
+    matchNames:
+    - beesbiz-data 
