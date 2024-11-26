@@ -6,6 +6,7 @@
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import type { Region } from '$lib/types';
 	import RegionEditModal from '../modals/RegionEditModal.svelte';
+	import RegionDeleteModal from '../modals/RegionDeleteModal.svelte';
 
 	export let onSelect: (region: Region) => void;
 	const toastStore = getToastStore();
@@ -15,6 +16,7 @@
 	let error = '';
 	let showAddModal = false;
 	let editingRegion: Region | null = null;
+	let deletingRegion: Region | null = null;
 
 	const climateIcons = {
 		tropical: 'mdi:weather-sunny',
@@ -68,22 +70,16 @@
 		}
 	}
 
-	async function handleDelete(region: Region) {
-		if (!confirm('Are you sure you want to delete this region?')) return;
+	async function handleDelete(regionId: number) {
+		if (!deletingRegion) return;
 
-		try {
-			await deleteRegion(region.region_id);
-			toastStore.trigger({
-				message: '✨ Region deleted successfully!',
-				background: 'variant-filled-success'
-			});
-			await loadRegions();
-		} catch (e) {
-			toastStore.trigger({
-				message: '❌ Failed to delete region',
-				background: 'variant-filled-error'
-			});
-		}
+		deletingRegion = null;
+		await deleteRegion(regionId);
+		toastStore.trigger({
+			message: '✨ Region deleted successfully!',
+			background: 'variant-filled-success'
+		});
+		await loadRegions();
 	}
 </script>
 
@@ -155,19 +151,19 @@
 						class="absolute top-2 right-2 opacity-0 group-hover:opacity-100
                         transition-opacity flex gap-2"
 					>
-						<button
+						<!-- <button
 							class="p-1 rounded-lg bg-amber-100 dark:bg-amber-900/30
                             text-amber-600 dark:text-amber-400 hover:bg-amber-200
                             dark:hover:bg-amber-900/50"
 							on:click|stopPropagation={() => (editingRegion = region)}
 						>
 							<Icon icon="mdi:pencil" class="w-4 h-4" />
-						</button>
+						</button> -->
 						<button
 							class="p-1 rounded-lg bg-red-100 dark:bg-red-900/30
                             text-red-600 dark:text-red-400 hover:bg-red-200
                             dark:hover:bg-red-900/50"
-							on:click|stopPropagation={() => handleDelete(region)}
+							on:click|stopPropagation={() => (deletingRegion = region)}
 						>
 							<Icon icon="mdi:trash" class="w-4 h-4" />
 						</button>
@@ -194,4 +190,11 @@
 			onSave={handleSaveRegion}
 		/>
 	{/if}
+
+	<RegionDeleteModal
+		isOpen={!!deletingRegion}
+		region={deletingRegion}
+		onClose={() => (deletingRegion = null)}
+		onConfirm={handleDelete}
+	/>
 </div>

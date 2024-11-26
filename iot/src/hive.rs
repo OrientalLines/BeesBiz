@@ -46,7 +46,7 @@ impl Actor for Hive {
                 info!("Hive {} initialized RabbitMQ channel", hive_id);
 
                 // Set up sensor reading interval after channel is initialized
-                ctx.run_interval(Duration::from_secs(20), move |act, _ctx| {
+                ctx.run_interval(Duration::from_secs(10), move |act, _ctx| {
                     if let Some(channel) = &act.channel {
                         info!("Generating sensor readings for hive {}:", act.hive_id);
                         for sensor_id in &act.sensors {
@@ -112,7 +112,21 @@ impl Hive {
     /// Generates a mock sensor value based on sensor type
     fn generate_mock_value(&self) -> String {
         let mut rng = rand::thread_rng();
-        let values = vec![rng.gen_range(20..30), rng.gen_range(0..100)];
+        let values = vec![
+            rng.gen_range(10..80),
+            rng.gen_range(0..255),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+            rng.gen_range(0..100),
+        ];
 
         BASE64.encode(&values)
     }

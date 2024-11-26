@@ -63,7 +63,7 @@
 				...formData,
 				installation_date: formData.installation_date
 					? new Date(formData.installation_date).toISOString()
-					: null
+					: undefined
 			};
 			await createHive(payload);
 			showModal = false;
@@ -146,6 +146,29 @@
 		{:else if error}
 			<div class="text-center text-red-500 p-4">
 				{error}
+			</div>
+		{:else if paginatedHives.length === 0}
+			<div class="col-span-full flex flex-col items-center justify-center py-16 px-4">
+				<div class="bg-amber-50 dark:bg-amber-900/20 rounded-full p-4 mb-4">
+					<Icon icon="mdi:beehive-outline" class="w-12 h-12 text-amber-500" />
+				</div>
+				<h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+					No Hives Found
+				</h3>
+				<p class="text-gray-600 dark:text-gray-400 text-center max-w-md mb-6">
+					{searchQuery
+						? "No hives match your search criteria. Try adjusting your search."
+						: "This apiary doesn't have any hives yet. Add your first hive to get started!"}
+				</p>
+				<button
+					class="bg-amber-500 text-white px-6 py-3 rounded-full
+					hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl
+					flex items-center gap-2"
+					on:click={() => (showModal = true)}
+				>
+					<Icon icon="mdi:plus" class="w-5 h-5" />
+					Add First Hive
+				</button>
 			</div>
 		{:else}
 			{#each paginatedHives as hive}

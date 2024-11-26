@@ -3,7 +3,14 @@
 	import Icon from '@iconify/svelte';
 	import { debounce } from 'lodash-es';
 	import type { User, Region } from '$lib/types';
-	import { getUsers, deleteUser, updateUser, updateRegionAccess, getRegions, createUser } from '$lib/services/api';
+	import {
+		getUsers,
+		deleteUser,
+		updateUser,
+		updateRegionAccess,
+		getRegions,
+		createUser
+	} from '$lib/services/api';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import { onMount } from 'svelte';
 	import UserEditModal from '$lib/components/modals/UserEditModal.svelte';
@@ -53,8 +60,6 @@
 	}
 
 	async function handleDeleteUser(userId: number) {
-		if (!confirm('Are you sure you want to delete this user?')) return;
-
 		try {
 			await deleteUser(userId);
 			await loadUsers();
@@ -139,7 +144,7 @@
 		<button
 			class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg
 				transition-colors duration-200 flex items-center gap-2"
-			on:click={() => addModalOpen = true}
+			on:click={() => (addModalOpen = true)}
 		>
 			<Icon icon="mdi:plus" class="w-5 h-5" />
 			Add User
@@ -266,14 +271,20 @@
 <UserEditModal
 	isOpen={editModalOpen}
 	user={selectedUser}
-	onClose={() => { editModalOpen = false; selectedUser = null; }}
+	onClose={() => {
+		editModalOpen = false;
+		selectedUser = null;
+	}}
 	onSave={handleUserUpdate}
 />
 
 <UserDeleteModal
 	isOpen={deleteModalOpen}
 	user={selectedUser}
-	onClose={() => { deleteModalOpen = false; selectedUser = null; }}
+	onClose={() => {
+		deleteModalOpen = false;
+		selectedUser = null;
+	}}
 	onConfirm={handleDeleteUser}
 />
 
@@ -281,13 +292,16 @@
 	isOpen={regionModalOpen}
 	user={selectedUser}
 	{regions}
-	onClose={() => { regionModalOpen = false; selectedUser = null; }}
+	onClose={() => {
+		regionModalOpen = false;
+		selectedUser = null;
+	}}
 	onSave={handleRegionUpdate}
 />
 
 <UserAddModal
 	isOpen={addModalOpen}
 	{regions}
-	onClose={() => addModalOpen = false}
+	onClose={() => (addModalOpen = false)}
 	onSave={handleCreateUser}
 />

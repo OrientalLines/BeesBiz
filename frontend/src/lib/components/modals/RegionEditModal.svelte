@@ -61,41 +61,60 @@
 <Modal {isOpen} title="Edit Region Access" {onClose}>
 	<div in:fly={{ y: 50, duration: 400 }} out:fade>
 		<form class="space-y-6" on:submit|preventDefault={handleSubmit}>
+			<!-- User Info Section -->
 			<div class="space-y-4">
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-					<Icon icon="mdi:map-marker" class="w-5 h-5 text-amber-500" />
-					Assign Regions
-				</h3>
+				<div class="text-center space-y-3" in:fly={{ y: 20, duration: 300, delay: 100 }}>
+					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+						Edit Access for {user?.full_name}
+					</h3>
+					<p class="text-gray-600 dark:text-gray-400">
+						Select the regions this user should have access to
+					</p>
+				</div>
 
-				<div class="space-y-2">
-					{#each regions as region}
-						<label
-							class="flex items-center p-3 rounded-lg border border-gray-200
-							dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800
-							transition-colors duration-200"
-						>
-							<input
-								type="checkbox"
-								value={region.region_id}
-								checked={selectedRegions.includes(region.region_id)}
-								on:change={(e) => {
-									if (e.currentTarget.checked) {
-										selectedRegions = [...selectedRegions, region.region_id];
-									} else {
-										selectedRegions = selectedRegions.filter((id) => id !== region.region_id);
-									}
-								}}
-								class="w-4 h-4 text-amber-500 border-gray-300 rounded
-									focus:ring-amber-500 dark:focus:ring-offset-gray-800"
-							/>
-							<span class="ml-3 text-gray-900 dark:text-gray-300">{region.name}</span>
-						</label>
-					{/each}
+				<!-- Region Selection -->
+				<div class="space-y-4 mt-6">
+					<h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+						<Icon icon="mdi:map-marker" class="w-5 h-5 text-amber-500" />
+						Available Regions
+					</h3>
+
+					<div class="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+						{#each regions as region}
+							<label
+								class="flex items-center p-3 rounded-lg border border-gray-200
+								dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800
+								transition-colors duration-200 cursor-pointer"
+							>
+								<input
+									type="checkbox"
+									value={region.region_id}
+									checked={selectedRegions.includes(region.region_id)}
+									on:change={(e) => {
+										if (e.currentTarget.checked) {
+											selectedRegions = [...selectedRegions, region.region_id];
+										} else {
+											selectedRegions = selectedRegions.filter((id) => id !== region.region_id);
+										}
+									}}
+									class="w-4 h-4 text-amber-500 border-gray-300 rounded
+										focus:ring-amber-500 dark:focus:ring-offset-gray-800"
+								/>
+								<span class="ml-3 text-gray-900 dark:text-gray-300">{region.name}</span>
+							</label>
+						{/each}
+
+						{#if regions.length === 0}
+							<div class="text-center py-4 text-gray-500 dark:text-gray-400">
+								No regions available
+							</div>
+						{/if}
+					</div>
 				</div>
 			</div>
 
 			<!-- Action Buttons -->
-			<div class="flex justify-end gap-3 pt-6">
+			<div class="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
 				<button
 					type="button"
 					class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100
@@ -107,7 +126,7 @@
 				<button
 					type="submit"
 					class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg
-						transition-colors duration-200 flex items-center gap-2"
+						transition-colors duration-200 flex items-center gap-2 disabled:opacity-50"
 					disabled={isLoading}
 				>
 					{#if isLoading}
