@@ -16,6 +16,7 @@ type MaintenancePlan struct {
 	PlannedDate null.Time `json:"planned_date" db:"planned_date"`
 	WorkType    string    `json:"work_type" db:"work_type"`
 	AssignedTo  int       `json:"assigned_to" db:"assigned_to"`
+	Status      string    `json:"status" db:"status"`
 }
 
 type Incident struct {

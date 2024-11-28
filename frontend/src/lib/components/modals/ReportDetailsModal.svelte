@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
-	import type { Report } from '$lib/types';
+	import type { ProductionReport } from '$lib/types';
 	import Icon from '@iconify/svelte';
 	import { tweened } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import { onMount } from 'svelte';
 
 	export let isOpen = false;
-	export let report: Report;
+	export let report: ProductionReport;
 	export let onClose = () => {};
 
 	// Animated number stores
@@ -19,8 +19,8 @@
 
 	// Start animations when modal opens
 	$: if (isOpen) {
-		honeyAmount.set(report.totalHoney);
-		expenses.set(report.totalExpenses);
+		honeyAmount.set(report.total_honey);
+		expenses.set(report.total_expenses);
 		profitMarginAnim.set(profitMargin);
 		revenuePerHiveAnim.set(revenuePerHive);
 		efficiencyAnim.set(productionEfficiency);
@@ -28,29 +28,31 @@
 
 	// Calculate some dummy metrics
 	$: profitMargin =
-		((report.totalHoney * 50 - report.totalExpenses) / (report.totalHoney * 50)) * 100;
-	$: revenuePerHive = (report.totalHoney * 50) / 5; // Assuming 5 hives for demo
-	$: productionEfficiency = report.totalHoney / report.totalExpenses;
+		((report.total_honey * 50 - report.total_expenses) / (report.total_honey * 50)) * 100;
+	$: revenuePerHive = (report.total_honey * 50) / 5; // Assuming 5 hives for demo
+	$: productionEfficiency = report.total_honey / report.total_expenses;
 </script>
 
-<Modal {isOpen} title="Report Details" {onClose}>
-	<div class="space-y-8">
+<Modal {isOpen} title="Production Report Details" {onClose}>
+	<div class="space-y-8 max-h-[80vh] overflow-y-auto pr-2">
 		<!-- Period and Basic Info -->
 		<div
 			class="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700"
 		>
-			<h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Report Overview</h3>
+			<h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+				Production Report Overview
+			</h3>
 			<div class="grid grid-cols-2 gap-6">
 				<div>
 					<p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Period</p>
 					<p class="text-gray-900 dark:text-white text-lg">
-						{new Date(report.startDate).toLocaleDateString()} -
-						{new Date(report.endDate).toLocaleDateString()}
+						{new Date(report.start_date).toLocaleDateString()} -
+						{new Date(report.end_date).toLocaleDateString()}
 					</p>
 				</div>
 				<div>
 					<p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Apiary ID</p>
-					<p class="text-gray-900 dark:text-white text-lg">{report.apiaryId}</p>
+					<p class="text-gray-900 dark:text-white text-lg">{report.apiary_id}</p>
 				</div>
 			</div>
 		</div>
@@ -119,15 +121,14 @@
 				{/each}
 			</div>
 		</div>
-
-		<div class="flex justify-end pt-2">
-			<button
-				class="px-6 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg
-					   transition-colors duration-200 font-medium"
-				on:click={onClose}
-			>
-				Close
-			</button>
-		</div>
+	</div>
+	<div class="flex justify-end pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+		<button
+			class="px-6 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg
+				   transition-colors duration-200 font-medium"
+			on:click={onClose}
+		>
+			Close
+		</button>
 	</div>
 </Modal>

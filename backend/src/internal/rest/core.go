@@ -202,6 +202,16 @@ func (s *Server) SetupRoutes() {
 	observation.Delete("/:id", handlers.DeleteObservationLog(s.db))
 	observation.Get("/", handlers.GetAllObservationLogs(s.db))
 
+	// Maintenance routes
+	maintenance := api.Group("/maintenance", roleMiddleware(types.Worker, types.Manager, types.Admin))
+
+	maintenance.Get("/:id", handlers.GetMaintenancePlan(s.db))
+	maintenance.Post("/", handlers.CreateMaintenancePlan(s.db))
+	maintenance.Put("/", handlers.UpdateMaintenancePlan(s.db))
+	maintenance.Delete("/:id", handlers.DeleteMaintenancePlan(s.db))
+	maintenance.Get("/", handlers.GetAllMaintenancePlans(s.db))
+	maintenance.Put("/:id/status", handlers.UpdateMaintenancePlanStatus(s.db))
+
 }
 
 // Run starts the server

@@ -94,9 +94,12 @@ export interface CreateObservationInput {
 export interface MaintenancePlan {
 	plan_id: number;
 	apiary_id: number;
-	planned_date: Time;
+	planned_date: Date | null;
 	work_type: string;
 	assigned_to: number;
+	status: 'Pending' | 'In Progress' | 'Completed';
+	priority: 'High' | 'Medium' | 'Low';
+	description: string;
 }
 
 export interface Incident {

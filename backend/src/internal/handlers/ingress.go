@@ -157,6 +157,51 @@ func GetAllMaintenancePlans(db *database.DB) fiber.Handler {
 	}
 }
 
+// Add this new handler after the other maintenance plan handlers
+// UpdateMaintenancePlanStatus updates a maintenance plan's status
+func UpdateMaintenancePlanStatus(db *database.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Get plan ID from params
+		id, err := c.ParamsInt("id")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": fmt.Sprintf("Invalid maintenance plan ID: %v", err),
+			})
+		}
+
+		// Parse request body
+		var updateData struct {
+			Status string `json:"status"`
+		}
+		if err := c.BodyParser(&updateData); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": fmt.Sprintf("Invalid request data: %v", err),
+			})
+		}
+
+		// Get existing plan
+		plan, err := db.GetMaintenancePlan(id)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": fmt.Sprintf("Failed to get maintenance plan: %v", err),
+			})
+		}
+
+		// Update status
+		plan.Status = updateData.Status
+
+		// Save updated plan
+		updatedPlan, err := db.UpdateMaintenancePlan(plan)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": fmt.Sprintf("Failed to update maintenance plan status: %v", err),
+			})
+		}
+
+		return c.JSON(updatedPlan)
+	}
+}
+
 // Incident handlers
 
 // GetIncident gets an incident by ID

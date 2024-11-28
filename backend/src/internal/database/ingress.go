@@ -68,7 +68,12 @@ func (db *DB) GetMaintenancePlan(id int) (types.MaintenancePlan, error) {
 
 func (db *DB) CreateMaintenancePlan(plan types.MaintenancePlan) (types.MaintenancePlan, error) {
 	var createdPlan types.MaintenancePlan
-	err := db.Get(&createdPlan, "INSERT INTO maintenance_plan (apiary_id, planned_date, work_type, assigned_to) VALUES ($1, $2, $3, $4) RETURNING *", plan.ApiaryID, plan.PlannedDate, plan.WorkType, plan.AssignedTo)
+	err := db.Get(&createdPlan, `
+		INSERT INTO maintenance_plan (
+			apiary_id, planned_date, work_type, assigned_to, status
+		) VALUES ($1, $2, $3, $4, $5)
+		RETURNING *`,
+		plan.ApiaryID, plan.PlannedDate, plan.WorkType, plan.AssignedTo, plan.Status)
 	if err != nil {
 		zap.S().Error("Error creating maintenance plan: ", err)
 		return types.MaintenancePlan{}, fmt.Errorf("error creating maintenance plan: %w", err)
@@ -78,7 +83,16 @@ func (db *DB) CreateMaintenancePlan(plan types.MaintenancePlan) (types.Maintenan
 
 func (db *DB) UpdateMaintenancePlan(plan types.MaintenancePlan) (types.MaintenancePlan, error) {
 	var updatedPlan types.MaintenancePlan
-	err := db.Get(&updatedPlan, "UPDATE maintenance_plan SET apiary_id = $1, planned_date = $2, work_type = $3, assigned_to = $4 WHERE plan_id = $5 RETURNING *", plan.ApiaryID, plan.PlannedDate, plan.WorkType, plan.AssignedTo, plan.PlanID)
+	err := db.Get(&updatedPlan, `
+		UPDATE maintenance_plan
+		SET apiary_id = $1,
+			planned_date = $2,
+			work_type = $3,
+			assigned_to = $4,
+			status = $5
+		WHERE plan_id = $6
+		RETURNING *`,
+		plan.ApiaryID, plan.PlannedDate, plan.WorkType, plan.AssignedTo, plan.Status, plan.PlanID)
 	if err != nil {
 		zap.S().Error("Error updating maintenance plan: ", err)
 		return types.MaintenancePlan{}, fmt.Errorf("error updating maintenance plan: %w", err)

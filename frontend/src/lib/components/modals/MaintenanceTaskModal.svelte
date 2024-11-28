@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
-	import type { MaintenanceTask } from '$lib/types';
+	import type { MaintenancePlan, Hive } from '$lib/types';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { Toast, getToastStore } from '@skeletonlabs/skeleton';
 	import DatePicker from '$lib/components/inputs/DatePicker.svelte';
@@ -14,16 +14,23 @@
 		ArrowUp,
 		ArrowRight,
 		ArrowDown,
-		Settings
+		Settings,
+		Search
 	} from 'lucide-svelte';
+	import { getHives } from '$lib/services/api';
+	import { onMount } from 'svelte';
 
 	export let isOpen = false;
-	export let task: MaintenanceTask | null = null;
+	export let task: MaintenancePlan | null = null;
 	export let onClose = () => {};
-	export let onSave = (updatedTask: MaintenanceTask) => {};
+	export let onSave = (updatedTask: MaintenancePlan) => {};
 
 	const toastStore = getToastStore();
 	let isLoading = false;
+	let hiveSearchQuery = '';
+	let showHiveSuggestions = false;
+	let hives: Hive[] = [];
+	let filteredHives: Hive[] = [];
 
 	const priorities = [
 		{
@@ -49,16 +56,51 @@
 		}
 	];
 
-	let formData: Partial<MaintenanceTask> = {
-		task: '',
-		hiveId: '',
-		dueDate: new Date(),
+	let formData: Partial<MaintenancePlan> = {
+		work_type: '',
+		apiary_id: 0,
+		planned_date: new Date(),
 		status: 'Pending',
-		priority: 'Medium'
+		priority: 'Medium',
+		assigned_to: 1, // Default value, should be replaced with current user's ID
+		description: ''
 	};
+
+	onMount(async () => {
+		try {
+			hives = await getHives();
+		} catch (error) {
+			console.error('Failed to fetch hives:', error);
+			toastStore.trigger({
+				message: '❌ Failed to load hives',
+				background: 'variant-filled-error'
+			});
+		}
+	});
 
 	$: if (task) {
 		formData = { ...task };
+	}
+
+	$: {
+		if (hiveSearchQuery) {
+			filteredHives = hives.filter(
+				(hive) =>
+					hive.hive_id.toString().includes(hiveSearchQuery) ||
+					hive.hive_type.toLowerCase().includes(hiveSearchQuery.toLowerCase()) ||
+					hive.apiary_id.toString().includes(hiveSearchQuery)
+			);
+			showHiveSuggestions = true;
+		} else {
+			filteredHives = [];
+			showHiveSuggestions = false;
+		}
+	}
+
+	function selectHive(hive: Hive) {
+		formData.apiary_id = parseInt(hive.hive_id.toString());
+		hiveSearchQuery = `${hive.hive_id} - ${hive.hive_type} | ${hive.apiary_id}`;
+		showHiveSuggestions = false;
 	}
 
 	function getTimeRemaining(dueDate: Date): string {
@@ -90,7 +132,7 @@
 
 		isLoading = true;
 		try {
-			await onSave(formData as MaintenanceTask);
+			await onSave(formData as MaintenancePlan);
 			toastStore.trigger({
 				message: '✨ Task saved successfully!',
 				background: 'variant-filled-success'
@@ -108,7 +150,7 @@
 
 	function handleDateChange(date: Date | null) {
 		if (date) {
-			formData.dueDate = date;
+			formData.planned_date = date;
 		}
 	}
 </script>
@@ -133,22 +175,43 @@
 
 		<form class="space-y-6" on:submit|preventDefault={handleSubmit}>
 			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-				<!-- Hive ID -->
-				<div class="space-y-2" in:fly={{ y: 20, duration: 300, delay: 300 }}>
+				<!-- Hive ID with Autocomplete -->
+				<div class="space-y-2 relative" in:fly={{ y: 20, duration: 300, delay: 300 }}>
 					<div class="flex items-center gap-2">
 						<Home class="w-4 h-4 text-amber-500" />
 						<label class="text-sm font-medium text-gray-700 dark:text-gray-300"> Hive ID </label>
 					</div>
-					<input
-						type="text"
-						bind:value={formData.hiveId}
-						class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700
-                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
-                            transition-all duration-300"
-						required
-						placeholder="Enter hive identifier"
-					/>
+					<div class="relative">
+						<input
+							type="text"
+							bind:value={hiveSearchQuery}
+							class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700
+                                bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                                focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                                transition-all duration-300"
+							placeholder="Search hive ID or name..."
+							required
+						/>
+						<Search
+							class="w-4 h-4 text-gray-400 absolute right-4 top-1/2 transform -translate-y-1/2"
+						/>
+						{#if showHiveSuggestions && filteredHives.length > 0}
+							<div
+								class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+							>
+								{#each filteredHives as hive}
+									<button
+										type="button"
+										class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700
+                                        text-gray-900 dark:text-white"
+										on:click={() => selectHive(hive)}
+									>
+										{hive.hive_id} - {hive.hive_type} | {hive.apiary_id}
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
 				</div>
 
 				<!-- Due Date -->
@@ -158,21 +221,26 @@
 							<CalendarClock class="w-4 h-4 text-amber-500" />
 							<label class="text-sm font-medium text-gray-700 dark:text-gray-300"> Due Date </label>
 						</div>
-						{#if formData.dueDate}
+						{#if formData.planned_date}
 							<span
 								class="text-sm px-2 py-1 rounded-full
-                                    {new Date(formData.dueDate) < new Date()
+                                    {new Date(formData.planned_date) < new Date()
 									? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
 									: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}"
 								in:scale={{ duration: 200 }}
 							>
 								<Clock class="w-3 h-3 inline-block mr-1" />
-								{getTimeRemaining(formData.dueDate)}
+								{getTimeRemaining(formData.planned_date)}
 							</span>
 						{/if}
 					</div>
 					<div class="relative">
-						<DatePicker startDate={formData.dueDate} onChange={handleDateChange} />
+						<DatePicker
+							startDate={formData.planned_date}
+							onChange={(date) => handleDateChange(date)}
+							singleDateMode={true}
+							placeholder="Select due date"
+						/>
 					</div>
 				</div>
 			</div>
@@ -186,7 +254,7 @@
 					</label>
 				</div>
 				<textarea
-					bind:value={formData.task}
+					bind:value={formData.work_type}
 					rows="3"
 					class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700
                         bg-white dark:bg-gray-800 text-gray-900 dark:text-white
@@ -213,7 +281,9 @@
                                 {formData.priority === priority.value
 								? `border-${priority.color} ${priority.bg}`
 								: 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}"
-							on:click={() => (formData.priority = priority.value)}
+							on:click={() => {
+								formData.priority = priority.value as 'High' | 'Medium' | 'Low';
+							}}
 						>
 							<svelte:component this={priority.icon} class="w-5 h-5 {priority.color} mb-2" />
 							<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -234,7 +304,7 @@
 					<label class="text-sm font-medium text-gray-700 dark:text-gray-300"> Status </label>
 				</div>
 				<div class="flex gap-4">
-					{#each ['Pending', 'Completed'] as status}
+					{#each ['Pending', 'In Progress', 'Completed'] as status}
 						<label
 							class="flex items-center gap-2 p-3 cursor-pointer rounded-lg
                                 {formData.status === status

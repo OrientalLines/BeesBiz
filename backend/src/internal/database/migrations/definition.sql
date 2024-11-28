@@ -261,3 +261,8 @@ ALTER COLUMN
 	"timestamp"
 SET
 	DEFAULT now();
+
+ALTER TABLE
+	"maintenance_plan"
+ADD
+	COLUMN "status" VARCHAR(50) NOT NULL DEFAULT 'pending';

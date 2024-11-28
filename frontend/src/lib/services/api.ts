@@ -1,5 +1,5 @@
 import { auth } from '$lib/stores/auth';
-import type { Region, Apiary, Hive, BeeCommunity, HoneyHarvest, ProductionReport, Sensor, SensorReading, WeatherData, ObservationLog, User, Incident, CreateIncidentInput, CreateObservationInput, Role, RegisterInput, LoginResponse } from '$lib/types';
+import type { Region, Apiary, Hive, BeeCommunity, HoneyHarvest, ProductionReport, Sensor, SensorReading, WeatherData, ObservationLog, User, Incident, CreateIncidentInput, CreateObservationInput, Role, RegisterInput, LoginResponse, MaintenancePlan as MaintenanceTask } from '$lib/types';
 import { get } from 'svelte/store';
 
 // API Base URL
@@ -671,6 +671,32 @@ export async function deleteObservationLog(id: number): Promise<void> {
 	const response = await fetch(`${API_BASE_URL}/api/observation/${id}`, {
 		method: 'DELETE',
 		headers: getAuthHeaders()
+	});
+	handleResponse(response);
+}
+
+// Add these functions for maintenance tasks
+export async function getMaintenanceTasks(): Promise<MaintenanceTask[]> {
+	return getResource<MaintenanceTask[]>('maintenance');
+}
+
+export async function createMaintenanceTask(data: Omit<MaintenanceTask, 'id'>): Promise<MaintenanceTask> {
+	return createResource<MaintenanceTask>('maintenance', data);
+}
+
+export async function updateMaintenanceTask(data: MaintenanceTask): Promise<MaintenanceTask> {
+	return updateResource<MaintenanceTask>('maintenance', data);
+}
+
+export async function deleteMaintenanceTask(id: number): Promise<void> {
+	return deleteResource('maintenance', id);
+}
+
+export async function updateMaintenanceTaskStatus(taskId: string, status: string): Promise<void> {
+	const response = await fetch(`${API_BASE_URL}/api/maintenance/${taskId}/status`, {
+		method: 'PUT',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({ status })
 	});
 	handleResponse(response);
 }
