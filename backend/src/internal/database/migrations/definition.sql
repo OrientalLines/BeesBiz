@@ -107,6 +107,7 @@ CREATE TABLE IF NOT EXISTS "maintenance_plan" (
 	"planned_date" DATE,
 	"work_type" VARCHAR,
 	"assigned_to" INTEGER,
+	"status" VARCHAR(50) NOT NULL DEFAULT 'pending',
 	PRIMARY KEY("plan_id")
 );
 
@@ -261,8 +262,3 @@ ALTER COLUMN
 	"timestamp"
 SET
 	DEFAULT now();
-
-ALTER TABLE
-	"maintenance_plan"
-ADD
-	COLUMN "status" VARCHAR(50) NOT NULL DEFAULT 'pending';
