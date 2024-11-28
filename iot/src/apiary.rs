@@ -1,5 +1,5 @@
 use crate::hive::Hive;
-use crate::messages::{CreateHive, NewSensorData};
+use crate::messages::{CreateHive, DeleteSensor, NewSensorData};
 use crate::types::Sensor;
 
 use actix::prelude::*;
@@ -270,17 +270,18 @@ impl Apiary {
     fn start_consumers(&self, ctx: &mut Context<Self>) {
         let sensor_queue = "sensor_queue".to_string();
         let hive_queue = "hive_queue".to_string();
+        let sensor_delete_queue = "sensor_delete_queue".to_string();
         let rabbitmq_channel = self.rabbitmq_channel.clone();
         let apiary_addr = ctx.address();
 
         ctx.spawn(
             async move {
                 debug!("Setting up consumers...");
-                let (sensor_consumer, hive_consumer, channel) = {
+                let (sensor_consumer, hive_consumer, delete_consumer, channel) = {
                     let channel = rabbitmq_channel.lock().await;
 
                     // Declare queues to ensure they exist
-                    for queue in &[&sensor_queue, &hive_queue] {
+                    for queue in &[&sensor_queue, &hive_queue, &sensor_delete_queue] {
                         channel
                             .queue_declare(
                                 queue,
@@ -325,11 +326,36 @@ impl Apiary {
                         .await
                         .expect("Failed to create hive consumer");
 
-                    (sensor_consumer, hive_consumer, channel.clone())
+                    let delete_consumer = channel
+                        .basic_consume(
+                            &sensor_delete_queue,
+                            "delete_consumer",
+                            BasicConsumeOptions {
+                                no_ack: false,
+                                exclusive: false,
+                                ..Default::default()
+                            },
+                            FieldTable::default(),
+                        )
+                        .await
+                        .expect("Failed to create delete consumer");
+
+                    (
+                        sensor_consumer,
+                        hive_consumer,
+                        delete_consumer,
+                        channel.clone(),
+                    )
                 }; // Lock is dropped here
 
-                let channel_clone = channel.clone();
+                // Create separate channel clones for each consumer
+                let sensor_channel = channel.clone();
+                let hive_channel = channel.clone();
+                let delete_channel = channel.clone();
+
                 let apiary_addr_clone = apiary_addr.clone();
+                let apiary_addr_clone2 = apiary_addr.clone();
+                let apiary_addr_clone3 = apiary_addr.clone();
 
                 let sensor_handle = tokio::spawn(async move {
                     let mut sensor_consumer = sensor_consumer;
@@ -345,7 +371,7 @@ impl Apiary {
                                     }
                                     Err(e) => {
                                         error!("Failed to deserialize sensor: {}", e);
-                                        if let Err(e) = channel
+                                        if let Err(e) = sensor_channel
                                             .basic_nack(
                                                 delivery.delivery_tag,
                                                 BasicNackOptions {
@@ -361,11 +387,13 @@ impl Apiary {
                                     }
                                 };
 
-                                if let Err(e) = apiary_addr.send(NewSensorData { sensor }).await {
+                                if let Err(e) =
+                                    apiary_addr_clone.send(NewSensorData { sensor }).await
+                                {
                                     error!("Failed to send NewSensorData message: {}", e);
                                 }
 
-                                if let Err(e) = channel
+                                if let Err(e) = sensor_channel
                                     .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
                                     .await
                                 {
@@ -391,7 +419,7 @@ impl Apiary {
                                     Ok(val) => val,
                                     Err(e) => {
                                         error!("Failed to deserialize hive request: {}", e);
-                                        if let Err(e) = channel_clone
+                                        if let Err(e) = hive_channel
                                             .basic_nack(
                                                 delivery.delivery_tag,
                                                 BasicNackOptions {
@@ -414,7 +442,7 @@ impl Apiary {
                                     Ok(sensors) => sensors,
                                     Err(e) => {
                                         error!("Failed to deserialize sensors: {}", e);
-                                        if let Err(e) = channel_clone
+                                        if let Err(e) = hive_channel
                                             .basic_nack(
                                                 delivery.delivery_tag,
                                                 BasicNackOptions {
@@ -430,14 +458,14 @@ impl Apiary {
                                     }
                                 };
 
-                                if let Err(e) = apiary_addr_clone
+                                if let Err(e) = apiary_addr_clone2
                                     .send(CreateHive { hive_id, sensors })
                                     .await
                                 {
                                     error!("Failed to send CreateHive message: {}", e);
                                 }
 
-                                if let Err(e) = channel_clone
+                                if let Err(e) = hive_channel
                                     .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
                                     .await
                                 {
@@ -452,7 +480,78 @@ impl Apiary {
                     }
                 });
 
-                tokio::try_join!(sensor_handle, hive_handle).expect("Consumer task failed");
+                let delete_handle = tokio::spawn(async move {
+                    let mut delete_consumer = delete_consumer;
+                    while let Some(delivery_result) = delete_consumer.next().await {
+                        match delivery_result {
+                            Ok(delivery) => {
+                                info!("Received message from sensor_delete_queue");
+                                let payload = &delivery.data;
+                                match serde_json::from_slice::<DeleteSensor>(payload) {
+                                    Ok(delete_request) => {
+                                        info!(
+                                            "Processing delete request for sensor {} in hive {}",
+                                            delete_request.sensor_id, delete_request.hive_id
+                                        );
+
+                                        if let Err(e) =
+                                            apiary_addr_clone3.send(delete_request).await
+                                        {
+                                            error!("Failed to send DeleteSensor message: {}", e);
+                                            // Nack the message if we failed to process it
+                                            if let Err(e) = delete_channel
+                                                .basic_nack(
+                                                    delivery.delivery_tag,
+                                                    BasicNackOptions {
+                                                        multiple: false,
+                                                        requeue: true,
+                                                    },
+                                                )
+                                                .await
+                                            {
+                                                error!("Failed to Nack message: {}", e);
+                                            }
+                                            continue;
+                                        }
+
+                                        // Acknowledge successful processing
+                                        if let Err(e) = delete_channel
+                                            .basic_ack(
+                                                delivery.delivery_tag,
+                                                BasicAckOptions::default(),
+                                            )
+                                            .await
+                                        {
+                                            error!("Failed to ack message: {}", e);
+                                        }
+                                    }
+                                    Err(e) => {
+                                        error!("Failed to deserialize delete request: {}", e);
+                                        if let Err(e) = delete_channel
+                                            .basic_nack(
+                                                delivery.delivery_tag,
+                                                BasicNackOptions {
+                                                    multiple: false,
+                                                    requeue: false,
+                                                },
+                                            )
+                                            .await
+                                        {
+                                            error!("Failed to Nack message: {}", e);
+                                        }
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                error!("Error in delete_queue consumer: {}", e);
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                tokio::try_join!(sensor_handle, hive_handle, delete_handle)
+                    .expect("Consumer task failed");
             }
             .into_actor(self),
         );
@@ -471,5 +570,35 @@ impl Handler<NewSensorData> for Apiary {
         info!("  - Sensor Type: {}", msg.sensor.sensor_type);
         // For simplicity, acknowledge the sensor data
         Box::pin(async move { Ok(()) }.into_actor(self))
+    }
+}
+
+impl Handler<DeleteSensor> for Apiary {
+    type Result = ResponseActFuture<Self, Result<(), ()>>;
+
+    fn handle(&mut self, msg: DeleteSensor, _ctx: &mut Context<Self>) -> Self::Result {
+        info!(
+            "Processing delete request for sensor {} in hive {}",
+            msg.sensor_id, msg.hive_id
+        );
+
+        // Find the hive
+        if let Some(hive_addr) = self.hives.get(&msg.hive_id) {
+            let hive_addr = hive_addr.clone();
+            Box::pin(
+                async move {
+                    // Forward the delete request to the hive
+                    hive_addr.send(msg).await.map_err(|e| {
+                        error!("Failed to send DeleteSensor message to hive: {}", e);
+                        ()
+                    })?
+                }
+                .into_actor(self)
+                .map(|result, _, _| result),
+            )
+        } else {
+            error!("Hive {} not found", msg.hive_id);
+            Box::pin(async move { Err(()) }.into_actor(self))
+        }
     }
 }

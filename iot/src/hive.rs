@@ -7,7 +7,7 @@ use log::{debug, error, info};
 use rand::Rng;
 use std::time::Duration;
 
-use crate::messages::SensorReadingData;
+use crate::messages::{DeleteSensor, SensorReadingData};
 use crate::types::SensorReading;
 
 pub struct Hive {
@@ -194,5 +194,33 @@ impl Handler<SensorReadingData> for Hive {
             }
             .into_actor(self),
         )
+    }
+}
+
+impl Handler<DeleteSensor> for Hive {
+    type Result = Result<(), ()>;
+
+    fn handle(&mut self, msg: DeleteSensor, _ctx: &mut Context<Self>) -> Self::Result {
+        info!(
+            "Removing sensor {} from hive {}",
+            msg.sensor_id, self.hive_id
+        );
+
+        if self.hive_id != msg.hive_id {
+            error!(
+                "Hive ID mismatch: expected {}, got {}",
+                self.hive_id, msg.hive_id
+            );
+            return Err(());
+        }
+
+        // Remove the sensor from the sensors list
+        self.sensors.retain(|&sensor_id| sensor_id != msg.sensor_id);
+        info!(
+            "Hive {} now has {} sensors",
+            self.hive_id,
+            self.sensors.len()
+        );
+        Ok(())
     }
 }

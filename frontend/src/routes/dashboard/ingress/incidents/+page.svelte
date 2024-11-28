@@ -114,11 +114,7 @@
 
 	<!-- Scrollable Content Area -->
 	<div class="flex-1 overflow-y-auto min-h-0 h-full">
-		{#if loading}
-			<div class="flex justify-center py-8">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
-			</div>
-		{:else if incidents.length === 0}
+		{#if incidents.length === 0}
 			<!-- Empty State -->
 			<div class="bg-white dark:bg-gray-800 rounded-lg p-8 text-center space-y-4">
 				<div class="flex justify-center">

@@ -24,10 +24,7 @@
 	let searchQuery = '';
 	let currentPage = 1;
 	const itemsPerPage = 20;
-	let dateRange = {
-		start: null as Date | null,
-		end: null as Date | null
-	};
+	let filterDate: Date | null = null;
 	let deletingObservation: ObservationLog | null = null;
 
 	onMount(async () => {
@@ -54,9 +51,8 @@
 		currentPage = 1;
 	}, 300);
 
-	function handleDateRangeChange(start: Date | null, end: Date | null) {
-		dateRange.start = start;
-		dateRange.end = end;
+	function handleDateChange(date: Date | null) {
+		filterDate = date;
 		currentPage = 1;
 	}
 
@@ -71,7 +67,7 @@
 			} else {
 				await createObservationLog({
 					hive_id: updatedObservation.hive_id,
-					observation_date: updatedObservation.observation_date,
+					observation_date: new Date(updatedObservation.observation_date).toISOString(),
 					description: updatedObservation.description,
 					recommendations: updatedObservation.recommendations
 				});
@@ -112,11 +108,11 @@
 			const matchesSearch =
 				log.hive_id.toString().includes(searchQuery) ||
 				log.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+			if (!filterDate) return matchesSearch;
+
 			const logDate = new Date(log.observation_date);
-			const matchesDate =
-				(!dateRange.start || logDate >= dateRange.start) &&
-				(!dateRange.end || logDate <= dateRange.end);
-			return matchesSearch && matchesDate;
+			return matchesSearch && logDate.toDateString() === filterDate.toDateString();
 		})
 		.sort((a, b) => {
 			return new Date(b.observation_date).getTime() - new Date(a.observation_date).getTime();
@@ -149,99 +145,123 @@
 		</button>
 	</div>
 
-	<!-- Controls -->
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-		<div class="relative">
-			<Icon
-				icon="mdi:magnify"
-				class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-			/>
-			<input
-				type="text"
-				placeholder="Search observations..."
-				class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
+	<!-- Data Grid -->
+	<div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+		{#if logs.length === 0}
+			<div class="bg-white dark:bg-gray-800 rounded-lg p-8 text-center space-y-4">
+				<div class="flex justify-center">
+					<Icon
+						icon="mdi:clipboard-text-outline"
+						class="w-16 h-16 text-gray-400 dark:text-gray-600"
+					/>
+				</div>
+				<h3 class="text-lg font-medium text-gray-900 dark:text-white">No Incidents Reported</h3>
+				<p class="text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+					There are currently no observation logs. Click the button above to create a new
+					observation.
+				</p>
+				<button
+					class="mt-4 inline-flex items-center gap-2 px-6 py-3
+						bg-amber-500 text-white rounded-full
+						hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl"
+					on:click={() => (showAddModal = true)}
+				>
+					<Icon icon="mdi:plus" class="w-5 h-5" />
+					Create First Observation
+				</button>
+			</div>
+		{:else}
+			<!-- Controls -->
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+				<div class="relative">
+					<Icon
+						icon="mdi:magnify"
+						class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+					/>
+					<input
+						type="text"
+						placeholder="Search observations..."
+						class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
 					bg-white dark:bg-gray-800 text-gray-900 dark:text-white
 					placeholder-gray-500 dark:placeholder-gray-400
 					focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-				on:input={(e) => debouncedSearch(e.currentTarget.value)}
-			/>
-		</div>
+						on:input={(e) => debouncedSearch(e.currentTarget.value)}
+					/>
+				</div>
 
-		<DatePicker
-			startDate={dateRange.start}
-			endDate={dateRange.end}
-			placeholder="Filter by observation date"
-			onChange={handleDateRangeChange}
-		/>
-	</div>
-
-	<!-- Data Grid -->
-	<div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-		<div class="overflow-x-auto">
-			<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-				<thead class="bg-gray-50 dark:bg-gray-700">
-					<tr>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
-						>
-							Date
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
-						>
-							Hive ID
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
-						>
-							Description
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
-						>
-							Recommendations
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
-						>
-							Actions
-						</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-					{#each paginatedLogs as log}
-						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{new Date(log.observation_date).toLocaleDateString()}
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{log.hive_id}
-							</td>
-							<td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-300">
-								{log.description}
-							</td>
-							<td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-300">
-								{log.recommendations}
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-								<button
-									class="text-amber-600 hover:text-amber-700"
-									on:click={() => handleEdit(log)}
-								>
-									<Icon icon="mdi:pencil" class="w-5 h-5" />
-								</button>
-								<button
-									class="text-red-600 hover:text-red-700"
-									on:click={() => (deletingObservation = log)}
-								>
-									<Icon icon="mdi:delete" class="w-5 h-5" />
-								</button>
-							</td>
+				<DatePicker
+					startDate={filterDate}
+					onChange={(date) => handleDateChange(date)}
+					singleDateMode={true}
+					placeholder="Filter by date"
+				/>
+			</div>
+			<div class="overflow-x-auto">
+				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+					<thead class="bg-gray-50 dark:bg-gray-700">
+						<tr>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
+							>
+								Date
+							</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
+							>
+								Hive ID
+							</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
+							>
+								Description
+							</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
+							>
+								Recommendations
+							</th>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
+							>
+								Actions
+							</th>
 						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
+					</thead>
+					<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+						{#each paginatedLogs as log}
+							<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+									{new Date(log.observation_date).toLocaleDateString()}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+									{log.hive_id}
+								</td>
+								<td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-300">
+									{log.description}
+								</td>
+								<td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-300">
+									{log.recommendations}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+									<button
+										class="text-amber-600 hover:text-amber-700"
+										on:click={() => handleEdit(log)}
+									>
+										<Icon icon="mdi:pencil" class="w-5 h-5" />
+									</button>
+									<button
+										class="text-red-600 hover:text-red-700"
+										on:click={() => (deletingObservation = log)}
+									>
+										<Icon icon="mdi:delete" class="w-5 h-5" />
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Pagination -->

@@ -122,11 +122,12 @@
 	// Add these helper functions
 	function getQualityColor(grade: string) {
 		const colors = {
-			'A': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-			'B': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-			'C': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-			'D': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+			A: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+			B: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+			C: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+			D: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
 		};
+		// @ts-ignore
 		return colors[grade] || 'bg-gray-100 text-gray-800';
 	}
 </script>
@@ -135,7 +136,9 @@
 	<!-- Header Section -->
 	<div class="flex justify-between items-center mb-8">
 		<div>
-			<h1 class="text-3xl font-bold bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent">
+			<h1
+				class="text-3xl font-bold bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent"
+			>
 				Honey Harvests
 			</h1>
 			<p class="text-gray-600 dark:text-gray-400 mt-1">Track and manage your honey production</p>
@@ -216,8 +219,10 @@
 	{:else}
 		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 			{#each paginatedHarvests as harvest}
-				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300
-							border border-gray-100 dark:border-gray-700 overflow-hidden">
+				<div
+					class="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300
+							border border-gray-100 dark:border-gray-700 overflow-hidden"
+				>
 					<div class="p-5">
 						<div class="flex justify-between items-start mb-4">
 							<div>
@@ -249,7 +254,9 @@
 							<div class="text-2xl font-bold text-amber-600">
 								{harvest.quantity} kg
 							</div>
-							<span class={`px-3 py-1 rounded-full text-sm font-medium ${getQualityColor(harvest.quality_grade)}`}>
+							<span
+								class={`px-3 py-1 rounded-full text-sm font-medium ${getQualityColor(harvest.quality_grade)}`}
+							>
 								Grade {harvest.quality_grade}
 							</span>
 						</div>

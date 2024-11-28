@@ -1,38 +1,11 @@
 import { auth } from '$lib/stores/auth';
-import type { Region, Apiary, Hive, BeeCommunity, HoneyHarvest, ProductionReport, Sensor, SensorReading, WeatherData, ObservationLog, User, Incident } from '$lib/types';
+import type { Region, Apiary, Hive, BeeCommunity, HoneyHarvest, ProductionReport, Sensor, SensorReading, WeatherData, ObservationLog, User, Incident, CreateIncidentInput, CreateObservationInput, Role, RegisterInput, LoginResponse } from '$lib/types';
 import { get } from 'svelte/store';
-
-// Types
-export type Role = 'ADMIN' | 'WORKER' | 'MANAGER';
 
 // API Base URL
 const API_BASE_URL = 'http://localhost:4040';
 
 const PROXY_API_BASE_URL = 'http://localhost:4041';
-
-// Auth Types & Functions
-interface LoginResponse {
-	user: User;
-	token: string;
-}
-
-interface RegisterInput {
-	email: string;
-	password: string;
-	full_name: string;
-	username: string;
-}
-
-// Add new types for region access management
-interface RegionAccessUpdate {
-	user_id: number;
-	region_ids: number[];
-}
-
-interface RoleUpdate {
-	user_id: number;
-	role: Role;
-}
 
 // Helper functions
 function getAuthHeaders(): HeadersInit {
@@ -579,6 +552,7 @@ export async function registerIncident(
 	handleResponse(response);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getLatestSensorReading(hiveId: number, sensorType: string): Promise<any> {
 	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/getLatestSensorReading`, {
 		method: 'POST',
@@ -596,6 +570,7 @@ export async function createProductionReport(
 	apiaryId: number,
 	startDate: string,
 	endDate: string
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
 	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/createProductionReport`, {
 		method: 'POST',
@@ -621,23 +596,6 @@ export async function searchHives(query: string): Promise<Hive[]> {
 	);
 }
 
-// Add these types
-export interface Incident {
-	incident_id: number;
-	hive_id: number;
-	incident_date: string | Date;
-	description: string;
-	severity: string;
-	actions_taken?: string;
-}
-
-export interface CreateIncidentInput {
-	hive_id: number;
-	incident_date: string;
-	description: string;
-	severity: string;
-	actions_taken?: string;
-}
 
 // Update the incident functions
 export async function getIncidents(): Promise<Incident[]> {
@@ -681,25 +639,6 @@ export async function deleteIncident(id: number): Promise<void> {
 	handleResponse(response);
 }
 
-// Remove the old observation functions that use incident endpoints
-// Add these new functions:
-
-export interface ObservationLog {
-	log_id: number;
-	hive_id: number;
-	observation_date: string | Date;
-	description: string;
-	recommendations?: string;
-}
-
-export interface CreateObservationInput {
-	hive_id: number;
-	observation_date: string;
-	description: string;
-	recommendations?: string;
-}
-
-// ObservationLog Operations
 export async function getObservationLogs(): Promise<ObservationLog[]> {
 	return getResource<ObservationLog[]>('observation');
 }

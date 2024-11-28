@@ -6,11 +6,24 @@
 	export let isOpen = false;
 	export let selectedDate: Date | null = null;
 	export let onClose = () => {};
-	export let onChange = (date: Date) => {};
+	export let onChange = (start: Date, end?: Date) => {};
+	export let isPeriodMode = false;
 
-	function handleDateSelect(date: Date) {
-		onChange(date);
-		onClose();
+	function handleDateSelect(start: Date | null, end: Date | null) {
+		if (!start) return;
+
+		const cleanDate = new Date(start);
+		cleanDate.setHours(0, 0, 0, 0);
+
+		if (!isPeriodMode) {
+			onChange(cleanDate);
+			onClose();
+		} else if (end) {
+			const cleanEndDate = new Date(end);
+			cleanEndDate.setHours(0, 0, 0, 0);
+			onChange(cleanDate, cleanEndDate);
+			onClose();
+		}
 	}
 
 	// Close on escape key
@@ -61,7 +74,13 @@
 
 		<!-- Calendar -->
 		<div class="p-4">
-			<DatePicker startDate={selectedDate} onChange={(start) => handleDateSelect(start as Date)} />
+			<DatePicker
+				startDate={selectedDate}
+				endDate={selectedDate}
+				onChange={(start, end = null) => handleDateSelect(start, end)}
+				singleDateMode={!isPeriodMode}
+				placeholder={isPeriodMode ? 'Select date range' : 'Select date'}
+			/>
 		</div>
 	</div>
 {/if}

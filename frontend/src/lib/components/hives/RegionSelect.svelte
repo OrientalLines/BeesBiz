@@ -151,14 +151,14 @@
 						class="absolute top-2 right-2 opacity-0 group-hover:opacity-100
                         transition-opacity flex gap-2"
 					>
-						<!-- <button
+						<button
 							class="p-1 rounded-lg bg-amber-100 dark:bg-amber-900/30
                             text-amber-600 dark:text-amber-400 hover:bg-amber-200
                             dark:hover:bg-amber-900/50"
 							on:click|stopPropagation={() => (editingRegion = region)}
 						>
 							<Icon icon="mdi:pencil" class="w-4 h-4" />
-						</button> -->
+						</button>
 						<button
 							class="p-1 rounded-lg bg-red-100 dark:bg-red-900/30
                             text-red-600 dark:text-red-400 hover:bg-red-200

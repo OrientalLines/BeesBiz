@@ -1,0 +1,23 @@
+{
+  "hive_id": 1,
+  "sensors": [
+    {
+      "sensor_id": 1,
+      "hive_id": 1,
+      "sensor_type": "temperature",
+      "last_reading": ""
+    },
+    {
+      "sensor_id": 2,
+      "hive_id": 1,
+      "sensor_type": "humidity",
+      "last_reading": ""
+    },
+    {
+      "sensor_id": 3,
+      "hive_id": 1,
+      "sensor_type": "weight",
+      "last_reading": ""
+    }
+  ]
+}

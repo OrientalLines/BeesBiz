@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 
 	"github.com/orientallines/beesbiz/internal/database"
+	"github.com/orientallines/beesbiz/internal/rabbitmq"
 	types "github.com/orientallines/beesbiz/internal/types/db"
 )
 
@@ -110,15 +112,45 @@ func UpdateHive(db *database.DB) fiber.Handler {
 	}
 }
 
-func DeleteHive(db *database.DB) fiber.Handler {
+func DeleteHive(db *database.DB, rmq *rabbitmq.RabbitMQ) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		id, err := c.ParamsInt("id")
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": fmt.Sprintf("Invalid hive ID: %v", err)})
 		}
-		if err := db.DeleteHive(id); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to delete hive: %v", err)})
+
+		// Get all sensors for this hive before deleting
+		sensors, err := db.GetAllSensorsByHiveID(id)
+		if err != nil {
+			zap.L().Error("Failed to get sensors for hive",
+				zap.Error(err),
+				zap.Int("hive_id", id))
+			// Continue with hive deletion even if we can't get sensors
+		} else if len(sensors) > 0 {
+			// Send delete messages for each sensor
+			for _, sensor := range sensors {
+				deleteMsg := types.DeleteSensor{
+					HiveID:   id,
+					SensorID: sensor.SensorID,
+				}
+
+				if err := rmq.PublishMessage(rabbitmq.DeleteSensorQueue, deleteMsg); err != nil {
+					zap.L().Error("Failed to publish sensor deletion message",
+						zap.Error(err),
+						zap.Int("sensor_id", sensor.SensorID),
+						zap.Int("hive_id", id))
+					// Continue with other sensors even if one fails
+				}
+			}
 		}
+
+		// Delete the hive
+		if err := db.DeleteHive(id); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": fmt.Sprintf("Failed to delete hive: %v", err),
+			})
+		}
+
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getHivesByApiaryId, createHive } from '$lib/services/api';
+	import { getHivesByApiaryId, createHive, deleteHive } from '$lib/services/api';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
@@ -25,7 +25,7 @@
 
 	const toastStore = getToastStore();
 	let showModal = false;
-	let loading = true;
+	let loading = false;
 	let error = '';
 
 	// Form data for new hive
@@ -38,6 +38,8 @@
 
 	let hives: Hive[] = [];
 
+	let deletingHive: Hive | null = null;
+
 	onMount(async () => {
 		await loadHives();
 	});
@@ -45,13 +47,15 @@
 	async function loadHives() {
 		try {
 			loading = true;
-			hives = await getHivesByApiaryId(selectedApiary.apiary_id);
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load hives';
+			const response = await getHivesByApiaryId(selectedApiary.apiary_id);
+			hives = response || [];
+		} catch (error) {
+			console.error('Failed to load hives:', error);
 			toastStore.trigger({
 				message: '❌ Failed to load hives',
 				background: 'variant-filled-error'
 			});
+			hives = [];
 		} finally {
 			loading = false;
 		}
@@ -61,9 +65,7 @@
 		try {
 			const payload = {
 				...formData,
-				installation_date: formData.installation_date
-					? new Date(formData.installation_date).toISOString()
-					: undefined
+				installation_date: new Date(formData.installation_date).toISOString()
 			};
 			await createHive(payload);
 			showModal = false;
@@ -170,41 +172,55 @@
 			</div>
 		{:else}
 			{#each paginatedHives as hive}
-				<button
+				<div
 					class="group relative p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg
-                    hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
-                    hover:border-amber-400 overflow-hidden"
-					on:click={() => onSelect(hive)}
+					hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
+					hover:border-amber-400 overflow-hidden"
 				>
-					<div class="relative">
-						<div class="flex items-center gap-3 mb-3">
-							<Icon icon="mdi:beehive-outline" class="w-6 h-6 text-amber-500" />
-							<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-								Hive #{hive.hive_id}
-							</h2>
-						</div>
+					<button
+						class="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-500
+							opacity-0 group-hover:opacity-100 transition-all duration-300"
+						on:click|stopPropagation={(e) => {
+							e.stopPropagation();
+							deletingHive = hive;
+						}}
+					>
+						<Icon icon="mdi:delete" class="w-5 h-5" />
+					</button>
 
-						<div class="mt-4 space-y-2">
-							<div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-								<Icon icon="mdi:clock-outline" class="w-5 h-5" />
-								<span
-									>Last inspection: {hive.installation_date
-										? new Date(hive.installation_date).toLocaleDateString()
-										: 'Never'}</span
-								>
+					<button class="w-full text-left" on:click={() => onSelect(hive)}>
+						<div class="relative">
+							<div class="flex items-center gap-3 mb-3">
+								<Icon icon="mdi:beehive-outline" class="w-6 h-6 text-amber-500" />
+								<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+									Hive #{hive.hive_id}
+								</h2>
 							</div>
-							<div class="flex items-center gap-2">
-								<Icon
-									icon={hive.current_status === 'active' ? 'mdi:check-circle' : 'mdi:alert-circle'}
-									class="w-5 h-5 {hive.current_status === 'active'
-										? 'text-green-500'
-										: 'text-amber-500'}"
-								/>
-								<span class="capitalize">{hive.current_status}</span>
+
+							<div class="mt-4 space-y-2">
+								<div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+									<Icon icon="mdi:clock-outline" class="w-5 h-5" />
+									<span
+										>Last inspection: {hive.installation_date
+											? new Date(hive.installation_date).toLocaleDateString()
+											: 'Never'}</span
+									>
+								</div>
+								<div class="flex items-center gap-2">
+									<Icon
+										icon={hive.current_status === 'active'
+											? 'mdi:check-circle'
+											: 'mdi:alert-circle'}
+										class="w-5 h-5 {hive.current_status === 'active'
+											? 'text-green-500'
+											: 'text-amber-500'}"
+									/>
+									<span class="capitalize">{hive.current_status}</span>
+								</div>
 							</div>
 						</div>
-					</div>
-				</button>
+					</button>
+				</div>
 			{/each}
 		{/if}
 	</div>
@@ -288,4 +304,71 @@
 			</div>
 		</form>
 	</Modal>
+
+	{#if deletingHive}
+		<Modal isOpen={true} title="Delete Hive" onClose={() => (deletingHive = null)}>
+			<div class="space-y-4" in:fade={{ duration: 300 }}>
+				<div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-start gap-3">
+					<div class="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+						<Icon icon="mdi:alert" class="w-6 h-6 text-red-600 dark:text-red-400" />
+					</div>
+					<div>
+						<h3 class="text-lg font-semibold text-red-800 dark:text-red-200">Confirm Deletion</h3>
+						<p class="mt-1 text-red-700 dark:text-red-300">
+							Are you sure you want to delete Hive #{deletingHive.hive_id}? This action cannot be
+							undone.
+						</p>
+						<div class="mt-2 text-sm text-red-600 dark:text-red-400">
+							<p>Hive details:</p>
+							<ul class="list-disc list-inside mt-1">
+								<li>Type: {deletingHive.hive_type}</li>
+								<li>Status: {deletingHive.current_status}</li>
+								<li>
+									Installation Date: {new Date(deletingHive.installation_date).toLocaleDateString()}
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<div class="flex justify-end gap-3">
+					<button
+						type="button"
+						class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100
+							dark:hover:bg-gray-700 rounded-lg transition-colors"
+						on:click={() => (deletingHive = null)}
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg
+							transition-colors flex items-center gap-2"
+						on:click={async () => {
+							if (deletingHive) {
+								try {
+									await deleteHive(deletingHive.hive_id);
+									await loadHives();
+									toastStore.trigger({
+										message: '✨ Hive deleted successfully!',
+										background: 'variant-filled-success'
+									});
+								} catch (e) {
+									toastStore.trigger({
+										message: '❌ Failed to delete hive',
+										background: 'variant-filled-error'
+									});
+								} finally {
+									deletingHive = null;
+								}
+							}
+						}}
+					>
+						<Icon icon="mdi:delete" class="w-5 h-5" />
+						Delete Hive
+					</button>
+				</div>
+			</div>
+		</Modal>
+	{/if}
 </div>

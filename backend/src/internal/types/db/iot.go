@@ -16,3 +16,14 @@ type SensorReading struct {
 	Value     []byte    `json:"value" db:"value"`
 	Timestamp null.Time `json:"timestamp" db:"timestamp"`
 }
+
+type DeleteSensor struct {
+	HiveID   int `json:"hive_id"`
+	SensorID int `json:"sensor_id"`
+}
+
+// HiveSensorMessage represents the message format expected by the IoT service
+type HiveSensorMessage struct {
+	HiveID  int      `json:"hive_id"`
+	Sensors []Sensor `json:"sensors"`
+}

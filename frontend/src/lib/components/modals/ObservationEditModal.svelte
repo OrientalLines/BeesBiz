@@ -92,7 +92,7 @@
 					Observation Date
 				</label>
 			</div>
-			<DatePicker startDate={selectedDate} onChange={(date) => handleDateChange(date)} />
+			<DatePicker startDate={selectedDate} onChange={handleDateChange} singleDateMode={true} />
 			<div class="text-xs text-gray-500">
 				Selected date: {selectedDate.toLocaleString()}
 			</div>

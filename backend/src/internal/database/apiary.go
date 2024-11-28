@@ -202,3 +202,13 @@ func (db *DB) GetAllHoneyHarvests() ([]types.HoneyHarvest, error) {
 	}
 	return harvests, nil
 }
+
+func (db *DB) GetAllSensorsByHiveID(hiveID int) ([]types.Sensor, error) {
+	var sensors []types.Sensor
+	err := db.Select(&sensors, "SELECT * FROM sensor WHERE hive_id = $1", hiveID)
+	if err != nil {
+		zap.S().Error("Error getting sensors by hive id: ", err)
+		return nil, fmt.Errorf("error getting sensors by hive id: %w", err)
+	}
+	return sensors, nil
+}

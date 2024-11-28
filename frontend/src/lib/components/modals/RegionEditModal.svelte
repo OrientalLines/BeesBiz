@@ -26,7 +26,7 @@
 		try {
 			const allowedRegions = await getUserAllowedRegions(user.user_id);
 			if (allowedRegions) {
-				selectedRegions = allowedRegions.map(region => region.region_id);
+				selectedRegions = allowedRegions.map((region) => region.region_id);
 			} else {
 				selectedRegions = [];
 			}

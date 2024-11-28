@@ -2,6 +2,18 @@ export type Time = string | Date;
 
 export type Role = 'ADMIN' | 'WORKER' | 'MANAGER';
 
+export interface LoginResponse {
+	user: User;
+	token: string;
+}
+
+export interface RegisterInput {
+	email: string;
+	password: string;
+	full_name: string;
+	username: string;
+}
+
 export interface User {
 	user_id: number;
 	username: string;
@@ -69,7 +81,14 @@ export interface ObservationLog {
 	hive_id: number;
 	observation_date: Time;
 	description: string;
-	recommendations: string;
+	recommendations?: string;
+}
+
+export interface CreateObservationInput {
+	hive_id: number;
+	observation_date: string;
+	description: string;
+	recommendations?: string;
 }
 
 export interface MaintenancePlan {
@@ -86,7 +105,15 @@ export interface Incident {
 	incident_date: Time;
 	description: string;
 	severity: string;
-	actions_taken: string;
+	actions_taken?: string;
+}
+
+export interface CreateIncidentInput {
+	hive_id: number;
+	incident_date: string;
+	description: string;
+	severity: string;
+	actions_taken?: string;
 }
 
 export interface ProductionReport {
@@ -137,4 +164,9 @@ export interface SensorReading {
 	sensor_id: number;
 	value: string;
 	timestamp: Time;
+}
+
+export interface RegionFormData {
+	name: string;
+	climate_zone: string;
 }

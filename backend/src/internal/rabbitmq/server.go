@@ -17,8 +17,10 @@ type Server struct {
 }
 
 const (
+	HiveQueue          = "hive_queue"
 	SensorQueue        = "sensor_queue"
 	SensorReadingQueue = "sensor_reading_queue"
+	DeleteSensorQueue  = "sensor_delete_queue"
 )
 
 // NewServer creates a new RabbitMQ server

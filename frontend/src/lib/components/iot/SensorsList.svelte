@@ -4,7 +4,7 @@
 	import { fade } from 'svelte/transition';
 	import { debounce } from 'lodash-es';
 	import { onMount } from 'svelte';
-	import { getSensors, createSensor } from '$lib/services/api';
+	import { getSensors, createSensor, deleteSensor } from '$lib/services/api';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import Modal from '../modals/Modal.svelte';
 
@@ -36,6 +36,8 @@
 		hive_id: selectedHive.hive_id,
 		sensor_type: 'temperature'
 	};
+
+	let deletingSensor: Sensor | null = null;
 
 	onMount(async () => {
 		await loadSensors();
@@ -98,6 +100,29 @@
 
 	function handleAddSensor() {
 		showModal = true;
+	}
+
+	async function handleDeleteSensor() {
+		if (!deletingSensor) return;
+
+		try {
+			loading = true;
+			await deleteSensor(deletingSensor.sensor_id);
+			await loadSensors();
+			toastStore.trigger({
+				message: '✨ Sensor deleted successfully!',
+				background: 'variant-filled-success'
+			});
+		} catch (e) {
+			console.error('Failed to delete sensor:', e);
+			toastStore.trigger({
+				message: '❌ Failed to delete sensor',
+				background: 'variant-filled-error'
+			});
+		} finally {
+			loading = false;
+			deletingSensor = null;
+		}
 	}
 
 	$: filteredSensors = sensors
@@ -167,38 +192,54 @@
 		<!-- Grid layout following ApiarySelect.svelte -->
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			{#each paginatedSensors as sensor}
-				<button
-					class="group relative p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg
-                    hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
-                    hover:border-amber-400 overflow-hidden"
-					on:click={() => onSelect(sensor)}
-				>
-					<div class="relative">
-						<div class="flex items-center gap-3 mb-3">
-							<Icon
-								icon={sensor.sensor_type === 'temperature' ? 'mdi:thermometer' : 'mdi:gauge'}
-								class="w-6 h-6 text-amber-500"
-							/>
-							<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-								{sensor.sensor_type.charAt(0).toUpperCase() + sensor.sensor_type.slice(1)}
-							</h2>
-						</div>
+				<div class="group relative p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg
+					hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
+					hover:border-amber-400 overflow-hidden">
 
-						<div class="mt-4 space-y-2">
-							<div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-								<Icon icon="mdi:clock-outline" class="w-5 h-5" />
-								<span
-									>Last updated: {sensor.last_reading_time
-										? new Date(sensor.last_reading_time).toLocaleString()
-										: 'Never'}</span
-								>
+					<!-- Delete button -->
+					<button
+						class="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-500
+							opacity-0 group-hover:opacity-100 transition-all duration-300"
+						on:click|stopPropagation={(e) => {
+							e.stopPropagation();
+							deletingSensor = sensor;
+						}}
+					>
+						<Icon icon="mdi:delete" class="w-5 h-5" />
+					</button>
+
+					<!-- Clickable area for sensor selection -->
+					<button
+						class="w-full text-left"
+						on:click={() => onSelect(sensor)}
+					>
+						<div class="relative">
+							<div class="flex items-center gap-3 mb-3">
+								<Icon
+									icon={sensor.sensor_type === 'temperature' ? 'mdi:thermometer' : 'mdi:gauge'}
+									class="w-6 h-6 text-amber-500"
+								/>
+								<h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+									{sensor.sensor_type.charAt(0).toUpperCase() + sensor.sensor_type.slice(1)}
+								</h2>
 							</div>
-							<div class="text-2xl font-bold text-amber-600">
-								{sensor.last_reading ? decodeSensorReading(sensor.last_reading) : '--'}°C
+
+							<div class="mt-4 space-y-2">
+								<div class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+									<Icon icon="mdi:clock-outline" class="w-5 h-5" />
+									<span
+										>Last updated: {sensor.last_reading_time
+											? new Date(sensor.last_reading_time).toLocaleString()
+											: 'Never'}</span
+									>
+								</div>
+								<div class="text-2xl font-bold text-amber-600">
+									{sensor.last_reading ? decodeSensorReading(sensor.last_reading) : '--'}°C
+								</div>
 							</div>
 						</div>
-					</div>
-				</button>
+					</button>
+				</div>
 			{/each}
 		</div>
 
@@ -261,3 +302,58 @@
 		</div>
 	</form>
 </Modal>
+
+<!-- Add delete confirmation modal -->
+{#if deletingSensor}
+	<Modal isOpen={true} title="Delete Sensor" onClose={() => (deletingSensor = null)}>
+		<div class="space-y-4" in:fade={{ duration: 300 }}>
+			<div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-start gap-3">
+				<div class="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+					<Icon icon="mdi:alert" class="w-6 h-6 text-red-600 dark:text-red-400" />
+				</div>
+				<div>
+					<h3 class="text-lg font-semibold text-red-800 dark:text-red-200">Confirm Deletion</h3>
+					<p class="mt-1 text-red-700 dark:text-red-300">
+						Are you sure you want to delete this sensor? This action cannot be undone.
+					</p>
+					<div class="mt-2 text-sm text-red-600 dark:text-red-400">
+						<p>Sensor details:</p>
+						<ul class="list-disc list-inside mt-1">
+							<li>Type: {deletingSensor.sensor_type}</li>
+							<li>Last Reading: {decodeSensorReading(deletingSensor.last_reading)}</li>
+							<li>Last Update: {deletingSensor.last_reading_time
+								? new Date(deletingSensor.last_reading_time).toLocaleString()
+								: 'Never'}</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div class="flex justify-end gap-3">
+				<button
+					type="button"
+					class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100
+						dark:hover:bg-gray-700 rounded-lg transition-colors"
+					on:click={() => (deletingSensor = null)}
+					disabled={loading}
+				>
+					Cancel
+				</button>
+				<button
+					type="button"
+					class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg
+						transition-colors flex items-center gap-2"
+					disabled={loading}
+					on:click={handleDeleteSensor}
+				>
+					{#if loading}
+						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+					{:else}
+						<Icon icon="mdi:delete" class="w-5 h-5" />
+						Delete Sensor
+					{/if}
+				</button>
+			</div>
+		</div>
+	</Modal>
+{/if}

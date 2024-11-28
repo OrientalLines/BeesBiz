@@ -6,7 +6,8 @@
 	export let startDate: Date | null = null;
 	export let endDate: Date | null = null;
 	export let placeholder = 'Select date range';
-	export let onChange: (start: Date | null, end: Date | null) => void;
+	export let onChange = (start: Date | null, end: Date | null = null) => {};
+	export let singleDateMode = false;
 
 	let isOpen = false;
 	let inputRef: HTMLDivElement;
@@ -78,6 +79,13 @@
 	}
 
 	function handleDateClick(date: Date) {
+		if (singleDateMode) {
+			startDate = date;
+			endDate = date;
+			onChange(date);
+			return;
+		}
+
 		if (!selectingEnd && !startDate) {
 			startDate = date;
 			selectingEnd = true;

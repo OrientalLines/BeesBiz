@@ -87,7 +87,7 @@ func (s *Server) SetupRoutes() {
 	hive.Get("/", handlers.GetAllHives(s.db))
 	hive.Post("/", handlers.CreateHive(s.db))
 	hive.Put("/", handlers.UpdateHive(s.db))
-	hive.Delete("/:id", handlers.DeleteHive(s.db))
+	hive.Delete("/:id", handlers.DeleteHive(s.db, s.rmq))
 	hive.Get("/:apiaryID/hives", handlers.GetAllHivesByApiaryID(s.db))
 
 	// BeeCommunity routes
@@ -160,9 +160,9 @@ func (s *Server) SetupRoutes() {
 	sensor := api.Group("/sensor", roleMiddleware(types.Admin, types.Manager, types.Worker))
 
 	sensor.Get("/:id", handlers.GetSensor(s.db))
-	sensor.Post("/", handlers.CreateSensor(s.db))
+	sensor.Post("/", handlers.CreateSensor(s.db, s.rmq))
 	sensor.Put("/", handlers.UpdateSensor(s.db))
-	sensor.Delete("/:id", handlers.DeleteSensor(s.db))
+	sensor.Delete("/:id", handlers.DeleteSensor(s.db, s.rmq))
 	sensor.Get("/", handlers.GetAllSensors(s.db))
 
 	// SensorReading routes
