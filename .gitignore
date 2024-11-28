@@ -200,5 +200,4 @@ src/.DS_Store
 lab*.log
 
 *.pyc
-*.tgz
 config.env
