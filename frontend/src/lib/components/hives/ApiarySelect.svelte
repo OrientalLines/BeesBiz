@@ -243,7 +243,10 @@
 					type="text"
 					id="location"
 					bind:value={formData.location}
-					class="w-full px-4 py-2 rounded-lg border"
+					class="w-full px-4 py-2 rounded-lg border dark:border-gray-700
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                            transition-all duration-300"
 					required
 				/>
 			</div>
@@ -255,7 +258,10 @@
 					type="datetime-local"
 					id="establishment_date"
 					bind:value={formData.establishment_date}
-					class="w-full px-4 py-2 rounded-lg border"
+					class="w-full px-4 py-2 rounded-lg border dark:border-gray-700
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                            transition-all duration-300"
 					required
 				/>
 			</div>

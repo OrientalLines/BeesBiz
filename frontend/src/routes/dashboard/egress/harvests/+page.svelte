@@ -60,8 +60,8 @@
 			showModal = false;
 			editingHarvest = null;
 			toastStore.trigger({
-					message: '✨ Harvest saved successfully!',
-					background: 'variant-filled-success'
+				message: '✨ Harvest saved successfully!',
+				background: 'variant-filled-success'
 			});
 		} catch (e) {
 			console.error('Save error:', e);
@@ -118,80 +118,141 @@
 		editingHarvest = { ...harvest };
 		showModal = true;
 	}
+
+	// Add these helper functions
+	function getQualityColor(grade: string) {
+		const colors = {
+			'A': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+			'B': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+			'C': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+			'D': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+		};
+		return colors[grade] || 'bg-gray-100 text-gray-800';
+	}
 </script>
 
-<div class="container mx-auto p-4 space-y-6">
-	<div class="flex justify-between items-center">
-		<h1 class="text-2xl font-bold">Honey Harvests</h1>
+<div class="container mx-auto p-4 space-y-8">
+	<!-- Header Section -->
+	<div class="flex justify-between items-center mb-8">
+		<div>
+			<h1 class="text-3xl font-bold bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent">
+				Honey Harvests
+			</h1>
+			<p class="text-gray-600 dark:text-gray-400 mt-1">Track and manage your honey production</p>
+		</div>
 		<button
-			class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+			class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg
+				   hover:from-amber-600 hover:to-amber-700 transform hover:scale-105 transition-all duration-200
+				   flex items-center gap-2 shadow-lg"
 			on:click={() => {
 				editingHarvest = null;
 				showModal = true;
 			}}
 		>
+			<Icon icon="mdi:plus" class="w-5 h-5" />
 			New Harvest
 		</button>
 	</div>
 
-	<!-- Filters -->
-	<div class="flex gap-4 flex-wrap">
-		<input
-			type="text"
-			placeholder="Search by hive ID..."
-			bind:value={searchQuery}
-			class="px-4 py-2 rounded-lg border"
-		/>
-		<select bind:value={filterQuality} class="px-4 py-2 rounded-lg border">
-			<option value="all">All Qualities</option>
-			<option value="A">Grade A</option>
-			<option value="B">Grade B</option>
-			<option value="C">Grade C</option>
-			<option value="D">Grade D</option>
-		</select>
-		<select bind:value={sortBy} class="px-4 py-2 rounded-lg border">
-			<option value="harvest_date">Sort by Date</option>
-			<option value="quantity">Sort by Quantity</option>
-			<option value="quality_grade">Sort by Quality</option>
-		</select>
+	<!-- Filters Section -->
+	<div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md">
+		<div class="flex gap-4 flex-wrap">
+			<div class="flex-1 min-w-[200px]">
+				<div class="relative">
+					<Icon icon="mdi:magnify" class="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+					<input
+						type="text"
+						placeholder="Search by hive ID..."
+						bind:value={searchQuery}
+						class="w-full pl-10 pr-4 py-2.5 rounded-lg border dark:border-gray-700
+							   bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
+							   focus:ring-2 focus:ring-amber-500 focus:border-transparent
+							   transition-all duration-300"
+					/>
+				</div>
+			</div>
+			<select
+				bind:value={filterQuality}
+				class="px-4 py-2.5 rounded-lg border dark:border-gray-700
+					   bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
+					   focus:ring-2 focus:ring-amber-500 focus:border-transparent
+					   transition-all duration-300"
+			>
+				<option value="all">All Qualities</option>
+				<option value="A">Grade A</option>
+				<option value="B">Grade B</option>
+				<option value="C">Grade C</option>
+				<option value="D">Grade D</option>
+			</select>
+			<select
+				bind:value={sortBy}
+				class="px-4 py-2.5 rounded-lg border dark:border-gray-700
+					   bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
+					   focus:ring-2 focus:ring-amber-500 focus:border-transparent
+					   transition-all duration-300"
+			>
+				<option value="harvest_date">Sort by Date</option>
+				<option value="quantity">Sort by Quantity</option>
+				<option value="quality_grade">Sort by Quality</option>
+			</select>
+		</div>
 	</div>
 
-	<!-- Harvests List -->
+	<!-- Harvests Grid -->
 	{#if loading}
-		<div class="text-center py-8">Loading...</div>
+		<div class="flex justify-center items-center py-12">
+			<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
+		</div>
 	{:else if error}
-		<div class="text-center py-8 text-red-500">{error}</div>
+		<div class="text-center py-12 text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg">
+			<Icon icon="mdi:alert-circle" class="w-12 h-12 mx-auto mb-2" />
+			{error}
+		</div>
 	{:else if paginatedHarvests.length === 0}
-		<div class="text-center py-8">No harvests found</div>
+		<div class="text-center py-12 text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+			<Icon icon="mdi:beehive-outline" class="w-16 h-16 mx-auto mb-2 opacity-50" />
+			No harvests found
+		</div>
 	{:else}
-		<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 			{#each paginatedHarvests as harvest}
-				<div class="p-4 border rounded-lg">
-					<div class="flex justify-between items-start">
-						<div>
-							<div class="font-medium">Hive #{harvest.hive_id}</div>
-							<div class="text-sm text-gray-600">
-								{new Date(harvest.harvest_date || '').toLocaleDateString()}
+				<div class="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300
+							border border-gray-100 dark:border-gray-700 overflow-hidden">
+					<div class="p-5">
+						<div class="flex justify-between items-start mb-4">
+							<div>
+								<div class="text-lg font-semibold flex items-center gap-2">
+									<Icon icon="mdi:beehive" class="w-5 h-5 text-amber-500" />
+									Hive #{harvest.hive_id}
+								</div>
+								<div class="text-sm text-gray-500 dark:text-gray-400">
+									<Icon icon="mdi:calendar" class="w-4 h-4 inline mr-1" />
+									{new Date(harvest.harvest_date || '').toLocaleDateString()}
+								</div>
+							</div>
+							<div class="flex gap-2">
+								<button
+									class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+									on:click={() => handleEdit(harvest)}
+								>
+									<Icon icon="mdi:pencil" class="w-5 h-5 text-amber-600" />
+								</button>
+								<button
+									class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+									on:click={() => handleDelete(harvest.harvest_id)}
+								>
+									<Icon icon="mdi:delete" class="w-5 h-5 text-red-600" />
+								</button>
 							</div>
 						</div>
-						<div class="flex gap-2">
-							<button
-								class="text-amber-600 hover:text-amber-700"
-								on:click={() => handleEdit(harvest)}
-							>
-								Edit
-							</button>
-							<button
-								class="text-red-600 hover:text-red-700"
-								on:click={() => handleDelete(harvest.harvest_id)}
-							>
-								Delete
-							</button>
+						<div class="flex justify-between items-center">
+							<div class="text-2xl font-bold text-amber-600">
+								{harvest.quantity} kg
+							</div>
+							<span class={`px-3 py-1 rounded-full text-sm font-medium ${getQualityColor(harvest.quality_grade)}`}>
+								Grade {harvest.quality_grade}
+							</span>
 						</div>
-					</div>
-					<div class="mt-2">
-						<div class="text-lg font-semibold">{harvest.quantity} kg</div>
-						<div class="text-sm">Quality: Grade {harvest.quality_grade}</div>
 					</div>
 				</div>
 			{/each}
@@ -200,20 +261,29 @@
 
 	<!-- Pagination -->
 	{#if totalPages > 1}
-		<div class="flex justify-center gap-2 mt-4">
+		<div class="flex justify-center gap-3 mt-8">
 			<button
-				class="px-4 py-2 rounded-lg border disabled:opacity-50"
+				class="px-4 py-2 rounded-lg border dark:border-gray-700 disabled:opacity-50
+					   hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
+					   flex items-center gap-2"
 				disabled={currentPage === 1}
 				on:click={() => currentPage--}
 			>
+				<Icon icon="mdi:chevron-left" />
 				Previous
 			</button>
+			<div class="flex items-center px-4 font-medium">
+				Page {currentPage} of {totalPages}
+			</div>
 			<button
-				class="px-4 py-2 rounded-lg border disabled:opacity-50"
+				class="px-4 py-2 rounded-lg border dark:border-gray-700 disabled:opacity-50
+					   hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
+					   flex items-center gap-2"
 				disabled={currentPage === totalPages}
 				on:click={() => currentPage++}
 			>
 				Next
+				<Icon icon="mdi:chevron-right" />
 			</button>
 		</div>
 	{/if}

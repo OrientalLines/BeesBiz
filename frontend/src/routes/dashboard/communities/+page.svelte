@@ -155,7 +155,10 @@
 				<input
 					type="text"
 					placeholder="Search communities..."
-					class="w-full pl-10 pr-4 py-2 rounded-lg border"
+					class="w-full pl-10 pr-4 py-2 rounded-lg border dark:border-gray-700
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                            transition-all duration-300"
 					on:input={(e) => debouncedSearch(e.currentTarget.value)}
 				/>
 			</div>
@@ -255,10 +258,13 @@
 			<select
 				id="hive_id"
 				bind:value={formData.hive_id}
-				class="w-full px-4 py-2 rounded-lg border"
+				class="w-full px-4 py-2 rounded-lg border dark:border-gray-700
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                            transition-all duration-300"
 				required
 			>
-				<option value={0} disabled>Select a hive...</option>
+				<option value="" disabled selected>Select a hive...</option>
 				{#each hives.filter((h) => !communities.some((c) => c.hive_id === h.hive_id)) as hive}
 					<option value={hive.hive_id}>
 						{hive.hive_type} Hive #{hive.hive_id} - {hive.current_status}
@@ -275,7 +281,10 @@
 				bind:value={formData.queen_age}
 				min="0"
 				max="60"
-				class="w-full px-4 py-2 rounded-lg border"
+				class="w-full px-4 py-2 rounded-lg border dark:border-gray-700
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                            transition-all duration-300"
 				required
 			/>
 		</div>
@@ -290,7 +299,10 @@
 				bind:value={formData.population_estimate}
 				min="0"
 				step="100"
-				class="w-full px-4 py-2 rounded-lg border"
+				class="w-full px-4 py-2 rounded-lg border dark:border-gray-700
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                            transition-all duration-300"
 				required
 			/>
 		</div>
@@ -300,7 +312,10 @@
 			<select
 				id="health_status"
 				bind:value={formData.health_status}
-				class="w-full px-4 py-2 rounded-lg border"
+				class="w-full px-4 py-2 rounded-lg border dark:border-gray-700
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                            transition-all duration-300"
 				required
 			>
 				<option value="healthy">Healthy</option>

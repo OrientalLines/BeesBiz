@@ -152,12 +152,10 @@
 				<div class="bg-amber-50 dark:bg-amber-900/20 rounded-full p-4 mb-4">
 					<Icon icon="mdi:beehive-outline" class="w-12 h-12 text-amber-500" />
 				</div>
-				<h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-					No Hives Found
-				</h3>
+				<h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Hives Found</h3>
 				<p class="text-gray-600 dark:text-gray-400 text-center max-w-md mb-6">
 					{searchQuery
-						? "No hives match your search criteria. Try adjusting your search."
+						? 'No hives match your search criteria. Try adjusting your search.'
 						: "This apiary doesn't have any hives yet. Add your first hive to get started!"}
 				</p>
 				<button
@@ -246,7 +244,10 @@
 				<select
 					id="hive_type"
 					bind:value={formData.hive_type}
-					class="w-full px-4 py-2 rounded-lg border"
+					class="w-full px-4 py-2 rounded-lg border dark:border-gray-700
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                            transition-all duration-300"
 					required
 				>
 					<option value="Langstroth">Langstroth</option>
@@ -259,7 +260,10 @@
 				<select
 					id="current_status"
 					bind:value={formData.current_status}
-					class="w-full px-4 py-2 rounded-lg border"
+					class="w-full px-4 py-2 rounded-lg border dark:border-gray-700
+                            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                            focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                            transition-all duration-300"
 					required
 				>
 					<option value="active">Active</option>
