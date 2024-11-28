@@ -3,6 +3,7 @@ module github.com/orientallines/beesbiz
 go 1.23.2
 
 require (
+	github.com/ansrivas/fiberprometheus/v2 v2.7.0
 	github.com/bytedance/sonic v1.12.3
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/guregu/null v4.0.0+incompatible
@@ -14,7 +15,6 @@ require (
 )
 
 require (
-	github.com/ansrivas/fiberprometheus/v2 v2.7.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -30,7 +30,6 @@ require (
 	github.com/google/btree v1.1.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pingcap/errors v0.11.5-0.20211224045212-9687c2b0f87c // indirect
