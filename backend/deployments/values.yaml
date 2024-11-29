@@ -143,3 +143,5 @@ monitoring:
     adminPassword: "admin"
 # Replace pod name with your actual grafana pod name from 'kubectl get pods -n beesbiz-monitoring'
 #kubectl exec -it -n beesbiz-monitoring monitoring-grafana-7c7c4d899d-jpbzb -- grafana-cli admin reset-admin-password newpassword
+
+#kubectl exec -it -n beesbiz-monitoring $(kubectl get pods -n beesbiz-monitoring| grep grafana | awk '{print $1}') -- grafana-cli admin reset-admin-password newpassword

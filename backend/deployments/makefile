@@ -96,13 +96,17 @@ update-deps:
 	$(HELM) repo update
 	$(HELM) dependency update
 
-setup-monitoring: setup-rabbit-monitoring setup-postgresql-monitoring
+setup-monitoring: setup-rabbit-monitoring setup-postgresql-monitoring setup-grafana
 
 setup-rabbit-monitoring:
 	sh rabbitmq-monitoring-setup.sh
 
 setup-postgresql-monitoring:
 	sh postgresql-monitoring-setup.sh
+
+setup-grafana:
+	$(KUBECTL) exec -it -n $(MONITORING_NAMESPACE) $$($(KUBECTL) get pods -n $(MONITORING_NAMESPACE) | grep grafana | awk '{print $$1}') -- grafana cli admin reset-admin-password admin
+
 
 setup-servicemonitors:
 	@echo "Applying monitoring configurations..."
