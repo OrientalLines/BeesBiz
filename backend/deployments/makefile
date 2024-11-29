@@ -96,7 +96,13 @@ update-deps:
 	$(HELM) repo update
 	$(HELM) dependency update
 
-setup-monitoring: install-monitoring setup-servicemonitors
+setup-monitoring: setup-rabbit-monitoring setup-postgresql-monitoring
+
+setup-rabbit-monitoring:
+	sh rabbitmq-monitoring-setup.sh
+
+setup-postgresql-monitoring:
+	sh postgresql-monitoring-setup.sh
 
 setup-servicemonitors:
 	@echo "Applying monitoring configurations..."
