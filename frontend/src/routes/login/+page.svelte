@@ -45,13 +45,19 @@
 				return;
 			}
 
+			const registeredEmail = email;     // Store email before clearing
+			const registeredPassword = password; // Store password before clearing
+			
 			await register({ email, password, username, full_name });
 			// Switch to login tab after successful registration
 			activeTab = 'login';
 			error = '';
-			// Clear form
-			email = '';
-			password = '';
+			// Clear registration form fields
+			username = '';
+			full_name = '';
+			// Set the login form fields
+			email = registeredEmail;
+			password = registeredPassword;
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Registration failed';
 		}

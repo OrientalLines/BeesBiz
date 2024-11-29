@@ -50,6 +50,7 @@
 		"fuse.js": "^7.0.0",
 		"google-protobuf": "^3.21.4",
 		"grpc-web": "^1.5.0",
+		"jspdf": "^2.5.2",
 		"lodash-es": "^4.17.21",
 		"lucide-svelte": "^0.454.0",
 		"postgres": "^3.4.4"

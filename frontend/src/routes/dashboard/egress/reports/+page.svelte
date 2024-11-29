@@ -7,6 +7,7 @@
 	import ReportEditModal from '$lib/components/modals/ReportEditModal.svelte';
 	import ReportDetailsModal from '$lib/components/modals/ReportDetailsModal.svelte';
 	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { ReportPDFGenerator } from '$lib/pdf/reports';
 
 	let showAddModal = false;
 	let editingReport: ProductionReport | null = null;
@@ -43,12 +44,12 @@
 	];
 
 	// Add handler for date changes
-	function handleDateRangeChange(start: Date | null, end: Date | null) {
+	function handleDateRangeChange(start: Date | null, end?: Date | null) {
 		dateRange = {
 			start,
-			end
+			end: end ?? null
 		};
-		currentPage = 1; // Reset to first page when filter changes
+		currentPage = 1;
 	}
 
 	async function handleSaveReport(report: ProductionReport) {
@@ -107,6 +108,11 @@
 	$: totalHoneyProduction = filteredReports.reduce((sum, r) => sum + r.total_honey, 0);
 	$: totalExpenses = filteredReports.reduce((sum, r) => sum + r.total_expenses, 0);
 	$: averageProduction = totalHoneyProduction / filteredReports.length || 0;
+
+	async function generatePDF(report: ProductionReport) {
+		const pdfGenerator = new ReportPDFGenerator();
+		pdfGenerator.generate(report);
+	}
 </script>
 
 <div class="max-w mx-auto" in:fade>
@@ -243,7 +249,12 @@
 								>
 									View Details
 								</button>
-								<button class="text-amber-600 hover:text-amber-700"> Download PDF </button>
+								<button 
+									class="text-amber-600 hover:text-amber-700"
+									on:click={() => generatePDF(report)}
+								> 
+									Download PDF 
+								</button>
 							</td>
 						</tr>
 					{/each}

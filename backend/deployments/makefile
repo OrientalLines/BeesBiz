@@ -96,6 +96,14 @@ update-deps:
 	$(HELM) repo update
 	$(HELM) dependency update
 
+setup-users: setup-rabbitmq-user setup-postgresql-user
+
+setup-postgresql-user:
+	$(KUBECTL) exec -it -n $(CLOUDNATIVEPG_NAMESPACE) $$($(KUBECTL) get pods -n $(CLOUDNATIVEPG_NAMESPACE) | grep postgresql | awk '{print $$1}') -- psql -U postgres -c "DO \$$\$$ BEGIN IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'user') THEN CREATE USER \"user\" WITH PASSWORD 'postgres'; GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"user\"; ALTER USER \"user\" CREATEDB; GRANT ALL PRIVILEGES ON DATABASE postgres TO \"user\"; END IF; END \$$\$$;"
+
+setup-rabbitmq-user:
+	$(KUBECTL) exec -it -n $(RABBITMQ_NAMESPACE) $$($(KUBECTL) get pods -n $(RABBITMQ_NAMESPACE) | grep rabbitmq-cluster | awk '{print $$1}') -- /bin/bash -c "rabbitmqctl delete_user guest || true && rabbitmqctl add_user guest guest && rabbitmqctl set_user_tags guest administrator && rabbitmqctl set_permissions -p / guest '.*' '.*' '.*'"
+
 setup-monitoring: setup-rabbit-monitoring setup-postgresql-monitoring setup-grafana
 
 setup-rabbit-monitoring:
@@ -106,7 +114,6 @@ setup-postgresql-monitoring:
 
 setup-grafana:
 	$(KUBECTL) exec -it -n $(MONITORING_NAMESPACE) $$($(KUBECTL) get pods -n $(MONITORING_NAMESPACE) | grep grafana | awk '{print $$1}') -- grafana cli admin reset-admin-password admin
-
 
 setup-servicemonitors:
 	@echo "Applying monitoring configurations..."
