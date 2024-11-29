@@ -73,21 +73,26 @@
 					<!-- Theme Toggle -->
 					<div
 						class="flex items-center justify-between group/item p-4 rounded-lg
-                        hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                         dark:hover:bg-gray-700/50 transition-colors"
 					>
-						<div>
-							<h3 class="font-medium text-gray-900 dark:text-white flex items-center gap-2">
-								Theme
-								<span
-									class="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700
-                                    text-gray-600 dark:text-gray-400"
-								>
-									{$theme === 'dark' ? 'Dark' : 'Light'}
-								</span>
-							</h3>
-							<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-								Choose your preferred visual theme
-							</p>
+						<div class="flex items-start gap-3">
+							<div class="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+								<Icon icon="mdi:theme-light-dark" class="w-5 h-5 text-amber-500" />
+							</div>
+							<div>
+								<h3 class="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+									Theme
+									<span
+										class="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700
+                                        text-gray-600 dark:text-gray-400"
+									>
+										{$theme === 'dark' ? 'Dark' : 'Light'}
+									</span>
+								</h3>
+								<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+									Choose your preferred visual theme
+								</p>
+							</div>
 						</div>
 						<button
 							class="p-3 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-amber-100
@@ -103,21 +108,25 @@
 
 					<!-- Language Selector -->
 					<div
-						class="flex items-center justify-between group/item p-4 rounded-lg
-                        hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+						class="flex items-center justify-between group/item p-4 rounded-lg dark:hover:bg-gray-700/50 transition-colors"
 					>
-						<div>
-							<h3 class="font-medium text-gray-900 dark:text-white">Language</h3>
-							<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-								Select your preferred language
-							</p>
+						<div class="flex items-start gap-3">
+							<div class="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+								<Icon icon="mdi:translate" class="w-5 h-5 text-amber-500" />
+							</div>
+							<div>
+								<h3 class="font-medium text-gray-900 dark:text-white">Language</h3>
+								<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+									Select your preferred language
+								</p>
+							</div>
 						</div>
 						<select
 							bind:value={language}
 							class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
                                 bg-white dark:bg-gray-800 text-gray-900 dark:text-white
                                 focus:ring-2 focus:ring-amber-500 focus:border-transparent
-                                appearance-none cursor-pointer group-hover/item:scale-105 transition-transform"
+                                appearance-none cursor-pointer"
 						>
 							{#each languages as lang}
 								<option value={lang.code}>{lang.flag} {lang.name}</option>
@@ -150,7 +159,7 @@
 						{#each [{ title: 'Push Notifications', description: 'Receive instant alerts about important events', icon: 'mdi:bell-ring', bind: notificationsEnabled }, { title: 'Email Notifications', description: 'Get updates delivered to your inbox', icon: 'mdi:email', bind: emailNotifications }] as setting}
 							<div
 								class="flex items-center justify-between group/item p-4 rounded-lg
-                                hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                                dark:hover:bg-gray-700/50 transition-colors"
 							>
 								<div class="flex items-start gap-3">
 									<div class="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">

@@ -112,8 +112,8 @@
 		<div class="text-red-500 text-center p-4">{error}</div>
 	{:else}
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-			{#each regions as region}
-				<div class="group relative">
+				{#each regions as region}
+					<div class="group relative">
 					<button
 						class="w-full flex flex-col p-5 bg-white dark:bg-gray-800
                         rounded-xl transition-all duration-300 hover:ring-2 hover:ring-amber-500

@@ -17,8 +17,10 @@
 	import UserDeleteModal from '$lib/components/modals/UserDeleteModal.svelte';
 	import RegionEditModal from '$lib/components/modals/RegionEditModal.svelte';
 	import UserAddModal from '$lib/components/modals/UserAddModal.svelte';
+	import { Toast } from '@skeletonlabs/skeleton';
 
 	const toastStore = getToastStore();
+
 	let users: User[] = [];
 	let loading = true;
 	let searchQuery = '';
@@ -41,7 +43,8 @@
 		} catch (error) {
 			toastStore.trigger({
 				message: '❌ Failed to load users',
-				background: 'variant-filled-error'
+				background: 'bg-amber-500 rounded-lg',
+				classes: 'text-white font-medium '
 			});
 		} finally {
 			loading = false;
@@ -51,10 +54,21 @@
 	async function loadRegions() {
 		try {
 			regions = await getRegions();
+			console.log('Loaded regions:', regions);
+			if (!regions || regions.length === 0) {
+				console.log('Triggering toast for no regions');
+				toastStore.trigger({
+					message: '⚠️ No regions available',
+					background: 'bg-amber-500 rounded-lg',
+					classes: 'text-white font-medium '
+				});
+			}
 		} catch (error) {
+			console.error('Error loading regions:', error);
 			toastStore.trigger({
 				message: '❌ Failed to load regions',
-				background: 'variant-filled-error'
+				background: 'bg-amber-500 rounded-lg',
+				classes: 'text-white font-medium '
 			});
 		}
 	}
@@ -65,12 +79,14 @@
 			await loadUsers();
 			toastStore.trigger({
 				message: '✨ User deleted successfully',
-				background: 'variant-filled-success'
+				background: 'bg-amber-500 rounded-lg',
+				classes: 'text-white font-medium '
 			});
 		} catch (error) {
 			toastStore.trigger({
 				message: '❌ Failed to delete user',
-				background: 'variant-filled-error'
+				background: 'bg-amber-500 rounded-lg',
+				classes: 'text-white font-medium '
 			});
 		}
 	}
@@ -202,7 +218,7 @@
 						<th
 							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
 						>
-							Role
+							settingsRole
 						</th>
 						<th
 							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
@@ -245,19 +261,19 @@
 									class="text-amber-600 hover:text-amber-900 dark:hover:text-amber-400 mr-3"
 									on:click={() => handleEdit(user)}
 								>
-									Edit
+									<Icon icon="mdi:pencil" class="w-5 h-5" />
 								</button>
 								<button
 									class="text-amber-600 hover:text-amber-900 dark:hover:text-amber-400 mr-3"
 									on:click={() => handleRegionEdit(user)}
 								>
-									Regions
+									<Icon icon="mdi:map-marker" class="w-5 h-5" />
 								</button>
 								<button
 									class="text-red-600 hover:text-red-900 dark:hover:text-red-400"
 									on:click={() => handleDelete(user)}
 								>
-									Delete
+									<Icon icon="mdi:delete" class="w-5 h-5" />
 								</button>
 							</td>
 						</tr>
@@ -305,3 +321,5 @@
 	onClose={() => (addModalOpen = false)}
 	onSave={handleCreateUser}
 />
+
+<Toast position="br" />

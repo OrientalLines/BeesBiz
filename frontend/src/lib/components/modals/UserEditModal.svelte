@@ -1,10 +1,9 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
 	import type { User } from '$lib/types';
-	import type { Role } from '$lib/services/api';
 	import { fade, fly } from 'svelte/transition';
-	import { Avatar } from '@skeletonlabs/skeleton';
 	import { Toast, getToastStore } from '@skeletonlabs/skeleton';
+	import Icon from '@iconify/svelte';
 
 	export let isOpen = false;
 	export let user: User | null = null;
@@ -50,26 +49,83 @@
 </script>
 
 <Modal {isOpen} title="Edit User Profile" {onClose}>
-	<div in:fly={{ y: 50, duration: 400 }} out:fade>
-		<form class="space-y-6" on:submit|preventDefault={handleSubmit}>
-			<!-- Form Fields with Modern Styling -->
+	<div in:fly={{ y: 50, duration: 400 }} out:fade class="p-4">
+		<form on:submit|preventDefault={handleSubmit} class="space-y-6">
+			<!-- Form Fields -->
 			<div class="space-y-4">
-				<div class="relative">
-					<input type="text" bind:value={formData.username} placeholder="Username" class="input" />
+				<!-- Username -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<div
+							class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center"
+						>
+							<Icon icon="mdi:account" class="w-5 h-5 text-amber-500" />
+						</div>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+					</div>
+					<input
+						type="text"
+						bind:value={formData.username}
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-amber-200/70
+                        dark:border-amber-800/30 rounded-lg focus:ring-2 focus:ring-amber-500/50
+                        focus:border-amber-500 transition-colors"
+					/>
 				</div>
-				<div class="relative">
+
+				<!-- Full Name -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<div
+							class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center"
+						>
+							<Icon icon="mdi:card-account-details" class="w-5 h-5 text-amber-500" />
+						</div>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+					</div>
 					<input
 						type="text"
 						bind:value={formData.full_name}
-						placeholder="Full Name"
-						class="input"
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-amber-200/70
+                        dark:border-amber-800/30 rounded-lg focus:ring-2 focus:ring-amber-500/50
+                        focus:border-amber-500 transition-colors"
 					/>
 				</div>
-				<div class="relative">
-					<input type="email" bind:value={formData.email} placeholder="Email" class="input" />
+
+				<!-- Email -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<div
+							class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center"
+						>
+							<Icon icon="mdi:email" class="w-5 h-5 text-amber-500" />
+						</div>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+					</div>
+					<input
+						type="email"
+						bind:value={formData.email}
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-amber-200/70
+                        dark:border-amber-800/30 rounded-lg focus:ring-2 focus:ring-amber-500/50
+                        focus:border-amber-500 transition-colors"
+					/>
 				</div>
-				<div class="relative">
-					<select bind:value={formData.role} class="select">
+
+				<!-- Role -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<div
+							class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center"
+						>
+							<Icon icon="mdi:shield-account" class="w-5 h-5 text-amber-500" />
+						</div>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+					</div>
+					<select
+						bind:value={formData.role}
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-amber-200/70
+                        dark:border-amber-800/30 rounded-lg focus:ring-2 focus:ring-amber-500/50
+                        focus:border-amber-500 transition-colors appearance-none cursor-pointer"
+					>
 						<option value="ADMIN">Admin</option>
 						<option value="MANAGER">Manager</option>
 						<option value="WORKER">Worker</option>
@@ -78,45 +134,32 @@
 			</div>
 
 			<!-- Action Buttons -->
-			<div class="flex justify-end gap-3 mt-8" in:fly={{ y: 20, duration: 300, delay: 600 }}>
+			<div class="flex justify-center gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
 				<button
 					type="button"
-					class="px-6 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700
-                        rounded-lg transition-all duration-300 transform hover:scale-105"
+					class="w-full px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300
+                    bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50
+                    rounded-lg transition-colors border border-gray-200 dark:border-gray-700
+                    min-w-[100px]"
 					on:click={onClose}
 				>
 					Cancel
 				</button>
 				<button
 					type="submit"
-					class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg
-                        hover:from-amber-600 hover:to-amber-700 transition-all duration-300 transform hover:scale-105
-                        disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+					class="w-full px-6 py-3 text-sm font-medium text-white bg-gradient-to-r
+                    from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600
+                    rounded-lg transition-colors flex items-center justify-center gap-2
+                    shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed
+                    min-w-[100px]"
 					disabled={isLoading}
 				>
 					{#if isLoading}
-						<svg class="animate-spin h-4 w-4" viewBox="0 0 24 24">
-							<circle
-								class="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								stroke-width="4"
-								fill="none"
-							/>
-							<path
-								class="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							/>
-						</svg>
+						<Icon icon="mdi:loading" class="w-4 h-4 animate-spin" />
 					{/if}
-					{isLoading ? 'Saving...' : 'Save Changes'}
+					<span>{isLoading ? 'Saving...' : 'Save Changes'}</span>
 				</button>
 			</div>
 		</form>
 	</div>
-
-	<Toast position="tr" />
 </Modal>

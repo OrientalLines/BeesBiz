@@ -109,7 +109,7 @@ func (s *Server) SetupRoutes() {
 	honeyHarvest.Get("/", handlers.GetAllHoneyHarvests(s.db))
 
 	// Region routes
-	region := api.Group("/region", roleMiddleware(types.Manager, types.Admin))
+	region := api.Group("/region", roleMiddleware(types.Worker, types.Manager, types.Admin))
 
 	region.Get("/:id", handlers.GetRegion(s.db))
 	region.Post("/", handlers.CreateRegion(s.db))
