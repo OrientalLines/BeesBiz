@@ -65,7 +65,7 @@
 			<div class="space-y-4">
 				<div class="text-center space-y-3" in:fly={{ y: 20, duration: 300, delay: 100 }}>
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-						Edit Access for {user?.full_name}
+						Edit Access for {user?.full_name || user?.email}
 					</h3>
 					<p class="text-gray-600 dark:text-gray-400">
 						Select the regions this user should have access to

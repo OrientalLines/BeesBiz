@@ -10,9 +10,7 @@
 	import { page } from '$app/stores';
 	import { navigating } from '$app/stores';
 	import { initializeStores } from '@skeletonlabs/skeleton';
-	import { requireAuth } from '$lib/guards/auth';
 	import { goto } from '$app/navigation';
-	import EventEmitter from 'events';
 	import process from 'process';
 
 	const getTitleFromPath = (path: string) => {
@@ -55,13 +53,7 @@
 	onMount(() => {
 		if (browser) {
 			auth.initialize();
-			const savedTheme = localStorage.getItem('theme');
-			if (savedTheme) {
-				theme.set(savedTheme as 'light' | 'dark');
-			} else {
-				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				theme.set(prefersDark ? 'dark' : 'light');
-			}
+			theme.initialize();
 			// Check for stored token
 			const storedAuth = localStorage.getItem('auth');
 			if (storedAuth) {

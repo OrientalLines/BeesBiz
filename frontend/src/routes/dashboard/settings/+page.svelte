@@ -37,9 +37,6 @@
 	<!-- Header -->
 	<div class="relative">
 		<div
-			class="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-xl blur-3xl"
-		/>
-		<div
 			class="relative bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl rounded-xl p-8 border border-gray-200/30 dark:border-gray-700/30 shadow-xl"
 		>
 			<h1 class="text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -58,10 +55,6 @@
 			class="group bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700
             shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
 		>
-			<div
-				class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5
-                opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-			/>
 			<div class="relative">
 				<h2
 					class="text-xl font-semibold mb-6 flex items-center gap-2 text-gray-900 dark:text-white"
@@ -123,7 +116,7 @@
 						</div>
 						<select
 							bind:value={language}
-							class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
+							class="px-6 py-2 rounded-lg border border-gray-200 dark:border-gray-700
                                 bg-white dark:bg-gray-800 text-gray-900 dark:text-white
                                 focus:ring-2 focus:ring-amber-500 focus:border-transparent
                                 appearance-none cursor-pointer"
@@ -142,10 +135,6 @@
 			class="group bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700
             shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
 		>
-			<div
-				class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5
-                opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-			/>
 			<div class="relative">
 				<h2
 					class="text-xl font-semibold mb-6 flex items-center gap-2 text-gray-900 dark:text-white"
@@ -180,8 +169,7 @@
                                         dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white
                                         after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white
                                         after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6
-                                        after:transition-all dark:border-gray-600 peer-checked:bg-amber-500
-                                        group-hover/item:scale-105 transition-transform"
+                                        after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"
 									></div>
 								</label>
 							</div>
@@ -198,13 +186,10 @@
 				on:click={saveSettings}
 				class="relative bg-gradient-to-r from-amber-500 to-orange-500 text-white px-8 py-3 rounded-xl
                     hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl
-                    flex items-center gap-3 group hover:-translate-y-0.5"
+                    flex items-center gap-3"
 			>
 				<Icon icon="mdi:content-save" class="w-5 h-5" />
 				<span>Save Changes</span>
-				<div
-					class="absolute inset-0 rounded-xl loading-gradient opacity-0 transition-opacity duration-300"
-				/>
 			</button>
 		</div>
 	</div>

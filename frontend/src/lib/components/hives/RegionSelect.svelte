@@ -7,6 +7,7 @@
 	import type { Region } from '$lib/types';
 	import RegionEditModal from '../modals/RegionEditModal.svelte';
 	import RegionDeleteModal from '../modals/RegionDeleteModal.svelte';
+	import RegionAddModal from '../modals/RegionAddModal.svelte';
 
 	export let onSelect: (region: Region) => void;
 	const toastStore = getToastStore();
@@ -174,7 +175,7 @@
 	{/if}
 
 	{#if showAddModal}
-		<RegionEditModal
+		<RegionAddModal
 			isOpen={true}
 			region={null}
 			onClose={() => (showAddModal = false)}

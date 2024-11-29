@@ -3,11 +3,11 @@
 
 	let hives: Hive[] = [
 		{
-			hiveId: 1,
-			apiaryId: 1,
-			hiveType: 'Langstroth',
-			inspectionDate: new Date('2024-03-15'),
-			currentStatus: 'active'
+			hive_id: 1,
+			apiary_id: 1,
+			hive_type: 'Langstroth',
+			installation_date: new Date('2024-03-15'),
+			current_status: 'active'
 		}
 		// Add more mock data
 	];
@@ -56,27 +56,27 @@
 			<tbody class="bg-white divide-y divide-gray-200">
 				{#each hives as hive}
 					<tr>
-						<td class="px-6 py-4 whitespace-nowrap">{hive.hiveType}</td>
-						<td class="px-6 py-4 whitespace-nowrap">{hive.apiaryId}</td>
+						<td class="px-6 py-4 whitespace-nowrap">{hive.hive_type}</td>
+						<td class="px-6 py-4 whitespace-nowrap">{hive.apiary_id}</td>
 						<td class="px-6 py-4 whitespace-nowrap">
 							<span
 								class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                {hive.currentStatus === 'active'
+                                {hive.current_status === 'active'
 									? 'bg-green-100 text-green-800'
-									: hive.currentStatus === 'inactive'
+									: hive.current_status === 'inactive'
 										? 'bg-red-100 text-red-800'
 										: 'bg-yellow-100 text-yellow-800'}"
 							>
-								{hive.currentStatus}
+								{hive.current_status}
 							</span>
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap">
-							{new Date(hive.inspectionDate).toLocaleDateString()}
+							{new Date(hive.installation_date).toLocaleDateString()}
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap">
 							<button
 								class="text-blue-600 hover:text-blue-900"
-								on:click={() => updateHive(hive.hiveId.toString())}
+								on:click={() => updateHive(hive.hive_id.toString())}
 							>
 								Edit
 							</button>

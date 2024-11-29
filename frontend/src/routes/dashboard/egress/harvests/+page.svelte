@@ -10,7 +10,7 @@
 		updateHoneyHarvest,
 		createHoneyHarvest
 	} from '$lib/services/api';
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { getToastStore, Toast } from '@skeletonlabs/skeleton';
 	import HarvestEditModal from '$lib/components/modals/HarvestEditModal.svelte';
 
 	const toastStore = getToastStore();
@@ -132,6 +132,7 @@
 	}
 </script>
 
+<Toast position="br" />
 <div class="container mx-auto p-4 space-y-8">
 	<!-- Header Section -->
 	<div class="flex justify-between items-center mb-8">
@@ -159,8 +160,8 @@
 
 	<!-- Filters Section -->
 	<div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-md">
-		<div class="flex gap-4 flex-wrap">
-			<div class="flex-1 min-w-[200px]">
+		<div class="flex flex-row space-x-4">
+			<div class="w-full w-3/5">
 				<div class="relative">
 					<Icon icon="mdi:magnify" class="absolute left-3 top-3 text-gray-400 w-5 h-5" />
 					<input
@@ -176,7 +177,7 @@
 			</div>
 			<select
 				bind:value={filterQuality}
-				class="px-4 py-2.5 rounded-lg border dark:border-gray-700
+				class="w-1/5 px-4 py-2.5 rounded-lg border dark:border-gray-700
 					   bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
 					   focus:ring-2 focus:ring-amber-500 focus:border-transparent
 					   transition-all duration-300"
@@ -189,7 +190,7 @@
 			</select>
 			<select
 				bind:value={sortBy}
-				class="px-4 py-2.5 rounded-lg border dark:border-gray-700
+				class="w-1/5 px-4 py-2.5 rounded-lg border dark:border-gray-700
 					   bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white
 					   focus:ring-2 focus:ring-amber-500 focus:border-transparent
 					   transition-all duration-300"
