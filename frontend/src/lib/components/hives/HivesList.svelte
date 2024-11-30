@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getHivesByApiaryId, createHive, deleteHive } from '$lib/services/api';
+	import { getHivesByApiaryId, createHive, deleteHive, assignManager } from '$lib/services/api';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import Icon from '@iconify/svelte';
 	import { fade } from 'svelte/transition';
@@ -39,6 +39,9 @@
 	let hives: Hive[] = [];
 
 	let deletingHive: Hive | null = null;
+	let showAssignManagerModal = false;
+	let selectedHiveForManager: Hive | null = null;
+	let managerEmail = '';
 
 	onMount(async () => {
 		await loadHives();
@@ -177,6 +180,18 @@
 					hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
 					hover:border-amber-400 overflow-hidden"
 				>
+					<button
+						class="absolute top-2 right-10 p-2 text-gray-400 hover:text-amber-500
+							opacity-0 group-hover:opacity-100 transition-all duration-300"
+						on:click|stopPropagation={(e) => {
+							e.stopPropagation();
+							selectedHiveForManager = hive;
+							showAssignManagerModal = true;
+						}}
+					>
+						<Icon icon="mdi:account-plus" class="w-5 h-5" />
+					</button>
+
 					<button
 						class="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-500
 							opacity-0 group-hover:opacity-100 transition-all duration-300"
@@ -371,4 +386,75 @@
 			</div>
 		</Modal>
 	{/if}
+
+	<Modal
+		isOpen={showAssignManagerModal}
+		title="Assign Manager"
+		onClose={() => {
+			showAssignManagerModal = false;
+			selectedHiveForManager = null;
+			managerEmail = '';
+		}}
+	>
+		<div class="space-y-4">
+			<div>
+				<label for="manager_email" class="block text-sm font-medium mb-1">Manager Email</label>
+				<input
+					type="email"
+					id="manager_email"
+					bind:value={managerEmail}
+					class="w-full px-4 py-2 rounded-lg border dark:border-gray-700
+						bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+						focus:ring-2 focus:ring-amber-500 focus:border-transparent
+						transition-all duration-300"
+					placeholder="Enter manager's email"
+					required
+				/>
+			</div>
+
+			<div class="flex justify-end gap-3">
+				<button
+					type="button"
+					class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100
+						dark:hover:bg-gray-700 rounded-lg transition-colors"
+					on:click={() => {
+						showAssignManagerModal = false;
+						selectedHiveForManager = null;
+						managerEmail = '';
+					}}
+				>
+					Cancel
+				</button>
+				<button
+					type="button"
+					class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg
+						transition-colors flex items-center gap-2"
+					on:click={async () => {
+						if (selectedHiveForManager && managerEmail) {
+							try {
+								await assignManager(selectedHiveForManager.hive_id, managerEmail);
+								await loadHives();
+								toastStore.trigger({
+									message: '✨ Manager assigned successfully!',
+									background: 'variant-filled-success'
+								});
+							} catch (e) {
+								toastStore.trigger({
+									message: '❌ Failed to assign manager',
+									background: 'variant-filled-error'
+								});
+							} finally {
+								showAssignManagerModal = false;
+								selectedHiveForManager = null;
+								managerEmail = '';
+							}
+						}
+					}}
+				>
+					<Icon icon="mdi:account-check" class="w-5 h-5" />
+					Assign Manager
+				</button>
+			</div>
+		</div>
+	</Modal>
 </div>

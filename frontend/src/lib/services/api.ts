@@ -700,3 +700,8 @@ export async function updateMaintenanceTaskStatus(taskId: string, status: string
 	});
 	handleResponse(response);
 }
+
+
+export async function assignManager(hiveId: number, email: string): Promise<void> {
+	return Promise.resolve();
+}

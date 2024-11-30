@@ -12,7 +12,7 @@
 	export let onSelect: (region: Region) => void;
 	const toastStore = getToastStore();
 
-	let regions: Region[] = [];
+	let regions: Region[] | null = null;
 	let loading = true;
 	let error = '';
 	let showAddModal = false;
@@ -111,10 +111,23 @@
 		</div>
 	{:else if error}
 		<div class="text-red-500 text-center p-4">{error}</div>
+	{:else if !regions || regions.length === 0}
+		<div class="text-center p-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+			<Icon icon="mdi:map-marker-off" class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+			<h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No Regions Yet</h3>
+			<p class="text-gray-500 dark:text-gray-400 mb-4">Start by adding your first region to manage your apiaries</p>
+			<button
+				class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2 mx-auto"
+				on:click={() => (showAddModal = true)}
+			>
+				<Icon icon="mdi:plus" class="w-5 h-5" />
+				Add First Region
+			</button>
+		</div>
 	{:else}
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-				{#each regions as region}
-					<div class="group relative">
+			{#each regions as region}
+				<div class="group relative">
 					<button
 						class="w-full flex flex-col p-5 bg-white dark:bg-gray-800
                         rounded-xl transition-all duration-300 hover:ring-2 hover:ring-amber-500
@@ -194,7 +207,7 @@
 
 	<RegionDeleteModal
 		isOpen={!!deletingRegion}
-		region={deletingRegion}
+		region={deletingRegion || null}
 		onClose={() => (deletingRegion = null)}
 		onConfirm={handleDelete}
 	/>

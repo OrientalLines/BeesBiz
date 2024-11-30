@@ -146,8 +146,8 @@
 		</div>
 
 		<!-- Search and Filter -->
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-			<div class="relative">
+		<div class="flex gap-4">
+			<div class="relative w-3/4">
 				<Icon
 					icon="mdi:magnify"
 					class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -162,10 +162,10 @@
 					on:input={(e) => debouncedSearch(e.currentTarget.value)}
 				/>
 			</div>
-			<div class="flex justify-end">
+			<div class="w-1/4">
 				<select
 					bind:value={selectedHealthStatus}
-					class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
+					class="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
                         bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
 				>
 					<option value="all">All Statuses</option>

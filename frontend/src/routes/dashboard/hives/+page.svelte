@@ -6,27 +6,27 @@
 	import SensorsDashboard from '$lib/components/iot/SensorsDashboard.svelte';
 	import type { Region, Apiary, Hive, Sensor } from '$lib/types';
 
-	let selectedRegion: Region | null = null;
-	let selectedApiary: Apiary | null = null;
-	let selectedHive: Hive | null = null;
-	let selectedSensor: Sensor | null = null;
+	let selectedRegion: Region | undefined = undefined;
+	let selectedApiary: Apiary | undefined = undefined;
+	let selectedHive: Hive | undefined = undefined;
+	let selectedSensor: Sensor | undefined = undefined;
 
 	function handleRegionSelect(region: Region) {
 		selectedRegion = region;
-		selectedApiary = null;
-		selectedHive = null;
-		selectedSensor = null;
+		selectedApiary = undefined;
+		selectedHive = undefined;
+		selectedSensor = undefined;
 	}
 
 	function handleApiarySelect(apiary: Apiary) {
 		selectedApiary = apiary;
-		selectedHive = null;
-		selectedSensor = null;
+		selectedHive = undefined;
+		selectedSensor = undefined;
 	}
 
 	function handleHiveSelect(hive: Hive) {
 		selectedHive = hive;
-		selectedSensor = null;
+		selectedSensor = undefined;
 	}
 
 	async function handleSensorSelect(sensor: Sensor) {
@@ -35,16 +35,15 @@
 
 	function handleBack() {
 		if (selectedSensor) {
-			selectedSensor = null;
+			selectedSensor = undefined;
 		} else if (selectedHive) {
-			selectedHive = null;
+			selectedHive = undefined;
 		} else if (selectedApiary) {
-			selectedApiary = null;
+			selectedApiary = undefined;
 		} else if (selectedRegion) {
-			selectedRegion = null;
+			selectedRegion = undefined;
 		}
 	}
-
 </script>
 
 <div class="space-y-6">
