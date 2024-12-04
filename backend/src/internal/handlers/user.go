@@ -155,3 +155,88 @@ func ModifyUserAllowedRegions(db *database.DB) fiber.Handler {
 		return c.JSON(regions)
 	}
 }
+
+// GetWorkerGroup retrieves a worker group by its ID.
+func GetWorkerGroup(db *database.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		id, err := c.ParamsInt("id")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": fmt.Sprintf("Invalid worker group ID: %v", err)})
+		}
+		group, err := db.GetWorkerGroup(id)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to get worker group: %v", err)})
+		}
+		return c.JSON(group)
+	}
+}
+
+// CreateWorkerGroup creates a new worker group.
+func CreateWorkerGroup(db *database.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var group types.WorkerGroup
+		if err := c.BodyParser(&group); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": fmt.Sprintf("Invalid worker group data: %v", err)})
+		}
+		createdGroup, err := db.CreateWorkerGroup(group)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to create worker group: %v", err)})
+		}
+		return c.JSON(createdGroup)
+	}
+}
+
+// UpdateWorkerGroup updates an existing worker group.
+func UpdateWorkerGroup(db *database.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		var group types.WorkerGroup
+		if err := c.BodyParser(&group); err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": fmt.Sprintf("Invalid worker group data: %v", err)})
+		}
+		updatedGroup, err := db.UpdateWorkerGroup(group)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to update worker group: %v", err)})
+		}
+		return c.JSON(updatedGroup)
+	}
+}
+
+// DeleteWorkerGroup deletes a worker group by its ID.
+func DeleteWorkerGroup(db *database.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		id, err := c.ParamsInt("id")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": fmt.Sprintf("Invalid worker group ID: %v", err)})
+		}
+		if err := db.DeleteWorkerGroup(id); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to delete worker group: %v", err)})
+		}
+		return c.SendStatus(fiber.StatusNoContent)
+	}
+}
+
+// GetAllWorkerGroups retrieves all worker groups.
+func GetAllWorkerGroups(db *database.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		groups, err := db.GetAllWorkerGroups()
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to get all worker groups: %v", err)})
+		}
+		return c.JSON(groups)
+	}
+}
+
+// GetWorkerGroupsByManager retrieves all worker groups managed by a specific manager.
+func GetWorkerGroupsByManager(db *database.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		managerID, err := c.ParamsInt("manager_id")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": fmt.Sprintf("Invalid manager ID: %v", err)})
+		}
+		groups, err := db.GetWorkerGroupsByManager(managerID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to get worker groups by manager: %v", err)})
+		}
+		return c.JSON(groups)
+	}
+}
