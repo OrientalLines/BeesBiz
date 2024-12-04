@@ -128,6 +128,7 @@ CREATE TABLE IF NOT EXISTS "production_report" (
 	"end_date" DATE,
 	"total_honey_produced" FLOAT,
 	"total_expenses" FLOAT,
+	"curated_by" INTEGER,
 	PRIMARY KEY("report_id"),
 	UNIQUE("apiary_id", "start_date", "end_date")
 );
@@ -241,6 +242,11 @@ ALTER TABLE
 	"production_report"
 ADD
 	FOREIGN KEY("apiary_id") REFERENCES "apiary"("apiary_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"production_report"
+ADD
+	FOREIGN KEY("curated_by") REFERENCES "user"("user_id") ON UPDATE NO ACTION ON DELETE CASCADE;
 
 ALTER TABLE
 	"weather_data"
