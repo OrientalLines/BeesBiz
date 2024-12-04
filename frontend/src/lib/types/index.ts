@@ -20,7 +20,7 @@ export interface User {
 	full_name: string;
 	role: Role;
 	email: string;
-	last_login: Time;
+	last_login?: Time;
 }
 
 export interface Region {

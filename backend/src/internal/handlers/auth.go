@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/guregu/null"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/orientallines/beesbiz/internal/database"
@@ -54,11 +55,19 @@ func Login(db *database.DB, jwtKey []byte) fiber.Handler {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid login or password"})
 		}
 
+		// Update last login time
+		now := time.Now()
+		user.LastLogin = null.TimeFrom(now)
+		if _, err := db.UpdateUser(user); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not update last login time"})
+		}
+
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"user_id": user.UserID,
 			"role":    user.Role,
 			"email":   user.Email,
 			"name":    user.FullName,
+			"username": user.Username,
 			"exp":     time.Now().Add(time.Hour * 24).Unix(),
 		})
 
@@ -70,10 +79,12 @@ func Login(db *database.DB, jwtKey []byte) fiber.Handler {
 		return c.JSON(fiber.Map{
 			"token": tokenString,
 			"user": fiber.Map{
-				"id":       user.UserID,
-				"email":    user.Email,
-				"role":     user.Role,
-				"fullName": user.FullName,
+				"user_id":    user.UserID,
+				"email":      user.Email,
+				"role":       user.Role,
+				"full_name":  user.FullName,
+				"username":   user.Username,
+				"last_login": user.LastLogin,
 			},
 		})
 	}

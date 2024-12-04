@@ -180,6 +180,16 @@ CREATE TABLE IF NOT EXISTS "worker_group" (
     UNIQUE ("manager_id", "worker_id")
 );
 
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name='production_report' AND column_name='curated_by'
+    ) THEN
+        ALTER TABLE "production_report" ADD COLUMN "curated_by" INTEGER;
+    END IF;
+END $$;
+
 ALTER TABLE
 	"worker_group"
 ADD

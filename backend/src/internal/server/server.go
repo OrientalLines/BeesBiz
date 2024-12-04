@@ -106,11 +106,3 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	return nil
 }
-
-// Helper function to determine if an error is fatal
-func isFatalError(err error) bool {
-	// TODO: @KXRXH
-	// Add your fatal error conditions here
-	// For example: connection loss, context cancellation, etc.
-	return true
-}

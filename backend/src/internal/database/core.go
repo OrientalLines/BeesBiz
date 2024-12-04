@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 )
@@ -64,6 +65,25 @@ func (db *DB) InitSchema() error {
 
 		// Execute the SQL
 		if _, err := db.Exec(string(content)); err != nil {
+			// Get the detailed error message
+			sqlErr, ok := err.(*pq.Error)
+			if ok {
+				zap.L().Error("Failed to execute migration",
+					zap.String("file", filename),
+					zap.String("error_detail", sqlErr.Detail),
+					zap.String("error_hint", sqlErr.Hint),
+					zap.String("error_position", sqlErr.Position),
+					zap.String("error_where", sqlErr.Where),
+					zap.String("error_schema", sqlErr.Schema),
+					zap.String("error_table", sqlErr.Table),
+					zap.String("error_column", sqlErr.Column),
+					zap.String("error_data_type", sqlErr.DataTypeName),
+					zap.String("error_constraint", sqlErr.Constraint),
+					zap.Error(err))
+				return fmt.Errorf("error executing migration %s at position %s: %w", filename, sqlErr.Position, err)
+			}
+			
+			// Fallback for non-postgres errors
 			zap.L().Error("Failed to execute migration",
 				zap.String("file", filename),
 				zap.Error(err))
@@ -76,4 +96,3 @@ func (db *DB) InitSchema() error {
 	zap.L().Info("All migrations completed successfully")
 	return nil
 }
-

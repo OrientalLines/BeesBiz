@@ -9,9 +9,20 @@
 	export let user: User | null = null;
 	export let onClose = () => {};
 	export let onSave = (updatedUser: User) => {};
-
 	const toastStore = getToastStore();
-	let formData: Partial<User> = {};
+	let formData: {
+		user_id: number;
+		username: string;
+		full_name: string;
+		email: string;
+		role: string;
+	} = {
+		user_id: 0,
+		username: '',
+		full_name: '',
+		email: '',
+		role: ''
+	};
 	let isLoading = false;
 	let avatarPreview: string | null = null;
 
@@ -66,9 +77,7 @@
 					<input
 						type="text"
 						bind:value={formData.username}
-						class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-amber-200/70
-                        dark:border-amber-800/30 rounded-lg focus:ring-2 focus:ring-amber-500/50
-                        focus:border-amber-500 transition-colors"
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 transition-colors"
 					/>
 				</div>
 
@@ -85,9 +94,7 @@
 					<input
 						type="text"
 						bind:value={formData.full_name}
-						class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-amber-200/70
-                        dark:border-amber-800/30 rounded-lg focus:ring-2 focus:ring-amber-500/50
-                        focus:border-amber-500 transition-colors"
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 transition-colors"
 					/>
 				</div>
 
@@ -104,9 +111,7 @@
 					<input
 						type="email"
 						bind:value={formData.email}
-						class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-amber-200/70
-                        dark:border-amber-800/30 rounded-lg focus:ring-2 focus:ring-amber-500/50
-                        focus:border-amber-500 transition-colors"
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 transition-colors"
 					/>
 				</div>
 
@@ -122,9 +127,7 @@
 					</div>
 					<select
 						bind:value={formData.role}
-						class="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-amber-200/70
-                        dark:border-amber-800/30 rounded-lg focus:ring-2 focus:ring-amber-500/50
-                        focus:border-amber-500 transition-colors appearance-none cursor-pointer"
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 transition-colors appearance-none cursor-pointer"
 					>
 						<option value="ADMIN">Admin</option>
 						<option value="MANAGER">Manager</option>
@@ -138,20 +141,18 @@
 				<button
 					type="button"
 					class="w-full px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300
-                    bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50
-                    rounded-lg transition-colors border border-gray-200 dark:border-gray-700
-                    min-w-[100px]"
+					bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800
+					rounded-lg transition-colors border border-gray-300 dark:border-gray-600 min-w-[100px]"
 					on:click={onClose}
 				>
 					Cancel
 				</button>
 				<button
 					type="submit"
-					class="w-full px-6 py-3 text-sm font-medium text-white bg-gradient-to-r
-                    from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600
-                    rounded-lg transition-colors flex items-center justify-center gap-2
-                    shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed
-                    min-w-[100px]"
+					class="w-full px-6 py-3 text-sm font-medium text-white
+					bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700
+					rounded-lg transition-colors flex items-center justify-center gap-2
+					shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed min-w-[100px]"
 					disabled={isLoading}
 				>
 					{#if isLoading}

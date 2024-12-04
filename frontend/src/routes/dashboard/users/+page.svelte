@@ -208,6 +208,11 @@
 						<th
 							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
 						>
+							Username
+						</th>
+						<th
+							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
+						>
 							Name
 						</th>
 						<th
@@ -236,6 +241,9 @@
 					{#each filteredUsers as user}
 						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+								{user.username}
+							</td>
+							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
 								{user.full_name}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
@@ -254,7 +262,7 @@
 								</span>
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{new Date(user.last_login).toLocaleString()}
+								{user.last_login ? new Date(user.last_login).toLocaleString() : 'N/A'}
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 								<button

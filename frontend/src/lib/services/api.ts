@@ -1,5 +1,24 @@
 import { auth } from '$lib/stores/auth';
-import type { Region, Apiary, Hive, BeeCommunity, HoneyHarvest, ProductionReport, Sensor, SensorReading, WeatherData, ObservationLog, User, Incident, CreateIncidentInput, CreateObservationInput, Role, RegisterInput, LoginResponse, MaintenancePlan as MaintenanceTask } from '$lib/types';
+import type {
+	Region,
+	Apiary,
+	Hive,
+	BeeCommunity,
+	HoneyHarvest,
+	ProductionReport,
+	Sensor,
+	SensorReading,
+	WeatherData,
+	ObservationLog,
+	User,
+	Incident,
+	CreateIncidentInput,
+	CreateObservationInput,
+	Role,
+	RegisterInput,
+	LoginResponse,
+	MaintenancePlan as MaintenanceTask
+} from '$lib/types';
 import { get } from 'svelte/store';
 
 // API Base URL
@@ -17,7 +36,7 @@ function getAuthHeaders(): HeadersInit {
 
 	return {
 		'Content-Type': 'application/json',
-		'Authorization': `Bearer ${authState.token}`
+		Authorization: `Bearer ${authState.token}`
 	};
 }
 
@@ -120,14 +139,16 @@ export async function getBeeCommunities(): Promise<BeeCommunity[]> {
 
 export async function getBeeCommunityById(id: number): Promise<BeeCommunity> {
 	const communities = await getResource<BeeCommunity[]>('bee-community');
-	const community = communities.find(c => c.community_id === id);
+	const community = communities.find((c) => c.community_id === id);
 	if (!community) {
 		throw new Error('Bee community not found');
 	}
 	return community;
 }
 
-export async function createBeeCommunity(data: Omit<BeeCommunity, 'community_id'>): Promise<BeeCommunity> {
+export async function createBeeCommunity(
+	data: Omit<BeeCommunity, 'community_id'>
+): Promise<BeeCommunity> {
 	return createResource<BeeCommunity>('bee-community', data);
 }
 
@@ -148,7 +169,9 @@ export async function getHoneyHarvestById(id: number): Promise<HoneyHarvest> {
 	return getResource<HoneyHarvest>(`honey-harvest/${id}`);
 }
 
-export async function createHoneyHarvest(data: Omit<HoneyHarvest, 'harvest_id'>): Promise<HoneyHarvest> {
+export async function createHoneyHarvest(
+	data: Omit<HoneyHarvest, 'harvest_id'>
+): Promise<HoneyHarvest> {
 	return createResource<HoneyHarvest>('honey-harvest', data);
 }
 
@@ -168,7 +191,6 @@ export async function getProductionReports(): Promise<ProductionReport[]> {
 export async function getProductionReportById(id: number): Promise<ProductionReport> {
 	return getResource<ProductionReport>(`production-report/${id}`);
 }
-
 
 export async function updateProductionReport(data: ProductionReport): Promise<ProductionReport> {
 	return updateResource<ProductionReport>('production-report', data);
@@ -300,7 +322,9 @@ export async function getWeatherDataById(id: number): Promise<WeatherData> {
 	return getResource<WeatherData>(`weather-data/${id}`);
 }
 
-export async function createWeatherData(data: Omit<WeatherData, 'weather_id'>): Promise<WeatherData> {
+export async function createWeatherData(
+	data: Omit<WeatherData, 'weather_id'>
+): Promise<WeatherData> {
 	return createResource<WeatherData>('weather-data', data);
 }
 
@@ -402,10 +426,10 @@ export async function getUserAllowedRegions(userId: number): Promise<Region[]> {
 export async function updateUserAllowedRegions(userId: number, regionIds: number[]): Promise<void> {
 	// First, get current allowed regions to determine which ones to remove
 	const currentRegions = await getUserAllowedRegions(userId);
-	const currentRegionIds = currentRegions.map(r => r.region_id);
+	const currentRegionIds = currentRegions.map((r) => r.region_id);
 
 	// Remove regions that are no longer selected
-	const regionsToRemove = currentRegionIds.filter(id => !regionIds.includes(id));
+	const regionsToRemove = currentRegionIds.filter((id) => !regionIds.includes(id));
 	for (const regionId of regionsToRemove) {
 		const response = await fetch(`${API_BASE_URL}/api/allowed-region/${regionId}`, {
 			method: 'DELETE',
@@ -415,7 +439,7 @@ export async function updateUserAllowedRegions(userId: number, regionIds: number
 	}
 
 	// Add new regions
-	const regionsToAdd = regionIds.filter(id => !currentRegionIds.includes(id));
+	const regionsToAdd = regionIds.filter((id) => !currentRegionIds.includes(id));
 	for (const regionId of regionsToAdd) {
 		const payload = {
 			user_id: userId,
@@ -440,7 +464,7 @@ export async function updateRegionAccess(userId: number, regionIds: number[]): P
 export async function checkRegionAccess(userId: number, regionId: number): Promise<boolean> {
 	try {
 		const allowedRegions = await getUserAllowedRegions(userId);
-		return allowedRegions.some(region => region.region_id === regionId);
+		return allowedRegions.some((region) => region.region_id === regionId);
 	} catch (error) {
 		console.error('Error checking region access:', error);
 		return false;
@@ -448,7 +472,11 @@ export async function checkRegionAccess(userId: number, regionId: number): Promi
 }
 
 // Add gRPC-specific functions
-export async function getTotalHoneyHarvested(hiveId: number, startDate: string, endDate: string): Promise<number> {
+export async function getTotalHoneyHarvested(
+	hiveId: number,
+	startDate: string,
+	endDate: string
+): Promise<number> {
 	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/getTotalHoneyHarvested`, {
 		method: 'POST',
 		headers: getAuthHeaders(),
@@ -522,13 +550,10 @@ export async function getAverageTemperature(regionId: number, days: number): Pro
 }
 
 export async function assignMaintenancePlan(planId: number, userId: number): Promise<void> {
-	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/assignMaintenancePlan`, {
-		method: 'POST',
+	const response = await fetch(`${API_BASE_URL}/api/maintenance`, {
+		method: 'PUT',
 		headers: getAuthHeaders(),
-		body: JSON.stringify({
-			plan_id: planId,
-			user_id: userId
-		})
+		body: JSON.stringify({ id: planId, assigned_to: userId })
 	});
 	handleResponse(response);
 }
@@ -589,13 +614,13 @@ export async function searchHives(query: string): Promise<Hive[]> {
 	const hives = await getHives();
 	const searchTerm = query.toLowerCase();
 
-	return hives.filter(hive =>
-		hive.hive_id.toString().includes(searchTerm) ||
-		hive.hive_type.toLowerCase().includes(searchTerm) ||
-		hive.current_status.toLowerCase().includes(searchTerm)
+	return hives.filter(
+		(hive) =>
+			hive.hive_id.toString().includes(searchTerm) ||
+			hive.hive_type.toLowerCase().includes(searchTerm) ||
+			hive.current_status.toLowerCase().includes(searchTerm)
 	);
 }
-
 
 // Update the incident functions
 export async function getIncidents(): Promise<Incident[]> {
@@ -680,7 +705,9 @@ export async function getMaintenanceTasks(): Promise<MaintenanceTask[]> {
 	return getResource<MaintenanceTask[]>('maintenance');
 }
 
-export async function createMaintenanceTask(data: Omit<MaintenanceTask, 'id'>): Promise<MaintenanceTask> {
+export async function createMaintenanceTask(
+	data: Omit<MaintenanceTask, 'id'>
+): Promise<MaintenanceTask> {
 	return createResource<MaintenanceTask>('maintenance', data);
 }
 
@@ -700,7 +727,6 @@ export async function updateMaintenanceTaskStatus(taskId: string, status: string
 	});
 	handleResponse(response);
 }
-
 
 export async function assignManager(hiveId: number, email: string): Promise<void> {
 	// TODO: Implement this

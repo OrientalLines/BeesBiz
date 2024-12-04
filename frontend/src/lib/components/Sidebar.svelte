@@ -73,17 +73,17 @@
 		{
 			label: 'Data Output',
 			icon: FileText,
-			roles: ['WORKER', 'ADMIN'],
+			roles: ['WORKER', 'MANAGER', 'ADMIN'],
 			items: [
 				{
 					path: '/dashboard/egress/harvests',
 					label: 'Honey Harvest',
-					roles: ['WORKER', 'ADMIN']
+					roles: ['WORKER', 'MANAGER', 'ADMIN']
 				},
 				{
 					path: '/dashboard/egress/reports',
 					label: 'Reports',
-					roles: ['WORKER', 'manager', 'ADMIN']
+					roles: ['WORKER', 'MANAGER', 'ADMIN']
 				}
 			]
 		},
@@ -109,16 +109,6 @@
 					label: 'General Settings',
 					roles: ['ADMIN']
 				}
-				// {
-				// 	path: '/dashboard/settings/notifications',
-				// 	label: 'Notifications',
-				// 	roles: ['ADMIN']
-				// },
-				// {
-				// 	path: '/dashboard/settings/system',
-				// 	label: 'System',
-				// 	roles: ['ADMIN']
-				// }
 			]
 		}
 	];
@@ -141,6 +131,10 @@
 		const userRole = $auth?.user?.role || '';
 		return allowedRoles.includes(userRole.toUpperCase());
 	}
+
+	onMount(() => {
+		console.log($auth);
+	});
 </script>
 
 <aside

@@ -141,7 +141,7 @@
                                     flex items-center justify-center"
 								>
 									<Icon
-										icon={climateIcons[region.climate_zone as keyof typeof climateIcons]}
+										icon={climateIcons[region.climate_zone as keyof typeof climateIcons] || 'mdi:map-marker'}
 										class="w-6 h-6 text-amber-600 dark:text-amber-400"
 									/>
 								</div>
@@ -190,18 +190,14 @@
 	{#if showAddModal}
 		<RegionAddModal
 			isOpen={true}
-			region={null}
 			onClose={() => (showAddModal = false)}
-			onSave={handleSaveRegion}
 		/>
 	{/if}
 
 	{#if editingRegion}
 		<RegionEditModal
 			isOpen={true}
-			region={editingRegion}
 			onClose={() => (editingRegion = null)}
-			onSave={handleSaveRegion}
 		/>
 	{/if}
 

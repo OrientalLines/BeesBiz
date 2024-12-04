@@ -29,7 +29,7 @@
 			}
 
 			const response = await login(email, password);
-			// @ts-ignore fuck typescript
+
 			auth.login(response.user, response.token);
 			goto('/dashboard/hives');
 		} catch (err) {
@@ -45,9 +45,9 @@
 				return;
 			}
 
-			const registeredEmail = email;     // Store email before clearing
+			const registeredEmail = email; // Store email before clearing
 			const registeredPassword = password; // Store password before clearing
-			
+
 			await register({ email, password, username, full_name });
 			// Switch to login tab after successful registration
 			activeTab = 'login';

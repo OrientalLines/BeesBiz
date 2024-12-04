@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
-	import type { User, Region } from '$lib/types';
-	import type { Role } from '$lib/services/api';
+	import type { User, Region, Role } from '$lib/types';
 	import { fade, fly } from 'svelte/transition';
 	import { Toast, getToastStore } from '@skeletonlabs/skeleton';
 	import Icon from '@iconify/svelte';
@@ -16,12 +15,12 @@
 	let selectedRegions: number[] = [];
 
 	// Form data
-	let formData = {
-		username: '',
-		full_name: '',
-		email: '',
-		password: '',
-		role: 'WORKER' as Role
+	let formData: {
+		username: string;
+		full_name: string;
+		email: string;
+		password: string;
+		role: Role;
 	};
 
 	// Reset form when modal opens
@@ -49,8 +48,7 @@
 		try {
 			await onSave(
 				{
-					...formData,
-					last_login: new Date()
+					...formData
 				},
 				selectedRegions
 			);
@@ -71,45 +69,96 @@
 </script>
 
 <Modal {isOpen} title="Add New User" {onClose}>
-	<div in:fly={{ y: 50, duration: 400 }} out:fade>
+	<div in:fly={{ y: 50, duration: 400 }} out:fade class="p-4">
 		<form class="space-y-6" on:submit|preventDefault={handleSubmit}>
 			<!-- User Information -->
 			<div class="space-y-4">
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-					<Icon icon="mdi:user" class="w-5 h-5 text-amber-500" />
-					User Information
-				</h3>
-
-				<div class="grid grid-cols-1 gap-4">
+				<!-- Username -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<div
+							class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center"
+						>
+							<Icon icon="mdi:account" class="w-5 h-5 text-amber-500" />
+						</div>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+					</div>
 					<input
 						type="text"
 						bind:value={formData.username}
-						placeholder="Username *"
-						class="input"
 						required
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 transition-colors"
 					/>
+				</div>
+
+				<!-- Full Name -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<div
+							class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center"
+						>
+							<Icon icon="mdi:card-account-details" class="w-5 h-5 text-amber-500" />
+						</div>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+					</div>
 					<input
 						type="text"
 						bind:value={formData.full_name}
-						placeholder="Full Name *"
-						class="input"
 						required
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 transition-colors"
 					/>
+				</div>
+
+				<!-- Email -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<div
+							class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center"
+						>
+							<Icon icon="mdi:email" class="w-5 h-5 text-amber-500" />
+						</div>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+					</div>
 					<input
 						type="email"
 						bind:value={formData.email}
-						placeholder="Email *"
-						class="input"
 						required
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 transition-colors"
 					/>
+				</div>
+
+				<!-- Password -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<div
+							class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center"
+						>
+							<Icon icon="mdi:lock" class="w-5 h-5 text-amber-500" />
+						</div>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+					</div>
 					<input
 						type="password"
 						bind:value={formData.password}
-						placeholder="Password *"
-						class="input"
 						required
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 transition-colors"
 					/>
-					<select bind:value={formData.role} class="select">
+				</div>
+
+				<!-- Role -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<div
+							class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center"
+						>
+							<Icon icon="mdi:shield-account" class="w-5 h-5 text-amber-500" />
+						</div>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+					</div>
+					<select
+						bind:value={formData.role}
+						class="w-full px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 transition-colors appearance-none cursor-pointer"
+					>
 						<option value="ADMIN">Admin</option>
 						<option value="MANAGER">Manager</option>
 						<option value="WORKER">Worker</option>
@@ -119,18 +168,20 @@
 
 			<!-- Region Access -->
 			<div class="space-y-4">
-				<h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-					<Icon icon="mdi:map-marker" class="w-5 h-5 text-amber-500" />
-					Region Access
-				</h3>
+				<div class="flex items-center gap-2 mb-2">
+					<div
+						class="w-9 h-9 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center"
+					>
+						<Icon icon="mdi:map-marker" class="w-5 h-5 text-amber-500" />
+					</div>
+					<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Region Access</label>
+				</div>
 
 				<div class="space-y-2 max-h-48 overflow-y-auto">
 					{#each regions as region}
-						<label
-							class="flex items-center p-3 rounded-lg border border-gray-200
-                            dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800
-                            transition-colors duration-200"
-						>
+						<label class="flex items-center p-3 rounded-lg border border-gray-300 dark:border-gray-600 
+							bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 
+							transition-colors duration-200">
 							<input
 								type="checkbox"
 								value={region.region_id}
@@ -142,51 +193,43 @@
 										selectedRegions = selectedRegions.filter((id) => id !== region.region_id);
 									}
 								}}
-								class="w-4 h-4 text-amber-500 border-gray-300 rounded
-                                    focus:ring-amber-500 dark:focus:ring-offset-gray-800"
+								class="w-4 h-4 text-amber-500 border-gray-300 rounded focus:ring-amber-500"
 							/>
-							<span class="ml-3 text-gray-900 dark:text-gray-300">{region.name}</span>
+							<span class="ml-3 text-gray-700 dark:text-gray-300">{region.name}</span>
 						</label>
 					{/each}
 				</div>
 			</div>
 
 			<!-- Action Buttons -->
-			<div class="flex justify-end gap-3 pt-6">
+			<div class="flex justify-center gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
 				<button
 					type="button"
-					class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100
-                        dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
+					class="w-full px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 
+					bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 
+					rounded-lg transition-colors border border-gray-300 dark:border-gray-600 min-w-[100px]"
 					on:click={onClose}
 				>
 					Cancel
 				</button>
 				<button
 					type="submit"
-					class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg
-                        transition-colors duration-200 flex items-center gap-2"
+					class="w-full px-6 py-3 text-sm font-medium text-white 
+					bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-700
+					rounded-lg transition-colors flex items-center justify-center gap-2 
+					shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed min-w-[100px]"
 					disabled={isLoading}
 				>
 					{#if isLoading}
-						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+						<Icon icon="mdi:loading" class="w-4 h-4 animate-spin" />
 					{/if}
-					{isLoading ? 'Creating...' : 'Create User'}
+					<span>{isLoading ? 'Creating...' : 'Create User'}</span>
 				</button>
 			</div>
 		</form>
 	</div>
 </Modal>
 
-<style lang="postcss">
-	.input {
-		@apply w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-            focus:ring-2 focus:ring-amber-500 focus:border-transparent;
-	}
-
-	.select {
-		@apply w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-            bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-            focus:ring-2 focus:ring-amber-500 focus:border-transparent;
-	}
+<style>
+	/* Remove the previous style block as it's no longer needed */
 </style>
