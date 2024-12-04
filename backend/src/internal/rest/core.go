@@ -136,16 +136,15 @@ func (s *Server) SetupRoutes() {
 	regionApiary.Get("/", handlers.GetAllRegionApiaries(s.db))
 
 	// User routes
-	user := api.Group("/user", roleMiddleware(types.Admin, types.Manager))
 
-	user.Get("/:id", handlers.GetUser(s.db))
-	user.Post("/", handlers.CreateUser(s.db))
-	user.Put("/", handlers.UpdateUser(s.db))
-	user.Delete("/:id", handlers.DeleteUser(s.db))
-	user.Get("/", handlers.GetAllUsers(s.db))
-	user.Get("/:id/allowed-regions", handlers.GetUserAllowedRegions(s.db))
-	user.Put("/role", handlers.ModifyUserRole(s.db))
-	user.Put("/allowed-regions", handlers.ModifyUserAllowedRegions(s.db))
+	workerGroup.Get("/:id", handlers.GetWorkerGroup(s.db))
+	workerGroup.Post("/", handlers.CreateWorkerGroup(s.db))
+	workerGroup.Put("/", handlers.UpdateWorkerGroup(s.db))
+	workerGroup.Delete("/:id", handlers.DeleteWorkerGroup(s.db))
+	workerGroup.Get("/", handlers.GetAllWorkerGroups(s.db))
+	workerGroup.Get("/manager/:manager_id", handlers.GetWorkerGroupsByManager(s.db))
+
+	user := api.Group("/worker-group", roleMiddleware(types.Admin, types.Manager))
 
 	// ProductionReport routes
 	productionReport := api.Group("/production-report", roleMiddleware(types.Manager, types.Worker, types.Admin))
