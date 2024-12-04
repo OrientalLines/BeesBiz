@@ -173,3 +173,18 @@ export interface RegionFormData {
 	name: string;
 	climate_zone: string;
 }
+
+export interface WorkerGroup {
+	group_id: number;
+	manager_id: number;
+	group_name: string;
+	created_at: Time | null;
+	updated_at: Time | null;
+}
+
+export interface WorkerGroupMember {
+	id: number;
+	group_id: number;
+	worker_id: number;
+	joined_at: Time | null;
+}

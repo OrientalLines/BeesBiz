@@ -101,7 +101,11 @@ func (db *DB) GetWorkerGroup(id int) (types.WorkerGroup, error) {
 // CreateWorkerGroup creates a new worker group and returns the created group.
 func (db *DB) CreateWorkerGroup(group types.WorkerGroup) (types.WorkerGroup, error) {
 	var createdGroup types.WorkerGroup
-	err := db.Get(&createdGroup, "INSERT INTO worker_group (manager_id, worker_id, group_name) VALUES ($1, $2, $3) RETURNING *", group.ManagerID, group.WorkerID, group.GroupName)
+	err := db.Get(&createdGroup, `
+		INSERT INTO worker_group (manager_id, group_name) 
+		VALUES ($1, $2) 
+		RETURNING *`, 
+		group.ManagerID, group.GroupName)
 	if err != nil {
 		zap.S().Error("Error creating worker group: ", err)
 		return types.WorkerGroup{}, fmt.Errorf("error creating worker group: %w", err)
@@ -109,20 +113,97 @@ func (db *DB) CreateWorkerGroup(group types.WorkerGroup) (types.WorkerGroup, err
 	return createdGroup, nil
 }
 
-// UpdateWorkerGroup updates an existing worker group and returns the updated group.
-func (db *DB) UpdateWorkerGroup(group types.WorkerGroup) (types.WorkerGroup, error) {
-	var updatedGroup types.WorkerGroup
-	err := db.Get(&updatedGroup, "UPDATE worker_group SET manager_id = $1, worker_id = $2, group_name = $3 WHERE group_id = $4 RETURNING *", group.ManagerID, group.WorkerID, group.GroupName, group.GroupID)
+// AddWorkerToGroup adds a worker to a group
+func (db *DB) AddWorkerToGroup(groupID, workerID int) error {
+	_, err := db.Exec(`
+		INSERT INTO worker_group_member (group_id, worker_id)
+		VALUES ($1, $2)`,
+		groupID, workerID)
 	if err != nil {
-		zap.S().Error("Error updating worker group: ", err)
-		return types.WorkerGroup{}, fmt.Errorf("error updating worker group: %w", err)
+		zap.S().Error("Error adding worker to group: ", err)
+		return fmt.Errorf("error adding worker to group: %w", err)
 	}
-	return updatedGroup, nil
+	return nil
 }
 
-// DeleteWorkerGroup deletes a worker group by its ID.
+// RemoveWorkerFromGroup removes a worker from a group
+func (db *DB) RemoveWorkerFromGroup(groupID, workerID int) error {
+	_, err := db.Exec(`
+		DELETE FROM worker_group_member 
+		WHERE group_id = $1 AND worker_id = $2`,
+		groupID, workerID)
+	if err != nil {
+		zap.S().Error("Error removing worker from group: ", err)
+		return fmt.Errorf("error removing worker from group: %w", err)
+	}
+	return nil
+}
+
+// GetGroupMembers retrieves all workers in a specific group
+func (db *DB) GetGroupMembers(groupID int) ([]types.User, error) {
+	var users []types.User
+	err := db.Select(&users, `
+		SELECT u.* FROM "user" u
+		JOIN worker_group_member wgm ON u.user_id = wgm.worker_id
+		WHERE wgm.group_id = $1`,
+		groupID)
+	if err != nil {
+		zap.S().Error("Error getting group members: ", err)
+		return nil, fmt.Errorf("error getting group members: %w", err)
+	}
+	return users, nil
+}
+
+// GetWorkerGroups retrieves all groups a worker belongs to
+func (db *DB) GetWorkerGroups(workerID int) ([]types.WorkerGroup, error) {
+	var groups []types.WorkerGroup
+	err := db.Select(&groups, `
+		SELECT wg.* FROM worker_group wg
+		JOIN worker_group_member wgm ON wg.group_id = wgm.group_id
+		WHERE wgm.worker_id = $1`,
+		workerID)
+	if err != nil {
+		zap.S().Error("Error getting worker's groups: ", err)
+		return nil, fmt.Errorf("error getting worker's groups: %w", err)
+	}
+	return groups, nil
+}
+
+func (db *DB) GetWorkerGroupsByManager(managerID int) ([]types.WorkerGroup, error) {
+	var groups []types.WorkerGroup
+	err := db.Select(&groups, "SELECT * FROM worker_group WHERE manager_id = $1", managerID)
+	if err != nil {
+		zap.S().Error("Error getting worker groups by manager: ", err)
+		return nil, fmt.Errorf("error getting worker groups by manager: %w", err)
+	}
+	return groups, nil
+}
+func (db *DB) GetFreeUsers() ([]types.User, error) {
+	var users []types.User
+	err := db.Select(&users, `
+		SELECT u.* FROM "user" u
+		WHERE u.role = 'WORKER'
+		AND NOT EXISTS (
+			SELECT 1 FROM worker_group_member wgm 
+			WHERE wgm.worker_id = u.user_id
+		)`)
+	if err != nil {
+		zap.S().Error("Error getting free users: ", err)
+		return nil, fmt.Errorf("error getting free users: %w", err)
+	}
+	return users, nil
+}
+
 func (db *DB) DeleteWorkerGroup(id int) error {
-	_, err := db.Exec("DELETE FROM worker_group WHERE group_id = $1", id)
+	// First delete all members from this group
+	_, err := db.Exec("DELETE FROM worker_group_member WHERE group_id = $1", id)
+	if err != nil {
+		zap.S().Error("Error deleting worker group members: ", err)
+		return fmt.Errorf("error deleting worker group members: %w", err)
+	}
+
+	// Then delete the group itself
+	_, err = db.Exec("DELETE FROM worker_group WHERE group_id = $1", id)
 	if err != nil {
 		zap.S().Error("Error deleting worker group: ", err)
 		return fmt.Errorf("error deleting worker group: %w", err)
@@ -130,28 +211,22 @@ func (db *DB) DeleteWorkerGroup(id int) error {
 	return nil
 }
 
-// GetAllWorkerGroups retrieves all worker groups.
+func (db *DB) UpdateWorkerGroup(id int, group types.WorkerGroup) (types.WorkerGroup, error) {
+	var updatedGroup types.WorkerGroup
+	err := db.Get(&updatedGroup, "UPDATE worker_group SET group_name = $1 WHERE group_id = $2 RETURNING *", group.GroupName, id)
+	if err != nil {
+		zap.S().Error("Error updating worker group: ", err)
+		return types.WorkerGroup{}, fmt.Errorf("error updating worker group: %w", err)
+	}
+	return updatedGroup, nil
+}
+
 func (db *DB) GetAllWorkerGroups() ([]types.WorkerGroup, error) {
 	var groups []types.WorkerGroup
 	err := db.Select(&groups, "SELECT * FROM worker_group")
 	if err != nil {
 		zap.S().Error("Error getting all worker groups: ", err)
-		return []types.WorkerGroup{}, fmt.Errorf("error getting all worker groups: %w", err)
-	}
-	return groups, nil
-}
-
-// GetWorkerGroupsByManager retrieves all worker groups managed by a specific manager.
-func (db *DB) GetWorkerGroupsByManager(managerID int) ([]types.WorkerGroup, error) {
-	var groups []types.WorkerGroup
-	query := `
-        SELECT * FROM worker_group
-        WHERE manager_id = $1
-    `
-	err := db.Select(&groups, query, managerID)
-	if err != nil {
-		zap.S().Error("Error getting worker groups by manager: ", err)
-		return nil, fmt.Errorf("error getting worker groups by manager: %w", err)
+		return nil, fmt.Errorf("error getting all worker groups: %w", err)
 	}
 	return groups, nil
 }

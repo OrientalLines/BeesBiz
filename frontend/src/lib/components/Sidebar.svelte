@@ -96,6 +96,11 @@
 					path: '/dashboard/users',
 					label: 'Users Overview',
 					roles: ['MANAGER', 'ADMIN']
+				},
+				{
+					path: '/dashboard/worker-groups',
+					label: 'Worker Groups',
+					roles: ['MANAGER', 'ADMIN']
 				}
 			]
 		},
@@ -132,9 +137,6 @@
 		return allowedRoles.includes(userRole.toUpperCase());
 	}
 
-	onMount(() => {
-		console.log($auth);
-	});
 </script>
 
 <aside

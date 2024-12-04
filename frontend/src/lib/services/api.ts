@@ -17,7 +17,8 @@ import type {
 	Role,
 	RegisterInput,
 	LoginResponse,
-	MaintenancePlan as MaintenanceTask
+	MaintenancePlan as MaintenanceTask,
+	WorkerGroup
 } from '$lib/types';
 import { get } from 'svelte/store';
 
@@ -731,4 +732,64 @@ export async function updateMaintenanceTaskStatus(taskId: string, status: string
 export async function assignManager(hiveId: number, email: string): Promise<void> {
 	// TODO: Implement this
 	return Promise.resolve();
+}
+
+// Worker Group Operations
+export async function getWorkerGroups(): Promise<WorkerGroup[]> {
+	return getResource<WorkerGroup[]>('worker-group');
+}
+
+export async function getWorkerGroupById(id: number): Promise<{group: WorkerGroup, members: User[]}> {
+	return getResource<{group: WorkerGroup, members: User[]}>(`worker-group/${id}`);
+}
+
+export async function getWorkerGroupsByManager(managerId: number): Promise<{group: WorkerGroup, members: User[]}[]> {
+	return getResource<{group: WorkerGroup, members: User[]}[]>(`worker-group/manager/${managerId}`);
+}
+
+export async function createWorkerGroup(data: Omit<WorkerGroup, 'group_id'>): Promise<WorkerGroup> {
+	return createResource<WorkerGroup>('worker-group', data);
+}
+
+export async function addGroupMember(groupId: number, workerId: number): Promise<void> {
+	const response = await fetch(`${API_BASE_URL}/api/worker-group/${groupId}/members`, {
+		method: 'POST',
+		headers: getAuthHeaders(),
+		body: JSON.stringify({ group_id: groupId, worker_id: workerId })
+	});
+	handleResponse(response);
+}
+
+export async function removeGroupMember(groupId: number, workerId: number): Promise<void> {
+	const response = await fetch(`${API_BASE_URL}/api/worker-group/${groupId}/members/${workerId}`, {
+		method: 'DELETE',
+		headers: getAuthHeaders()
+	});
+	handleResponse(response);
+}
+
+export async function getGroupMembers(groupId: number): Promise<User[]> {
+	return getResource<User[]>(`worker-group/${groupId}/members`);
+}
+
+export async function getCuratedProductionReports(userId: number): Promise<ProductionReport[]> {
+	return getResource<ProductionReport[]>(`production-report/curated/${userId}`);
+}
+
+export async function getFreeUsers(): Promise<User[]> {
+	return getResource<User[]>('user/free');
+}
+
+export async function deleteWorkerGroup(id: number): Promise<void> {
+	return deleteResource('worker-group', id);
+}
+
+export async function updateWorkerGroup(id: number, data: Omit<WorkerGroup, 'group_id'>): Promise<WorkerGroup> {
+	const response = await fetch(`${API_BASE_URL}/api/worker-group/${id}`, {
+		method: 'PUT',
+		headers: getAuthHeaders(),
+		body: JSON.stringify(data)
+	});
+	handleResponse(response);
+	return response.json();
 }

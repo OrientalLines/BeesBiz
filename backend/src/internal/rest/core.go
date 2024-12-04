@@ -137,7 +137,7 @@ func (s *Server) SetupRoutes() {
 
 	// User routes
 	user := api.Group("/user", roleMiddleware(types.Admin, types.Manager))
-	
+
 	user.Get("/:id", handlers.GetUser(s.db))
 	user.Post("/", handlers.CreateUser(s.db))
 	user.Put("/", handlers.UpdateUser(s.db))
@@ -146,16 +146,20 @@ func (s *Server) SetupRoutes() {
 	user.Get("/:id/allowed-regions", handlers.GetUserAllowedRegions(s.db))
 	user.Put("/role", handlers.ModifyUserRole(s.db))
 	user.Put("/allowed-regions", handlers.ModifyUserAllowedRegions(s.db))
-	
+
+	// WorkerGroup routes
 	workerGroup := api.Group("/worker-group", roleMiddleware(types.Admin, types.Manager))
 
+	workerGroup.Get("/", handlers.GetAllWorkerGroups(s.db))
 	workerGroup.Get("/:id", handlers.GetWorkerGroup(s.db))
 	workerGroup.Post("/", handlers.CreateWorkerGroup(s.db))
-	workerGroup.Put("/", handlers.UpdateWorkerGroup(s.db))
-	workerGroup.Delete("/:id", handlers.DeleteWorkerGroup(s.db))
-	workerGroup.Get("/", handlers.GetAllWorkerGroups(s.db))
 	workerGroup.Get("/manager/:manager_id", handlers.GetWorkerGroupsByManager(s.db))
-
+	workerGroup.Post("/:group_id/members", handlers.AddGroupMember(s.db))
+	workerGroup.Delete("/:group_id/members/:worker_id", handlers.RemoveGroupMember(s.db))
+	workerGroup.Get("/:group_id/members", handlers.GetGroupMembers(s.db))
+	workerGroup.Get("/worker/:worker_id/groups", handlers.GetWorkerGroups(s.db))
+	workerGroup.Delete("/:id", handlers.DeleteWorkerGroup(s.db))
+	workerGroup.Put("/:id", handlers.UpdateWorkerGroup(s.db))
 
 	// ProductionReport routes
 	productionReport := api.Group("/production-report", roleMiddleware(types.Manager, types.Worker, types.Admin))
