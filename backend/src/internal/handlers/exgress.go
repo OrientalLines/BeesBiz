@@ -81,7 +81,7 @@ func GetAllProductionReports(db *database.DB) fiber.Handler {
 	}
 }
 
-func GetProductionReportsByUser(db *database.DB) fiber.Handler {
+func GetCuratedProductionReportsByUser(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		userID, err := c.ParamsInt("user_id")
 		if err != nil {
