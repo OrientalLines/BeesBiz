@@ -175,7 +175,9 @@ CREATE TABLE IF NOT EXISTS "worker_group" (
     "manager_id" INTEGER NOT NULL,
     "worker_id" INTEGER NOT NULL,
     "group_name" VARCHAR NOT NULL,
-    UNIQUE ("manager_id", "worker_id")  -- Ensures that a worker can only be in a group with a specific manager once
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP  
+    UNIQUE ("manager_id", "worker_id")
 );
 
 ALTER TABLE
