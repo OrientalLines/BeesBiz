@@ -80,3 +80,18 @@ func GetAllProductionReports(db *database.DB) fiber.Handler {
 		return c.JSON(reports)
 	}
 }
+
+func GetProductionReportsByUser(db *database.DB) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		userID, err := c.ParamsInt("user_id")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": fmt.Sprintf("Invalid user ID: %v", err)})
+		}
+		reports, err := db.GetCuratedProductionReportsByUser(userID)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fmt.Sprintf("Failed to get production reports by user: %v", err)})
+		}
+		return c.JSON(reports)
+	}
+}
+
