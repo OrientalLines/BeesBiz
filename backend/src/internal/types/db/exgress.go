@@ -9,4 +9,5 @@ type ProductionReport struct {
 	EndDate       null.Time `json:"end_date" db:"end_date"`
 	TotalHoney    int       `json:"total_honey_produced" db:"total_honey_produced"`
 	TotalExpenses int       `json:"total_expenses" db:"total_expenses"`
+	CuratedBy     int       `json:"curated_by" db:"curated_by"`
 }
