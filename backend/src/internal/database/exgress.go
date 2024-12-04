@@ -69,3 +69,17 @@ func (db *DB) GetRecentProductionReports(limit int) ([]types.ProductionReport, e
 	}
 	return reports, nil
 }
+
+func (db *DB) GetCuratedProductionReportsByUser(userID int) ([]types.ProductionReport, error) {
+	var reports []types.ProductionReport
+	query := `
+        SELECT * FROM production_report
+        WHERE curated_by = $1
+    `
+	err := db.Select(&reports, query, userID)
+	if err != nil {
+		zap.S().Error("Error getting production reports curated by user: ", err)
+		return nil, fmt.Errorf("error getting production reports curated by user: %w", err)
+	}
+	return reports, nil
+}
