@@ -188,7 +188,7 @@ ADD
 ALTER TABLE
 	"worker_group"
 ADD
-    FOREIGN KEY ("worker_id") REFERENCES "user"("user_id") ON UPDATE NO ACTION ON DELETE CASCADE,
+    FOREIGN KEY ("worker_id") REFERENCES "user"("user_id") ON UPDATE NO ACTION ON DELETE CASCADE;
 	
 ALTER TABLE
 	"hive"
