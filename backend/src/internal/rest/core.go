@@ -155,6 +155,7 @@ func (s *Server) SetupRoutes() {
 	productionReport.Put("/", handlers.UpdateProductionReport(s.db))
 	productionReport.Delete("/:id", handlers.DeleteProductionReport(s.db))
 	productionReport.Get("/", handlers.GetAllProductionReports(s.db))
+	productionReport.Get("/curated/:id", handlers.GetCuratedProductionReportsByUser(s.db))
 
 	// Sensor routes
 	sensor := api.Group("/sensor", roleMiddleware(types.Admin, types.Manager, types.Worker))
