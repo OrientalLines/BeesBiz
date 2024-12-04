@@ -81,7 +81,7 @@
 						>
 							<Icon icon="mdi:account" class="w-5 h-5 text-amber-500" />
 						</div>
-						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="username">Username</label>
 					</div>
 					<input
 						type="text"
@@ -99,7 +99,7 @@
 						>
 							<Icon icon="mdi:card-account-details" class="w-5 h-5 text-amber-500" />
 						</div>
-						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="full_name">Full Name</label>
 					</div>
 					<input
 						type="text"
@@ -117,7 +117,7 @@
 						>
 							<Icon icon="mdi:email" class="w-5 h-5 text-amber-500" />
 						</div>
-						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="email">Email</label>
 					</div>
 					<input
 						type="email"
@@ -135,7 +135,7 @@
 						>
 							<Icon icon="mdi:lock" class="w-5 h-5 text-amber-500" />
 						</div>
-						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="password">Password</label>
 					</div>
 					<input
 						type="password"
@@ -153,7 +153,7 @@
 						>
 							<Icon icon="mdi:shield-account" class="w-5 h-5 text-amber-500" />
 						</div>
-						<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+						<label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="role">Role</label>
 					</div>
 					<select
 						bind:value={formData.role}
@@ -174,7 +174,7 @@
 					>
 						<Icon icon="mdi:map-marker" class="w-5 h-5 text-amber-500" />
 					</div>
-					<label class="text-sm font-medium text-gray-700 dark:text-gray-300">Region Access</label>
+					<label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="region_access">Region Access</label>
 				</div>
 
 				<div class="space-y-2 max-h-48 overflow-y-auto">
