@@ -137,3 +137,10 @@ monitoring-dashboard:
 
 prometheus-dashboard:
 	$(KUBECTL) port-forward svc/monitoring-kube-prometheus-prometheus -n $(MONITORING_NAMESPACE) 9090:9090
+
+lens:
+	@echo "Downloading K8s Lens..."
+	curl -L -o lens.AppImage https://api.k8slens.dev/binaries/Lens-2024.11.261604-latest.x86_64.AppImage
+	@echo "Making AppImage executable..."
+	chmod +x lens.AppImage
+	@echo "K8s Lens downloaded successfully. You can run it with: ./lens.AppImage"
