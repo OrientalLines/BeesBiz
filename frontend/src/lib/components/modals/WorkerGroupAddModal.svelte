@@ -110,7 +110,7 @@
 			</div>
 
 			<div class="flex-1 overflow-hidden">
-				<label class="block text-sm font-medium mb-1">Select Members</label>
+				<label class="block text-sm font-medium mb-1" for="members">Select Members</label>
 				<div
 					class="border-2 border-amber-500/50 rounded-lg overflow-y-auto dark:bg-gray-800 h-[calc(100%-2rem)]"
 				>
