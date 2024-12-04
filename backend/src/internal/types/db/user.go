@@ -19,3 +19,12 @@ type User struct {
 	Password  string    `json:"password" db:"password"`
 	LastLogin null.Time `json:"last_login" db:"last_login"`
 }
+
+type WorkerGroup struct {
+	GroupID   int       `db:"group_id" json:"group_id"`
+	ManagerID int       `db:"manager_id" json:"manager_id"`
+	WorkerID  int       `db:"worker_id" json:"worker_id"`
+	GroupName string    `db:"group_name" json:"group_name"`
+	CreatedAt null.Time `db:"created_at" json:"created_at"`
+	UpdatedAt null.Time `db:"updated_at" json:"updated_at"`
+}
