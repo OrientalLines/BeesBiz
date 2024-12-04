@@ -169,6 +169,24 @@ CREATE TABLE IF NOT EXISTS "region_apiary" (
 	PRIMARY KEY("id")
 );
 
+CREATE TABLE IF NOT EXISTS "worker_group" (
+    "group_id" SERIAL PRIMARY KEY,
+    "manager_id" INTEGER NOT NULL,
+    "worker_id" INTEGER NOT NULL,
+    "group_name" VARCHAR NOT NULL,
+    UNIQUE ("manager_id", "worker_id")  -- Ensures that a worker can only be in a group with a specific manager once
+);
+
+ALTER TABLE
+	"worker_group"
+ADD
+    FOREIGN KEY ("manager_id") REFERENCES "user"("user_id") ON UPDATE NO ACTION ON DELETE CASCADE;
+
+ALTER TABLE
+	"worker_group"
+ADD
+    FOREIGN KEY ("worker_id") REFERENCES "user"("user_id") ON UPDATE NO ACTION ON DELETE CASCADE,
+	
 ALTER TABLE
 	"hive"
 ADD
