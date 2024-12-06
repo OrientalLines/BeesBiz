@@ -180,7 +180,7 @@
 					hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
 					hover:border-amber-400 overflow-hidden"
 				>
-					<button
+					<!-- <button
 						class="absolute top-2 right-10 p-2 text-gray-400 hover:text-amber-500
 							opacity-0 group-hover:opacity-100 transition-all duration-300"
 						on:click|stopPropagation={(e) => {
@@ -190,7 +190,7 @@
 						}}
 					>
 						<Icon icon="mdi:account-plus" class="w-5 h-5" />
-					</button>
+					</button> -->
 
 					<button
 						class="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-500

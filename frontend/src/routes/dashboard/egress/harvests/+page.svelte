@@ -145,9 +145,9 @@
 			<p class="text-gray-600 dark:text-gray-400 mt-1">Track and manage your honey production</p>
 		</div>
 		<button
-			class="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg
-				   hover:from-amber-600 hover:to-amber-700 transform hover:scale-105 transition-all duration-200
-				   flex items-center gap-2 shadow-lg"
+			class="bg-amber-500 text-white px-6 py-3 rounded-full
+        hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl
+        flex items-center gap-2"
 			on:click={() => {
 				editingHarvest = null;
 				showModal = true;

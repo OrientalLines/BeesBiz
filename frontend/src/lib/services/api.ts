@@ -193,12 +193,23 @@ export async function getProductionReportById(id: number): Promise<ProductionRep
 	return getResource<ProductionReport>(`production-report/${id}`);
 }
 
+export async function createProductionReport(data: Omit<ProductionReport, 'report_id'>): Promise<ProductionReport> {
+	return createResource<ProductionReport>('production-report', data);
+}
+
 export async function updateProductionReport(data: ProductionReport): Promise<ProductionReport> {
 	return updateResource<ProductionReport>('production-report', data);
 }
 
 export async function deleteProductionReport(id: number): Promise<void> {
 	return deleteResource('production-report', id);
+}
+
+export async function getCuratedProductionReports(userId: number): Promise<ProductionReport[]> {
+	if (!userId || isNaN(userId)) {
+		throw new Error('Invalid user ID');
+	}
+	return getResource<ProductionReport[]>(`production-report/curated/${userId}`);
 }
 
 // Sensor Operations
@@ -489,7 +500,7 @@ export async function getTotalHoneyHarvested(
 	});
 	handleResponse(response);
 	const data = await response.json();
-	return data.total_honey;
+	return data.total_honey_produced;
 }
 
 export async function addObservation(
@@ -586,25 +597,6 @@ export async function getLatestSensorReading(hiveId: number, sensorType: string)
 		body: JSON.stringify({
 			hive_id: hiveId,
 			sensor_type: sensorType
-		})
-	});
-	handleResponse(response);
-	return response.json();
-}
-
-export async function createProductionReport(
-	apiaryId: number,
-	startDate: string,
-	endDate: string
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any> {
-	const response = await fetch(`${PROXY_API_BASE_URL}/api/grpc/createProductionReport`, {
-		method: 'POST',
-		headers: getAuthHeaders(),
-		body: JSON.stringify({
-			apiary_id: apiaryId,
-			start_date: startDate,
-			end_date: endDate
 		})
 	});
 	handleResponse(response);
@@ -739,12 +731,12 @@ export async function getWorkerGroups(): Promise<WorkerGroup[]> {
 	return getResource<WorkerGroup[]>('worker-group');
 }
 
-export async function getWorkerGroupById(id: number): Promise<{group: WorkerGroup, members: User[]}> {
-	return getResource<{group: WorkerGroup, members: User[]}>(`worker-group/${id}`);
+export async function getWorkerGroupById(id: number): Promise<{ group: WorkerGroup, members: User[] }> {
+	return getResource<{ group: WorkerGroup, members: User[] }>(`worker-group/${id}`);
 }
 
-export async function getWorkerGroupsByManager(managerId: number): Promise<{group: WorkerGroup, members: User[]}[]> {
-	return getResource<{group: WorkerGroup, members: User[]}[]>(`worker-group/manager/${managerId}`);
+export async function getWorkerGroupsByManager(managerId: number): Promise<{ group: WorkerGroup, members: User[] }[]> {
+	return getResource<{ group: WorkerGroup, members: User[] }[]>(`worker-group/manager/${managerId}`);
 }
 
 export async function createWorkerGroup(data: Omit<WorkerGroup, 'group_id'>): Promise<WorkerGroup> {
@@ -770,10 +762,6 @@ export async function removeGroupMember(groupId: number, workerId: number): Prom
 
 export async function getGroupMembers(groupId: number): Promise<User[]> {
 	return getResource<User[]>(`worker-group/${groupId}/members`);
-}
-
-export async function getCuratedProductionReports(userId: number): Promise<ProductionReport[]> {
-	return getResource<ProductionReport[]>(`production-report/curated/${userId}`);
 }
 
 export async function getFreeUsers(): Promise<User[]> {

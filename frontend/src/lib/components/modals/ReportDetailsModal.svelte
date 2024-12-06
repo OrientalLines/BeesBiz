@@ -19,7 +19,7 @@
 
 	// Start animations when modal opens
 	$: if (isOpen) {
-		honeyAmount.set(report.total_honey);
+		honeyAmount.set(report.total_honey_produced);
 		expenses.set(report.total_expenses);
 		profitMarginAnim.set(profitMargin);
 		revenuePerHiveAnim.set(revenuePerHive);
@@ -28,9 +28,9 @@
 
 	// Calculate some dummy metrics
 	$: profitMargin =
-		((report.total_honey * 50 - report.total_expenses) / (report.total_honey * 50)) * 100;
-	$: revenuePerHive = (report.total_honey * 50) / 5; // Assuming 5 hives for demo
-	$: productionEfficiency = report.total_honey / report.total_expenses;
+		((report.total_honey_produced * 50 - report.total_expenses) / (report.total_honey_produced * 50)) * 100;
+	$: revenuePerHive = (report.total_honey_produced * 50) / 5; // Assuming 5 hives for demo
+	$: productionEfficiency = report.total_honey_produced / report.total_expenses;
 </script>
 
 <Modal {isOpen} title="Production Report Details" {onClose}>

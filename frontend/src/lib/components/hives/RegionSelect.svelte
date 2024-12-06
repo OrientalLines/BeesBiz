@@ -94,8 +94,9 @@
 			<p class="mt-2 text-gray-600 dark:text-gray-400">Select a region to view its apiaries</p>
 		</div>
 		<button
-			class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600
-            transition-colors flex items-center gap-2"
+			class="bg-amber-500 text-white px-6 py-3 rounded-full
+        hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl
+        flex items-center gap-2"
 			on:click={() => (showAddModal = true)}
 		>
 			<Icon icon="mdi:plus" class="w-5 h-5" />
@@ -112,10 +113,17 @@
 	{:else if error}
 		<div class="text-red-500 text-center p-4">{error}</div>
 	{:else if !regions || regions.length === 0}
-		<div class="text-center p-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
-			<Icon icon="mdi:map-marker-off" class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+		<div
+			class="text-center p-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700"
+		>
+			<Icon
+				icon="mdi:map-marker-off"
+				class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4"
+			/>
 			<h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No Regions Yet</h3>
-			<p class="text-gray-500 dark:text-gray-400 mb-4">Start by adding your first region to manage your apiaries</p>
+			<p class="text-gray-500 dark:text-gray-400 mb-4">
+				Start by adding your first region to manage your apiaries
+			</p>
 			<button
 				class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2 mx-auto"
 				on:click={() => (showAddModal = true)}
@@ -141,7 +149,8 @@
                                     flex items-center justify-center"
 								>
 									<Icon
-										icon={climateIcons[region.climate_zone as keyof typeof climateIcons] || 'mdi:map-marker'}
+										icon={climateIcons[region.climate_zone as keyof typeof climateIcons] ||
+											'mdi:map-marker'}
 										class="w-6 h-6 text-amber-600 dark:text-amber-400"
 									/>
 								</div>
@@ -188,17 +197,11 @@
 	{/if}
 
 	{#if showAddModal}
-		<RegionAddModal
-			isOpen={true}
-			onClose={() => (showAddModal = false)}
-		/>
+		<RegionAddModal isOpen={true} onClose={() => (showAddModal = false)} />
 	{/if}
 
 	{#if editingRegion}
-		<RegionEditModal
-			isOpen={true}
-			onClose={() => (editingRegion = null)}
-		/>
+		<RegionEditModal isOpen={true} onClose={() => (editingRegion = null)} />
 	{/if}
 
 	<RegionDeleteModal

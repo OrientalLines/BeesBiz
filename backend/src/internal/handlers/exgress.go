@@ -83,7 +83,7 @@ func GetAllProductionReports(db *database.DB) fiber.Handler {
 
 func GetCuratedProductionReportsByUser(db *database.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		userID, err := c.ParamsInt("user_id")
+		userID, err := c.ParamsInt("id")
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": fmt.Sprintf("Invalid user ID: %v", err)})
 		}
@@ -94,4 +94,3 @@ func GetCuratedProductionReportsByUser(db *database.DB) fiber.Handler {
 		return c.JSON(reports)
 	}
 }
-

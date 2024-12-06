@@ -56,6 +56,12 @@
 
 			if (!sensor) throw new Error('Sensor not found');
 
+			// Set last_reading_time to 0 if no data
+			sensor.last_reading_time = sensor.last_reading_time || new Date(0);
+			readings.forEach((r) => {
+				r.timestamp = r.timestamp || new Date(0);
+			});
+
 			// Filter readings for this sensor
 			readings = readings?.filter((r) => r.sensor_id === parseInt(sensorId)) || [];
 		} catch (e) {

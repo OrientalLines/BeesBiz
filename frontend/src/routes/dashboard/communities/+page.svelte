@@ -136,8 +136,9 @@
 				</p>
 			</div>
 			<button
-				class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors
-                    flex items-center gap-2"
+				class="bg-amber-500 text-white px-6 py-3 rounded-full
+			hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl
+			flex items-center gap-2"
 				on:click={() => (showModal = true)}
 			>
 				<Icon icon="mdi:plus" class="w-5 h-5" />

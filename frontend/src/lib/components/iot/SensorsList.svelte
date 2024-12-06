@@ -48,6 +48,9 @@
 			loading = true;
 			sensors = await getSensors();
 			// Filter for current hive's sensors only
+			sensors.forEach((s) => {
+				s.last_reading_time = s.last_reading_time || new Date(0);
+			});
 			sensors = sensors.filter((s) => s.hive_id === selectedHive.hive_id);
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to load sensors';
@@ -192,10 +195,11 @@
 		<!-- Grid layout following ApiarySelect.svelte -->
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			{#each paginatedSensors as sensor}
-				<div class="group relative p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg
+				<div
+					class="group relative p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg
 					hover:shadow-xl transition-all duration-300 text-left border-2 border-transparent
-					hover:border-amber-400 overflow-hidden">
-
+					hover:border-amber-400 overflow-hidden"
+				>
 					<!-- Delete button -->
 					<button
 						class="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-500
@@ -209,10 +213,7 @@
 					</button>
 
 					<!-- Clickable area for sensor selection -->
-					<button
-						class="w-full text-left"
-						on:click={() => onSelect(sensor)}
-					>
+					<button class="w-full text-left" on:click={() => onSelect(sensor)}>
 						<div class="relative">
 							<div class="flex items-center gap-3 mb-3">
 								<Icon
@@ -321,9 +322,11 @@
 						<ul class="list-disc list-inside mt-1">
 							<li>Type: {deletingSensor.sensor_type}</li>
 							<li>Last Reading: {decodeSensorReading(deletingSensor.last_reading)}</li>
-							<li>Last Update: {deletingSensor.last_reading_time
-								? new Date(deletingSensor.last_reading_time).toLocaleString()
-								: 'Never'}</li>
+							<li>
+								Last Update: {deletingSensor.last_reading_time
+									? new Date(deletingSensor.last_reading_time).toLocaleString()
+									: 'Never'}
+							</li>
 						</ul>
 					</div>
 				</div>

@@ -1,14 +1,19 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
-	import type { ProductionReport } from '$lib/types';
+	import type { ProductionReport, User } from '$lib/types';
 	import { fade, fly } from 'svelte/transition';
 	import { Toast, getToastStore } from '@skeletonlabs/skeleton';
 	import DatePicker from '$lib/components/inputs/DatePicker.svelte';
-	import { FileSpreadsheet, TrendingUp, DollarSign, Droplets } from 'lucide-svelte';
-	import { getApiaries } from '$lib/services/api';
+	import {
+		FileSpreadsheet,
+		TrendingUp,
+		DollarSign,
+		Droplets,
+		Users as UsersIcon
+	} from 'lucide-svelte';
+	import { getApiaries, getUsers } from '$lib/services/api';
 	import type { Apiary } from '$lib/types';
 	import { Home } from 'lucide-svelte';
-	import { debounce } from 'lodash-es';
 	import { onMount } from 'svelte';
 
 	export let isOpen = false;
@@ -18,12 +23,13 @@
 
 	const toastStore = getToastStore();
 	let isLoading = false;
-	let formData: Partial<ProductionReport> = {
+	let formData: Partial<ProductionReport & { curated_by?: number }> = {
 		report_id: undefined,
 		apiary_id: 0,
+		curated_by: undefined,
 		start_date: new Date(),
 		end_date: new Date(),
-		total_honey: 0,
+		total_honey_produced: 0,
 		total_expenses: 0
 	};
 
@@ -33,19 +39,35 @@
 	let showApiaryDropdown = false;
 	let selectedApiary: Apiary | null = null;
 
-	// Load apiaries on mount
+	// User selection state
+	let users: User[] = [];
+	let selectedCurator: User | null = null;
+
+	// Load apiaries and users on mount
 	onMount(async () => {
-		await loadApiaries();
+		await Promise.all([loadApiaries(), loadUsers()]);
+
+		// Populate form if editing an existing report
 		if (report) {
 			formData = {
 				...report,
 				start_date: report.start_date ? new Date(report.start_date) : new Date(),
 				end_date: report.end_date ? new Date(report.end_date) : new Date()
 			};
+
+			// Find and set selected apiary
 			const matchingApiary = apiaries.find((a) => a.apiary_id === report.apiary_id);
 			if (matchingApiary) {
 				selectedApiary = matchingApiary;
 				apiarySearchQuery = `Apiary #${matchingApiary.apiary_id} (${matchingApiary.location})`;
+			}
+
+			// Find and set selected curator
+			if (report.curated_by) {
+				const matchingCurator = users.find((u) => u.user_id === report.curated_by);
+				if (matchingCurator) {
+					selectedCurator = matchingCurator;
+				}
 			}
 		}
 	});
@@ -54,7 +76,6 @@
 		try {
 			isLoading = true;
 			apiaries = await getApiaries();
-			filterApiaries();
 		} catch (error) {
 			toastStore.trigger({
 				message: '❌ Failed to load apiaries',
@@ -65,37 +86,18 @@
 		}
 	}
 
-	const filterApiaries = debounce(() => {
-		if (!apiarySearchQuery.trim()) {
-			filteredApiaries = apiaries;
-		} else {
-			filteredApiaries = apiaries.filter(
-				(apiary) =>
-					apiary.apiary_id.toString().includes(apiarySearchQuery) ||
-					(apiary.location &&
-						apiary.location.toLowerCase().includes(apiarySearchQuery.toLowerCase()))
-			);
+	async function loadUsers() {
+		try {
+			isLoading = true;
+			users = await getUsers();
+		} catch (error) {
+			toastStore.trigger({
+				message: '❌ Failed to load users',
+				background: 'variant-filled-error'
+			});
+		} finally {
+			isLoading = false;
 		}
-	}, 300);
-
-	function handleApiaryInput(event: Event) {
-		const input = event.target as HTMLInputElement;
-		apiarySearchQuery = input.value;
-		showApiaryDropdown = true;
-		selectedApiary = null;
-		formData.apiary_id = 0;
-	}
-
-	function selectApiary(apiary: Apiary) {
-		selectedApiary = apiary;
-		formData.apiary_id = apiary.apiary_id;
-		apiarySearchQuery = `Apiary #${apiary.apiary_id} (${apiary.location})`;
-		showApiaryDropdown = false;
-	}
-
-	// Add reactive statement for apiary search
-	$: if (apiarySearchQuery !== undefined) {
-		filterApiaries();
 	}
 
 	function handleDateRangeChange(start: Date | null, end: Date | null) {
@@ -104,7 +106,14 @@
 	}
 
 	async function handleSubmit() {
-		if (!formData.apiary_id) return;
+		// Validate required fields
+		if (!formData.apiary_id || !formData.curated_by) {
+			toastStore.trigger({
+				message: '❌ Please select an apiary and a curator',
+				background: 'variant-filled-error'
+			});
+			return;
+		}
 
 		isLoading = true;
 		try {
@@ -131,9 +140,9 @@
 
 	// Calculate report metrics
 	$: profitMargin =
-		formData.total_honey && formData.total_expenses
+		formData.total_honey_produced && formData.total_expenses
 			? (
-					((formData.total_honey * 25 - formData.total_expenses) / (formData.total_honey * 25)) *
+					((formData.total_honey_produced * 25 - formData.total_expenses) / (formData.total_honey_produced * 25)) *
 					100
 				).toFixed(1)
 			: 0;
@@ -173,7 +182,6 @@
 						type="text"
 						bind:value={apiarySearchQuery}
 						placeholder="Search by apiary ID or location..."
-						on:input={handleApiaryInput}
 						on:focus={() => (showApiaryDropdown = true)}
 						class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700
 							bg-white dark:bg-gray-800 text-gray-900 dark:text-white
@@ -182,17 +190,26 @@
 						required
 					/>
 
-					{#if showApiaryDropdown && filteredApiaries.length > 0}
+					{#if showApiaryDropdown && apiaries.length > 0}
 						<div
 							class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200
 							dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto dropdown-scroll"
 						>
-							{#each filteredApiaries as apiary}
+							{#each apiaries.filter((a) => a.apiary_id
+										.toString()
+										.includes(apiarySearchQuery) || a.location
+										.toLowerCase()
+										.includes(apiarySearchQuery.toLowerCase())) as apiary}
 								<button
 									type="button"
 									class="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700
 										text-gray-900 dark:text-white"
-									on:click={() => selectApiary(apiary)}
+									on:click={() => {
+										selectedApiary = apiary;
+										formData.apiary_id = apiary.apiary_id;
+										apiarySearchQuery = `Apiary #${apiary.apiary_id} (${apiary.location})`;
+										showApiaryDropdown = false;
+									}}
 								>
 									Apiary #{apiary.apiary_id} ({apiary.location})
 								</button>
@@ -205,6 +222,46 @@
 						Selected: Apiary #{selectedApiary.apiary_id} ({selectedApiary.location})
 					</p>
 				{/if}
+			</div>
+
+			<!-- Curator Selection -->
+			<div class="space-y-2" in:fly={{ y: 20, duration: 300, delay: 350 }}>
+				<div class="flex items-center gap-2 mb-2">
+					<UsersIcon class="w-4 h-4 text-amber-500" />
+					<label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+						Report Curator
+					</label>
+				</div>
+				<div class="border-2 border-amber-500/50 rounded-lg overflow-y-auto dark:bg-gray-800">
+					<div class="p-2 space-y-2">
+						{#each users.filter((u) => !selectedCurator || u.user_id === selectedCurator.user_id || u.full_name
+									.toLowerCase()
+									.includes(apiarySearchQuery.toLowerCase()) || u.email
+									.toLowerCase()
+									.includes(apiarySearchQuery.toLowerCase())) as user}
+							<label
+								class="flex items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer transition-colors duration-150"
+								class:bg-amber-100={selectedCurator?.user_id === user.user_id}
+							>
+								<input
+									type="radio"
+									name="curator"
+									value={user.user_id}
+									checked={selectedCurator?.user_id === user.user_id}
+									on:change={() => {
+										selectedCurator = user;
+										formData.curated_by = user.user_id;
+									}}
+									class="form-radio h-5 w-5 text-amber-500 rounded border-gray-300 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-700 dark:checked:bg-amber-500"
+								/>
+								<div class="ml-3">
+									<span class="font-medium">{user.full_name}</span>
+									<span class="text-sm text-gray-500 dark:text-gray-400 ml-1">({user.email})</span>
+								</div>
+							</label>
+						{/each}
+					</div>
+				</div>
 			</div>
 
 			<!-- Metrics Grid -->
@@ -223,7 +280,7 @@
 					<input
 						type="number"
 						step="0.1"
-						bind:value={formData.total_honey}
+						bind:value={formData.total_honey_produced}
 						class="w-full px-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700
                             bg-white dark:bg-gray-800 text-gray-900 dark:text-white
                             focus:ring-2 focus:ring-amber-500 focus:border-transparent
@@ -256,7 +313,7 @@
 			</div>
 
 			<!-- Profit Margin Indicator -->
-			{#if formData.total_honey && formData.total_expenses && (formData.total_honey > 0 || formData.total_expenses > 0)}
+			{#if formData.total_honey_produced && formData.total_expenses && (formData.total_honey_produced > 0 || formData.total_expenses > 0)}
 				<div
 					class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg space-y-2"
 					in:fly={{ y: 20, duration: 300, delay: 500 }}
@@ -319,6 +376,4 @@
 			</div>
 		</form>
 	</div>
-
-	<Toast position="tr" />
 </Modal>

@@ -8,6 +8,15 @@
 	import ReportDetailsModal from '$lib/components/modals/ReportDetailsModal.svelte';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import { ReportPDFGenerator } from '$lib/pdf/reports';
+	import {
+		getProductionReports,
+		createProductionReport,
+		updateProductionReport,
+		deleteProductionReport,
+		getCuratedProductionReports
+	} from '$lib/services/api';
+	import { auth } from '$lib/stores/auth';
+	import { onMount } from 'svelte';
 
 	let showAddModal = false;
 	let editingReport: ProductionReport | null = null;
@@ -15,7 +24,8 @@
 
 	// State management
 	let searchQuery = '';
-	let currentPage = 1;
+	let currentAllPage = 1;
+	let currentCuratedPage = 1;
 
 	const itemsPerPage = 10;
 	const toastStore = getToastStore();
@@ -28,20 +38,94 @@
 	// Debounced search function
 	const debouncedSearch = debounce((value: string) => {
 		searchQuery = value;
-		currentPage = 1;
+		currentAllPage = 1;
+		currentCuratedPage = 1;
 	}, 300);
 
-	// Mock data - replace with API call
-	let reports: ProductionReport[] = [
-		{
-			report_id: 1,
-			apiary_id: 101,
-			start_date: new Date('2024-01-01'),
-			end_date: new Date('2024-03-31'),
-			total_honey: 450,
-			total_expenses: 2500
+	// New state for reports
+	let allReports: ProductionReport[] = [];
+	let curatedReports: ProductionReport[] = [];
+
+	let loading = {
+		all: true,
+		curated: true
+	};
+	let error = {
+		all: null as string | null,
+		curated: null as string | null
+	};
+
+	async function loadAllReports() {
+		try {
+			loading.all = true;
+			error.all = null;
+			allReports = await getProductionReports();
+		} catch (e) {
+			console.error('Error loading all reports:', e);
+			error.all = 'Failed to load all reports';
+			allReports = [];
+		} finally {
+			loading.all = false;
 		}
-	];
+	}
+
+	async function loadCuratedReports() {
+		try {
+			loading.curated = true;
+			error.curated = null;
+
+			// If user is logged in, get their curated reports
+			if ($auth?.user?.user_id) {
+				const userId = Number($auth.user.user_id);
+				if (isNaN(userId)) {
+					throw new Error('Invalid user ID');
+				}
+				curatedReports = await getCuratedProductionReports(userId);
+			} else {
+				curatedReports = [];
+			}
+		} catch (e) {
+			console.error('Error loading curated reports:', e);
+			error.curated = 'Failed to load curated reports';
+			curatedReports = [];
+		} finally {
+			loading.curated = false;
+		}
+	}
+
+	onMount(() => {
+		loadAllReports();
+		loadCuratedReports();
+	});
+
+	// Modify existing filter logic to work with both report lists
+	function createReportFilter(reports: ProductionReport[]) {
+		return reports
+			.filter((r) => {
+				const matchesSearch = r.apiary_id.toString().includes(searchQuery);
+				const matchesDate =
+					(!dateRange.start || new Date(r.start_date) >= dateRange.start) &&
+					(!dateRange.end || new Date(r.end_date) <= dateRange.end);
+				return matchesSearch && matchesDate;
+			})
+			.sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime());
+	}
+
+	$: filteredAllReports = createReportFilter(allReports);
+	$: filteredCuratedReports = createReportFilter(curatedReports);
+
+	$: paginatedAllReports = filteredAllReports.slice(
+		(currentAllPage - 1) * itemsPerPage,
+		currentAllPage * itemsPerPage
+	);
+
+	$: paginatedCuratedReports = filteredCuratedReports.slice(
+		(currentCuratedPage - 1) * itemsPerPage,
+		currentCuratedPage * itemsPerPage
+	);
+
+	$: totalAllPages = Math.ceil(filteredAllReports.length / itemsPerPage);
+	$: totalCuratedPages = Math.ceil(filteredCuratedReports.length / itemsPerPage);
 
 	// Add handler for date changes
 	function handleDateRangeChange(start: Date | null, end?: Date | null) {
@@ -49,26 +133,26 @@
 			start,
 			end: end ?? null
 		};
-		currentPage = 1;
+		currentAllPage = 1;
+		currentCuratedPage = 1;
 	}
 
 	async function handleSaveReport(report: ProductionReport) {
 		try {
-			// Check for reportId to determine if we're editing or creating
 			if (report.report_id) {
 				// Update existing report
-				const index = reports.findIndex((r) => r.report_id === report.report_id);
-				if (index !== -1) {
-					reports[index] = report;
-					reports = [...reports]; // Trigger reactivity
-				}
+				const updatedReport = await updateProductionReport(report);
+				allReports = allReports.map((r) =>
+					r.report_id === updatedReport.report_id ? updatedReport : r
+				);
+				curatedReports = curatedReports.map((r) =>
+					r.report_id === updatedReport.report_id ? updatedReport : r
+				);
 			} else {
 				// Create new report
-				const newReport = {
-					...report,
-					report_id: Math.max(...reports.map((r) => r.report_id), 0) + 1
-				};
-				reports = [...reports, newReport];
+				const newReport = await createProductionReport(report);
+				allReports = [...allReports, newReport];
+				curatedReports = [...curatedReports, newReport];
 			}
 
 			showAddModal = false;
@@ -86,33 +170,33 @@
 		}
 	}
 
-	// Filter logic
-	$: filteredReports = reports
-		.filter((r) => {
-			const matchesSearch = r.apiary_id.toString().includes(searchQuery);
-			const matchesDate =
-				(!dateRange.start || new Date(r.start_date) >= dateRange.start) &&
-				(!dateRange.end || new Date(r.end_date) <= dateRange.end);
-			return matchesSearch && matchesDate;
-		})
-		.sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime());
-
-	$: paginatedReports = filteredReports.slice(
-		(currentPage - 1) * itemsPerPage,
-		currentPage * itemsPerPage
-	);
-
-	$: totalPages = Math.ceil(filteredReports.length / itemsPerPage);
-
-	// Calculate totals for summary cards
-	$: totalHoneyProduction = filteredReports.reduce((sum, r) => sum + r.total_honey, 0);
-	$: totalExpenses = filteredReports.reduce((sum, r) => sum + r.total_expenses, 0);
-	$: averageProduction = totalHoneyProduction / filteredReports.length || 0;
+	async function handleDeleteReport(id: number) {
+		try {
+			await deleteProductionReport(id);
+			allReports = allReports.filter((r) => r.report_id !== id);
+			curatedReports = curatedReports.filter((r) => r.report_id !== id);
+			toastStore.trigger({
+				message: '🗑️ Report deleted successfully',
+				background: 'variant-filled-success'
+			});
+		} catch (e) {
+			console.error('Delete error:', e);
+			toastStore.trigger({
+				message: '❌ Failed to delete report',
+				background: 'variant-filled-error'
+			});
+		}
+	}
 
 	async function generatePDF(report: ProductionReport) {
 		const pdfGenerator = new ReportPDFGenerator();
 		pdfGenerator.generate(report);
 	}
+
+	// Calculate totals for summary cards
+	$: totalHoneyProduction = filteredAllReports.reduce((sum, r) => sum + r.total_honey_produced, 0);
+	$: totalExpenses = filteredAllReports.reduce((sum, r) => sum + r.total_expenses, 0);
+	$: averageProduction = totalHoneyProduction / (filteredAllReports.length || 1);
 </script>
 
 <div class="max-w mx-auto" in:fade>
@@ -193,105 +277,203 @@
 		</div>
 	</div>
 
-	<!-- Reports Table -->
-	<div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-		<div class="overflow-x-auto">
-			<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-				<thead class="bg-gray-50 dark:bg-gray-700">
-					<tr>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
-						>
-							Report Period
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
-						>
-							Apiary ID
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
-						>
-							Honey Production
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
-						>
-							Expenses
-						</th>
-						<th
-							class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase"
-						>
-							Actions
-						</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-					{#each paginatedReports as report}
-						<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{new Date(report.start_date).toLocaleDateString()} -
-								{new Date(report.end_date).toLocaleDateString()}
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{report.apiary_id}
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								{report.total_honey} kg
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
-								${report.total_expenses}
-							</td>
-							<td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-								<button
-									class="text-amber-600 hover:text-amber-700"
-									on:click={() => (viewingReport = report)}
-								>
-									View Details
-								</button>
-								<button 
-									class="text-amber-600 hover:text-amber-700"
-									on:click={() => generatePDF(report)}
-								> 
-									Download PDF 
-								</button>
-							</td>
+	<!-- All Reports Section -->
+	<div class="mb-8">
+		<h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+			All Reports
+		</h2>
+		<div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+			<div class="overflow-x-auto">
+				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+					<thead class="bg-gray-50 dark:bg-gray-700">
+						<tr>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+								Report Period
+							</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+								Apiary ID
+							</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+								Honey Production
+							</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+								Expenses
+							</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+								Actions
+							</th>
 						</tr>
-					{/each}
-				</tbody>
-			</table>
+					</thead>
+					<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+						{#each paginatedAllReports as report}
+							<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+									{new Date(report.start_date).toLocaleDateString()} -
+									{new Date(report.end_date).toLocaleDateString()}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+									{report.apiary_id}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+									{report.total_honey_produced} kg
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+									${report.total_expenses}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+									<button
+										class="text-amber-600 hover:text-amber-700"
+										on:click={() => (viewingReport = report)}
+									>
+										View Details
+									</button>
+									<button
+										class="text-amber-600 hover:text-amber-700"
+										on:click={() => generatePDF(report)}
+									>
+										Download PDF
+									</button>
+									<button
+										class="text-red-600 hover:text-red-700"
+										on:click={() => handleDeleteReport(report.report_id)}
+									>
+										Delete
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+
+			<!-- Pagination for All Reports -->
+			{#if totalAllPages > 1}
+				<div class="mt-4 flex justify-between items-center p-4">
+					<div class="text-sm text-gray-700 dark:text-gray-300">
+						Showing {(currentAllPage - 1) * itemsPerPage + 1} to
+						{Math.min(currentAllPage * itemsPerPage, filteredAllReports.length)}
+						of {filteredAllReports.length} entries
+					</div>
+					<div class="flex gap-2">
+						<button
+							class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700"
+							disabled={currentAllPage === 1}
+							on:click={() => currentAllPage--}
+						>
+							Previous
+						</button>
+						<button
+							class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700"
+							disabled={currentAllPage === totalAllPages}
+							on:click={() => currentAllPage++}
+						>
+							Next
+						</button>
+					</div>
+				</div>
+			{/if}
 		</div>
 	</div>
 
-	<!-- Pagination -->
-	{#if totalPages > 1}
-		<div class="mt-4 flex justify-between items-center">
-			<div class="text-sm text-gray-700 dark:text-gray-300">
-				Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(
-					currentPage * itemsPerPage,
-					filteredReports.length
-				)} of {filteredReports.length} entries
+	<!-- Curated Reports Section -->
+	<div>
+		<h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+			Curated Reports
+		</h2>
+		<div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+			<div class="overflow-x-auto">
+				<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+					<thead class="bg-gray-50 dark:bg-gray-700">
+						<tr>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+								Report Period
+							</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+								Apiary ID
+							</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+								Honey Production
+							</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+								Expenses
+							</th>
+							<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+								Actions
+							</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+						{#each paginatedCuratedReports as report}
+							<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+									{new Date(report.start_date).toLocaleDateString()} -
+									{new Date(report.end_date).toLocaleDateString()}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+									{report.apiary_id}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+									{report.total_honey_produced} kg
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+									${report.total_expenses}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+									<button
+										class="text-amber-600 hover:text-amber-700"
+										on:click={() => (viewingReport = report)}
+									>
+										View Details
+									</button>
+									<button
+										class="text-amber-600 hover:text-amber-700"
+										on:click={() => generatePDF(report)}
+									>
+										Download PDF
+									</button>
+									<button
+										class="text-red-600 hover:text-red-700"
+										on:click={() => handleDeleteReport(report.report_id)}
+									>
+										Delete
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</div>
-			<div class="flex gap-2">
-				<button
-					class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                        disabled:opacity-50 disabled:cursor-not-allowed"
-					disabled={currentPage === 1}
-					on:click={() => currentPage--}
-				>
-					Previous
-				</button>
-				<button
-					class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700
-                        disabled:opacity-50 disabled:cursor-not-allowed"
-					disabled={currentPage === totalPages}
-					on:click={() => currentPage++}
-				>
-					Next
-				</button>
-			</div>
+
+			<!-- Pagination for Curated Reports -->
+			{#if totalCuratedPages > 1}
+				<div class="mt-4 flex justify-between items-center p-4">
+					<div class="text-sm text-gray-700 dark:text-gray-300">
+						Showing {(currentCuratedPage - 1) * itemsPerPage + 1} to
+						{Math.min(currentCuratedPage * itemsPerPage, filteredCuratedReports.length)}
+						of {filteredCuratedReports.length} entries
+					</div>
+					<div class="flex gap-2">
+						<button
+							class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700"
+							disabled={currentCuratedPage === 1}
+							on:click={() => currentCuratedPage--}
+						>
+							Previous
+						</button>
+						<button
+							class="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700"
+							disabled={currentCuratedPage === totalCuratedPages}
+							on:click={() => currentCuratedPage++}
+						>
+							Next
+						</button>
+					</div>
+				</div>
+			{/if}
 		</div>
-	{/if}
+	</div>
+
+	<!-- Modals remain the same -->
 	{#if showAddModal}
 		<ReportEditModal
 			isOpen={true}
@@ -320,5 +502,22 @@
 			report={viewingReport}
 			onClose={() => (viewingReport = null)}
 		/>
+	{/if}
+
+	{#if loading.all || loading.curated}
+		<div class="flex justify-center items-center h-64">
+			<div class="spinner" />
+		</div>
+	{:else if error.all || error.curated}
+		<div class="alert variant-filled-error">
+			<span>{error.all || error.curated}</span>
+			<button
+				class="btn"
+				on:click={() => {
+					loadAllReports();
+					loadCuratedReports();
+				}}>Retry</button
+			>
+		</div>
 	{/if}
 </div>

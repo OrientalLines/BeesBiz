@@ -19,7 +19,20 @@ func (db *DB) GetProductionReport(id int) (types.ProductionReport, error) {
 
 func (db *DB) CreateProductionReport(report types.ProductionReport) (types.ProductionReport, error) {
 	var createdReport types.ProductionReport
-	err := db.Get(&createdReport, "INSERT INTO production_report (apiary_id, start_date, end_date, total_honey_produced, total_expenses) VALUES ($1, $2, $3, $4, $5) RETURNING *", report.ApiaryID, report.StartDate, report.EndDate, report.TotalHoney, report.TotalExpenses)
+	query := `
+		INSERT INTO production_report
+		(apiary_id, start_date, end_date, total_honey_produced, total_expenses, curated_by)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING *
+	`
+	err := db.Get(&createdReport, query,
+		report.ApiaryID,
+		report.StartDate,
+		report.EndDate,
+		report.TotalHoney,
+		report.TotalExpenses,
+		report.CuratedBy,
+	)
 	if err != nil {
 		zap.S().Error("Error creating production report: ", err)
 		return types.ProductionReport{}, fmt.Errorf("error creating production report: %w", err)
@@ -29,7 +42,27 @@ func (db *DB) CreateProductionReport(report types.ProductionReport) (types.Produ
 
 func (db *DB) UpdateProductionReport(report types.ProductionReport) (types.ProductionReport, error) {
 	var updatedReport types.ProductionReport
-	err := db.Get(&updatedReport, "UPDATE production_report SET apiary_id = $1, start_date = $2, end_date = $3, total_honey_produced = $4, total_expenses = $5 WHERE report_id = $6 RETURNING *", report.ApiaryID, report.StartDate, report.EndDate, report.TotalHoney, report.TotalExpenses, report.ReportID)
+	query := `
+		UPDATE production_report
+		SET
+			apiary_id = $1,
+			start_date = $2,
+			end_date = $3,
+			total_honey_produced = $4,
+			total_expenses = $5,
+			curated_by = $6
+		WHERE report_id = $7
+		RETURNING *
+	`
+	err := db.Get(&updatedReport, query,
+		report.ApiaryID,
+		report.StartDate,
+		report.EndDate,
+		report.TotalHoney,
+		report.TotalExpenses,
+		report.CuratedBy,
+		report.ReportID,
+	)
 	if err != nil {
 		zap.S().Error("Error updating production report: ", err)
 		return types.ProductionReport{}, fmt.Errorf("error updating production report: %w", err)

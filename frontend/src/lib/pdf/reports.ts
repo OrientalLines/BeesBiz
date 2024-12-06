@@ -82,7 +82,7 @@ export class ReportPDFGenerator {
 				label: 'Period:',
 				value: `${new Date(report.start_date).toLocaleDateString()} - ${new Date(report.end_date).toLocaleDateString()}`
 			},
-			{ label: 'Total Honey:', value: `${report.total_honey} kg` },
+			{ label: 'Total Honey:', value: `${report.total_honey_produced} kg` },
 			{ label: 'Total Expenses:', value: `$${report.total_expenses}` }
 		];
 

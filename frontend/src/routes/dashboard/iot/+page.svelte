@@ -20,6 +20,12 @@
 		try {
 			loading = true;
 			[sensors, recentReadings] = await Promise.all([getSensors(), getSensorReadings()]);
+			sensors.forEach((s) => {
+				s.last_reading_time = s.last_reading_time || new Date(0);
+			});
+			recentReadings.forEach((r) => {
+				r.timestamp = r.timestamp || new Date(0);
+			});
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to load data';
 			toastStore.trigger({
@@ -129,11 +135,13 @@
 			</div>
 			<p class="text-xl font-medium text-amber-600">
 				{new Date(
-					Math.max(
-						...sensors
-							.filter((s) => s.last_reading_time !== null)
-							.map((s) => (s.last_reading_time ? new Date(s.last_reading_time).getTime() : 0))
-					) || Date.now()
+					sensors.length > 0
+						? Math.max(
+								...sensors
+									.filter((s) => s.last_reading_time)
+									.map((s) => new Date(s.last_reading_time).getTime())
+							)
+						: Date.now()
 				).toLocaleString()}
 			</p>
 		</div>

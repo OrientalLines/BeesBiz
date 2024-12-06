@@ -195,12 +195,12 @@
 									: 'not set'}
 							</span>
 						</div>
-						<div class="flex items-center gap-2">
+						<!-- <div class="flex items-center gap-2">
 							<Icon icon="mdi:account" class="w-5 h-5 text-amber-500" />
 							<span class="text-sm"
 								>Manager {apiary.manager_id ? `#${apiary.manager_id}` : 'not set'}
 							</span>
-						</div>
+						</div> -->
 					</div>
 				</div>
 			</button>

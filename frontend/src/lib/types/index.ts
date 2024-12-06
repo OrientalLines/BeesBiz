@@ -124,8 +124,9 @@ export interface ProductionReport {
 	apiary_id: number;
 	start_date: Time;
 	end_date: Time;
-	total_honey: number;
+	total_honey_produced: number;
 	total_expenses: number;
+	curated_by: number;
 }
 
 export interface VeterinaryPassport {
